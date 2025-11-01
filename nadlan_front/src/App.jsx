@@ -14,6 +14,8 @@ import RegisterPage from './pages/RegisterPage';
 import ProfilePage from './pages/ProfilePage';
 import CreatePropertyPage from './pages/CreatePropertyPage';
 import NotFoundPage from './pages/NotFoundPage';
+import AuthSuccessPage from './pages/AuthSuccessPage';
+import AuthErrorPage from './pages/AuthErrorPage';
 
 // Layout
 import Layout from './components/layout/Layout';
@@ -44,6 +46,10 @@ function App() {
                   <Route path="/properties/:id" element={<PropertyDetailsPage />} />
                   <Route path="/login" element={<LoginPage />} />
                   <Route path="/register" element={<RegisterPage />} />
+
+                  {/* Auth Routes */}
+                  <Route path="/auth/success" element={<AuthSuccessPage />} />
+                  <Route path="/auth/error" element={<AuthErrorPage />} />
 
                   {/* Protected Routes */}
                   <Route path="/profile" element={<ProfilePage />} />

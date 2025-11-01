@@ -1,4 +1,5 @@
 import express from 'express';
+import passport from '../config/passport.js';
 import {
     register,
     login,
@@ -8,7 +9,10 @@ import {
     forgotPassword,
     resetPassword,
     getProfile,
-    updateProfile
+    updateProfile,
+    googleAuth,
+    googleAuthFailure,
+    createAdmin
 } from '../controllers/authController.js';
 import {
     validateRegister,
@@ -17,7 +21,7 @@ import {
     validateForgotPassword,
     validateResetPassword
 } from '../middleware/validation.js';
-import { authenticateToken } from '../middleware/auth.js';
+import { authenticateToken, requireRole } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -29,9 +33,27 @@ router.get('/verify-email/:token', verifyEmail);
 router.post('/forgot-password', validateForgotPassword, forgotPassword);
 router.post('/reset-password/:token', validateResetPassword, resetPassword);
 
+// Google OAuth routes
+router.get('/google',
+    passport.authenticate('google', { scope: ['profile', 'email'] })
+);
+
+router.get('/google/callback',
+    passport.authenticate('google', {
+        failureRedirect: '/api/auth/google/failure',
+        session: false
+    }),
+    googleAuth
+);
+
+router.get('/google/failure', googleAuthFailure);
+
 // Защищенные роуты
 router.post('/logout', authenticateToken, logout);
 router.get('/profile', authenticateToken, getProfile);
 router.put('/profile', authenticateToken, validateProfileUpdate, updateProfile);
+
+// Admin routes
+router.post('/create-admin', createAdmin);
 
 export default router;

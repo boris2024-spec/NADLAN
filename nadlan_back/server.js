@@ -4,6 +4,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import session from 'express-session';
+import passport from './config/passport.js';
 import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
@@ -64,6 +65,10 @@ app.use(session({
         maxAge: 24 * 60 * 60 * 1000 // 24 часа
     }
 }));
+
+// Passport middleware
+app.use(passport.initialize());
+app.use(passport.session());
 
 // Подключение к MongoDB
 const connectDB = async () => {

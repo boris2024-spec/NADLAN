@@ -63,20 +63,23 @@ export const authorizeRoles = (...roles) => {
         if (!req.user) {
             return res.status(401).json({
                 success: false,
-                message: 'Необходима аутентификация'
+                message: 'דרושה אותנטיקציה'
             });
         }
 
         if (!roles.includes(req.user.role)) {
             return res.status(403).json({
                 success: false,
-                message: 'Недостаточно прав доступа'
+                message: 'אין הרשאות מספקות'
             });
         }
 
         next();
     };
 };
+
+// Синоним для authorizeRoles
+export const requireRole = (...roles) => authorizeRoles(...roles);
 
 // Middleware для проверки владельца ресурса или админа
 export const authorizeOwnerOrAdmin = (resourceOwnerField = 'owner') => {

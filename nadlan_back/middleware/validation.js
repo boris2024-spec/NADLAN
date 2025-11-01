@@ -5,37 +5,38 @@ export const validateRegister = [
     body('firstName')
         .trim()
         .isLength({ min: 2, max: 50 })
-        .withMessage('Имя должно содержать от 2 до 50 символов')
+        .withMessage('השם חייב להכיל בין 2 ל-50 תווים')
         .matches(/^[a-zA-Zа-яёА-ЯЁ\u0590-\u05FF\s]+$/)
-        .withMessage('Имя может содержать только буквы и пробелы'),
+        .withMessage('השם יכול להכיל רק אותיות ורווחים'),
 
     body('lastName')
         .trim()
         .isLength({ min: 2, max: 50 })
-        .withMessage('Фамилия должна содержать от 2 до 50 символов')
+        .withMessage('שם המשפחה חייב להכיל בין 2 ל-50 תווים')
         .matches(/^[a-zA-Zа-яёА-ЯЁ\u0590-\u05FF\s]+$/)
-        .withMessage('Фамилия может содержать только буквы и пробелы'),
+        .withMessage('שם המשפחה יכול להכיל רק אותיות ורווחים'),
 
     body('email')
         .isEmail()
-        .withMessage('Некорректный email адрес')
+        .withMessage('כתובת אימייל לא תקינה')
         .normalizeEmail(),
 
     body('password')
+        .if(body('googleId').not().exists())
         .isLength({ min: 6 })
-        .withMessage('Пароль должен содержать минимум 6 символов')
+        .withMessage('הסיסמה חייבת להכיל לפחות 6 תווים')
         .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
-        .withMessage('Пароль должен содержать минимум одну заглавную букву, одну строчную букву и одну цифру'),
+        .withMessage('הסיסמה חייבת להכיל לפחות אות קטנה, אות גדולה ומספר'),
 
     body('phone')
         .optional()
         .matches(/^[\+]?[1-9][\d]{0,15}$/)
-        .withMessage('Некорректный номер телефона'),
+        .withMessage('מספר טלפון לא תקין'),
 
     body('role')
         .optional()
         .isIn(['user', 'agent'])
-        .withMessage('Роль может быть только user или agent')
+        .withMessage('התפקיד יכול להיות רק משתמש או סוכן')
 ];
 
 // Валидация входа

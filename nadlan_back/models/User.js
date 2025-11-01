@@ -5,40 +5,45 @@ import crypto from 'crypto';
 const userSchema = new mongoose.Schema({
     firstName: {
         type: String,
-        required: [true, 'Имя обязательно'],
+        required: [true, 'השם חובה'],
         trim: true,
-        minlength: [2, 'Имя должно содержать минимум 2 символа'],
-        maxlength: [50, 'Имя не должно превышать 50 символов']
+        minlength: [2, 'השם חייב להכיל לפחות 2 תווים'],
+        maxlength: [50, 'השם לא יכול להכיל יותר מ-50 תווים']
     },
     lastName: {
         type: String,
-        required: [true, 'Фамилия обязательна'],
+        required: [true, 'שם המשפחה חובה'],
         trim: true,
-        minlength: [2, 'Фамилия должна содержать минимум 2 символа'],
-        maxlength: [50, 'Фамилия не должна превышать 50 символов']
+        minlength: [2, 'שם המשפחה חייב להכיל לפחות 2 תווים'],
+        maxlength: [50, 'שם המשפחה לא יכול להכיל יותר מ-50 תווים']
     },
     email: {
         type: String,
-        required: [true, 'Email обязателен'],
+        required: [true, 'אימייל חובה'],
         unique: true,
         lowercase: true,
         trim: true,
         match: [
             /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-            'Некорректный email адрес'
+            'כתובת אימייל לא תקינה'
         ]
     },
     password: {
         type: String,
-        minlength: [6, 'Пароль должен содержать минимум 6 символов'],
-        select: false // По умолчанию не включать пароль в запросы
+        minlength: [6, 'הסיסמה חייבת להכיל לפחות 6 תווים'],
+        select: false, // По умолчанию не включать пароль в запросы
+        required: function () {
+            // Пароль обязателен только если нет OAuth ID
+            return !this.googleId;
+        }
     },
     phone: {
         type: String,
         trim: true,
+        required: false, // טלפון לא חובה
         match: [
             /^[\+]?[1-9][\d]{0,15}$/,
-            'Некорректный номер телефона'
+            'מספר טלפון לא תקין'
         ]
     },
     role: {

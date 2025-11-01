@@ -7,12 +7,16 @@ import { validationResult } from 'express-validator';
 // Регистрация пользователя
 export const register = async (req, res) => {
     try {
+        console.log('Register request body:', req.body);
+        console.log('Register request headers:', req.headers);
+
         // Проверяем валидацию
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
+            console.log('Validation errors:', errors.array());
             return res.status(400).json({
                 success: false,
-                message: 'Ошибки валидации',
+                message: 'שגיאות בוולידציה',
                 errors: errors.array()
             });
         }
@@ -24,7 +28,7 @@ export const register = async (req, res) => {
         if (existingUser) {
             return res.status(400).json({
                 success: false,
-                message: 'Пользователь с таким email уже существует'
+                message: 'משתמש עם כתובת אימייל זו כבר קיים'
             });
         }
 
@@ -63,7 +67,7 @@ export const register = async (req, res) => {
 
         res.status(201).json({
             success: true,
-            message: 'Пользователь успешно зарегистрирован',
+            message: 'משתמש נרשם בהצלחה',
             data: {
                 user: userResponse,
                 tokens: {
@@ -79,7 +83,7 @@ export const register = async (req, res) => {
         console.error('Ошибка регистрации:', error);
         res.status(500).json({
             success: false,
-            message: 'Внутренняя ошибка сервера'
+            message: 'שגיאת שרת פנימית'
         });
     }
 };
@@ -386,7 +390,7 @@ export const updateProfile = async (req, res) => {
         if (!errors.isEmpty()) {
             return res.status(400).json({
                 success: false,
-                message: 'Ошибки валидации',
+                message: 'שגיאות בוולידציה',
                 errors: errors.array()
             });
         }
@@ -406,7 +410,7 @@ export const updateProfile = async (req, res) => {
 
         res.json({
             success: true,
-            message: 'Профиль успешно обновлен',
+            message: 'הפרופיל עודכן בהצלחה',
             data: {
                 user: updatedUser
             }
@@ -416,7 +420,108 @@ export const updateProfile = async (req, res) => {
         console.error('Ошибка обновления профиля:', error);
         res.status(500).json({
             success: false,
-            message: 'Внутренняя ошибка сервера'
+            message: 'שגיאת שרת פנימית'
+        });
+    }
+};
+
+// OAuth Google Success
+export const googleAuth = async (req, res) => {
+    try {
+        const { googleId, email, firstName, lastName, avatar } = req.user;
+
+        // חיפוש או יצירת משתמש
+        let user = await User.findOne({ $or: [{ googleId }, { email }] });
+
+        if (!user) {
+            // יצירת משתמש חדש מ-Google
+            user = new User({
+                googleId,
+                email,
+                firstName,
+                lastName,
+                avatar: avatar ? { url: avatar } : undefined,
+                isVerified: true, // Google users are automatically verified
+                role: 'user'
+            });
+            await user.save();
+        } else if (!user.googleId && user.email === email) {
+            // חיבור חשבון קיים ל-Google
+            user.googleId = googleId;
+            user.isVerified = true;
+            if (avatar) user.avatar = { url: avatar };
+            await user.save();
+        }
+
+        // בדיקת הרשאות מיוחדות
+        if (user.email === process.env.ADMIN_EMAIL) {
+            user.role = 'admin';
+            await user.save();
+        }
+
+        // יצירת טוקנים
+        const { accessToken, refreshToken } = generateTokens(user._id);
+
+        user.refreshToken = refreshToken;
+        user.lastLogin = new Date();
+        await user.save();
+
+        // הפניה לקליינט עם הטוקנים
+        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+        res.redirect(`${frontendUrl}/auth/success?token=${accessToken}&refresh=${refreshToken}`);
+
+    } catch (error) {
+        console.error('Google Auth Error:', error);
+        const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+        res.redirect(`${frontendUrl}/auth/error?message=שגיאה באימות Google`);
+    }
+};
+
+// OAuth Google Failure
+export const googleAuthFailure = (req, res) => {
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    res.redirect(`${frontendUrl}/auth/error?message=אימות Google נכשל`);
+};
+
+// יצירת משתמש אדמין (רק פעם אחת)
+export const createAdmin = async (req, res) => {
+    try {
+        // בדיקה אם כבר קיים אדמין
+        const existingAdmin = await User.findOne({ role: 'admin' });
+        if (existingAdmin) {
+            return res.status(400).json({
+                success: false,
+                message: 'אדמין כבר קיים במערכת'
+            });
+        }
+
+        const adminData = {
+            email: process.env.ADMIN_EMAIL,
+            firstName: process.env.ADMIN_FIRST_NAME || 'Admin',
+            lastName: process.env.ADMIN_LAST_NAME || 'Nadlan',
+            password: process.env.ADMIN_DEFAULT_PASSWORD,
+            role: 'admin',
+            isVerified: true,
+            isActive: true
+        };
+
+        const admin = new User(adminData);
+        await admin.save();
+
+        res.status(201).json({
+            success: true,
+            message: 'חשבון אדמין נוצר בהצלחה',
+            data: {
+                email: admin.email,
+                role: admin.role
+            }
+        });
+
+    } catch (error) {
+        console.error('Error creating admin:', error);
+        res.status(500).json({
+            success: false,
+            message: 'שגיאה ביצירת חשבון אדמין'
         });
     }
 };
