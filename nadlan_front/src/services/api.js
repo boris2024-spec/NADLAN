@@ -101,6 +101,9 @@ export const authAPI = {
     // Обновление профиля
     updateProfile: (profileData) => api.put('/auth/profile', profileData),
 
+    // Получение статистики пользователя
+    getUserStats: () => api.get('/auth/profile/stats'),
+
     // Верификация email
     verifyEmail: (token) => api.get(`/auth/verify-email/${token}`),
 

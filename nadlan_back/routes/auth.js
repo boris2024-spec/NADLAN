@@ -6,10 +6,12 @@ import {
     refreshToken,
     logout,
     verifyEmail,
+    resendVerificationEmail,
     forgotPassword,
     resetPassword,
     getProfile,
     updateProfile,
+    getUserStats,
     googleAuth,
     googleAuthFailure,
     createAdmin
@@ -30,6 +32,7 @@ router.post('/register', validateRegister, register);
 router.post('/login', validateLogin, login);
 router.post('/refresh-token', refreshToken);
 router.get('/verify-email/:token', verifyEmail);
+router.post('/resend-verification', resendVerificationEmail);
 router.post('/forgot-password', validateForgotPassword, forgotPassword);
 router.post('/reset-password/:token', validateResetPassword, resetPassword);
 
@@ -52,6 +55,7 @@ router.get('/google/failure', googleAuthFailure);
 router.post('/logout', authenticateToken, logout);
 router.get('/profile', authenticateToken, getProfile);
 router.put('/profile', authenticateToken, validateProfileUpdate, updateProfile);
+router.get('/profile/stats', authenticateToken, getUserStats);
 
 // Admin routes
 router.post('/create-admin', createAdmin);

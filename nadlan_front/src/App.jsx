@@ -16,6 +16,9 @@ import CreatePropertyPage from './pages/CreatePropertyPage';
 import NotFoundPage from './pages/NotFoundPage';
 import AuthSuccessPage from './pages/AuthSuccessPage';
 import AuthErrorPage from './pages/AuthErrorPage';
+import EmailVerificationPage from './pages/EmailVerificationPage';
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import ResetPasswordPage from './pages/ResetPasswordPage';
 
 // Layout
 import Layout from './components/layout/Layout';
@@ -51,6 +54,9 @@ function App() {
                   <Route path="/properties/:id" element={<PropertyDetailsPage />} />
                   <Route path="/login" element={<LoginPage />} />
                   <Route path="/register" element={<RegisterPage />} />
+                  <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+                  <Route path="/reset-password/:token" element={<ResetPasswordPage />} />
+                  <Route path="/verify-email/:token" element={<EmailVerificationPage />} />
 
                   {/* Auth Routes */}
                   <Route path="/auth/success" element={<AuthSuccessPage />} />

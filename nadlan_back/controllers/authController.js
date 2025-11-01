@@ -3,6 +3,7 @@ import crypto from 'crypto';
 import { User } from '../models/index.js';
 import { generateTokens, verifyRefreshToken } from '../middleware/auth.js';
 import { validationResult } from 'express-validator';
+import emailService from '../utils/emailService.js';
 
 // Регистрация пользователя
 export const register = async (req, res) => {
@@ -67,7 +68,7 @@ export const register = async (req, res) => {
 
         res.status(201).json({
             success: true,
-            message: 'משתמש נרשם בהצלחה',
+            message: 'משתמש נרשם בהצלחה. אנא בדוק את האימייל שלך לאימות החשבון',
             data: {
                 user: userResponse,
                 tokens: {
@@ -77,7 +78,18 @@ export const register = async (req, res) => {
             }
         });
 
-        // TODO: Отправить email для верификации
+        // Отправляем email для верификации
+        try {
+            await emailService.sendVerificationEmail(
+                user.email,
+                verificationToken,
+                user.fullName
+            );
+            console.log('Verification email sent successfully to:', user.email);
+        } catch (emailError) {
+            console.error('Failed to send verification email:', emailError);
+            // Не прерываем процесс регистрации из-за ошибки email
+        }
 
     } catch (error) {
         console.error('Ошибка регистрации:', error);
@@ -243,6 +255,77 @@ export const logout = async (req, res) => {
     }
 };
 
+// Повторная отправка email верификации
+export const resendVerificationEmail = async (req, res) => {
+    try {
+        const { email } = req.body;
+
+        if (!email) {
+            return res.status(400).json({
+                success: false,
+                message: 'אימייל נדרש'
+            });
+        }
+
+        // Находим пользователя
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'משתמש עם אימייל זה לא נמצא'
+            });
+        }
+
+        // Проверяем, не верифицирован ли уже email
+        if (user.isVerified) {
+            return res.status(400).json({
+                success: false,
+                message: 'האימייל כבר מאומת'
+            });
+        }
+
+        // Генерируем новый токен верификации
+        const verificationToken = crypto.randomBytes(32).toString('hex');
+        user.emailVerificationToken = crypto
+            .createHash('sha256')
+            .update(verificationToken)
+            .digest('hex');
+        user.emailVerificationExpires = Date.now() + 24 * 60 * 60 * 1000; // 24 часа
+
+        await user.save({ validateBeforeSave: false });
+
+        // Отправляем email
+        try {
+            await emailService.sendVerificationEmail(
+                user.email,
+                verificationToken,
+                user.fullName
+            );
+
+            res.json({
+                success: true,
+                message: 'אימייל אימות חדש נשלח בהצלחה'
+            });
+
+            console.log('Verification email resent successfully to:', user.email);
+        } catch (emailError) {
+            console.error('Failed to resend verification email:', emailError);
+
+            res.status(500).json({
+                success: false,
+                message: 'שגיאה בשליחת אימייל. אנא נסה שוב מאוחר יותר'
+            });
+        }
+
+    } catch (error) {
+        console.error('Error in resendVerificationEmail:', error);
+        res.status(500).json({
+            success: false,
+            message: 'שגיאת שרת פנימית'
+        });
+    }
+};
+
 // Верификация email
 export const verifyEmail = async (req, res) => {
     try {
@@ -272,6 +355,15 @@ export const verifyEmail = async (req, res) => {
         user.emailVerificationToken = undefined;
         user.emailVerificationExpires = undefined;
         await user.save();
+
+        // Отправляем приветственное письмо
+        try {
+            await emailService.sendWelcomeEmail(user.email, user.fullName);
+            console.log('Welcome email sent successfully to:', user.email);
+        } catch (emailError) {
+            console.error('Failed to send welcome email:', emailError);
+            // Не прерываем процесс верификации из-за ошибки email
+        }
 
         res.json({
             success: true,
@@ -304,12 +396,32 @@ export const forgotPassword = async (req, res) => {
         const resetToken = user.createPasswordResetToken();
         await user.save({ validateBeforeSave: false });
 
-        // TODO: Отправить email с токеном сброса
+        // Отправляем email с токеном сброса
+        try {
+            await emailService.sendPasswordResetEmail(
+                user.email,
+                resetToken,
+                user.fullName
+            );
+            console.log('Password reset email sent successfully to:', user.email);
 
-        res.json({
-            success: true,
-            message: 'Инструкции для сброса пароля отправлены на email'
-        });
+            res.json({
+                success: true,
+                message: 'הוראות לאיפוס הסיסמה נשלחו לאימייל שלך'
+            });
+        } catch (emailError) {
+            console.error('Failed to send password reset email:', emailError);
+
+            // Отменяем токен сброса если email не отправился
+            user.passwordResetToken = undefined;
+            user.passwordResetExpires = undefined;
+            await user.save({ validateBeforeSave: false });
+
+            res.status(500).json({
+                success: false,
+                message: 'שגיאה בשליחת אימייל. אנא נסה שוב מאוחר יותר'
+            });
+        }
 
     } catch (error) {
         console.error('Ошибка запроса сброса пароля:', error);
@@ -395,29 +507,67 @@ export const updateProfile = async (req, res) => {
             });
         }
 
-        const { firstName, lastName, phone, preferences } = req.body;
+        const { firstName, lastName, phone, preferences, agentInfo } = req.body;
+
+        // Подготавливаем объект для обновления
+        const updateData = {
+            firstName,
+            lastName,
+            phone,
+            preferences
+        };
+
+        // Добавляем agentInfo только для агентов
+        if (req.user.role === 'agent' && agentInfo) {
+            updateData.agentInfo = {
+                ...req.user.agentInfo,  // Сохраняем существующие данные
+                ...agentInfo            // Обновляем переданные поля
+            };
+        }
 
         const updatedUser = await User.findByIdAndUpdate(
             req.user._id,
+            updateData,
             {
-                firstName,
-                lastName,
-                phone,
-                preferences
-            },
-            { new: true, runValidators: true }
+                new: true,
+                runValidators: true,
+                // Populate virtuals if needed
+                populate: { path: 'propertiesCount' }
+            }
         );
+
+        // Убираем чувствительные данные
+        const userResponse = updatedUser.toJSON();
+        delete userResponse.password;
+        delete userResponse.refreshToken;
+        delete userResponse.emailVerificationToken;
+        delete userResponse.passwordResetToken;
 
         res.json({
             success: true,
             message: 'הפרופיל עודכן בהצלחה',
             data: {
-                user: updatedUser
+                user: userResponse
             }
         });
 
     } catch (error) {
         console.error('Ошибка обновления профиля:', error);
+
+        // Обрабатываем специфичные ошибки
+        if (error.name === 'ValidationError') {
+            const validationErrors = Object.values(error.errors).map(err => ({
+                field: err.path,
+                message: err.message
+            }));
+
+            return res.status(400).json({
+                success: false,
+                message: 'שגיאות בוולידציה',
+                errors: validationErrors
+            });
+        }
+
         res.status(500).json({
             success: false,
             message: 'שגיאת שרת פנימית'
@@ -481,6 +631,48 @@ export const googleAuth = async (req, res) => {
 export const googleAuthFailure = (req, res) => {
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
     res.redirect(`${frontendUrl}/auth/error?message=אימות Google נכשל`);
+};
+
+// Получение статистики пользователя
+export const getUserStats = async (req, res) => {
+    try {
+        const userId = req.user._id;
+
+        // Получаем количество избранных (напрямую из пользователя)
+        const favoritesCount = req.user.favorites?.length || 0;
+
+        // Получаем количество сохраненных поисков
+        const savedSearchesCount = req.user.savedSearches?.length || 0;
+
+        let stats = {
+            favoritesCount,
+            savedSearchesCount,
+            viewsCount: 0, // TODO: Реализовать отслеживание просмотров
+            propertiesCount: 0
+        };
+
+        // Если пользователь - агент, получаем количество его объявлений
+        if (req.user.role === 'agent') {
+            const { Property } = await import('../models/index.js');
+            const propertiesCount = await Property.countDocuments({
+                agent: userId,
+                status: { $in: ['active', 'pending'] }
+            });
+            stats.propertiesCount = propertiesCount;
+        }
+
+        res.json({
+            success: true,
+            data: { stats }
+        });
+
+    } catch (error) {
+        console.error('Ошибка получения статистики пользователя:', error);
+        res.status(500).json({
+            success: false,
+            message: 'שגיאת שרת פנימית'
+        });
+    }
 };
 
 // יצירת משתמש אדמין (רק פעם אחת)

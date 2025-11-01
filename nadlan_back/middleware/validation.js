@@ -57,32 +57,72 @@ export const validateProfileUpdate = [
         .optional()
         .trim()
         .isLength({ min: 2, max: 50 })
-        .withMessage('Имя должно содержать от 2 до 50 символов')
+        .withMessage('השם חייב להכיל בין 2 ל-50 תווים')
         .matches(/^[a-zA-Zа-яёА-ЯЁ\u0590-\u05FF\s]+$/)
-        .withMessage('Имя может содержать только буквы и пробелы'),
+        .withMessage('השם יכול להכיל רק אותיות ורווחים'),
 
     body('lastName')
         .optional()
         .trim()
         .isLength({ min: 2, max: 50 })
-        .withMessage('Фамилия должна содержать от 2 до 50 символов')
+        .withMessage('שם המשפחה חייב להכיל בין 2 ל-50 תווים')
         .matches(/^[a-zA-Zа-яёА-ЯЁ\u0590-\u05FF\s]+$/)
-        .withMessage('Фамилия может содержать только буквы и пробелы'),
+        .withMessage('שם המשפחה יכול להכיל רק אותיות ורווחים'),
 
     body('phone')
         .optional()
-        .matches(/^[\+]?[1-9][\d]{0,15}$/)
-        .withMessage('Некорректный номер телефона'),
+        .matches(/^[\+]?[0-9][\d]{0,15}$/)
+        .withMessage('מספר טלפון לא תקין'),
 
     body('preferences.language')
         .optional()
         .isIn(['he', 'en', 'ru'])
-        .withMessage('Язык может быть только he, en или ru'),
+        .withMessage('השפה יכולה להיות רק he, en או ru'),
 
     body('preferences.currency')
         .optional()
         .isIn(['ILS', 'USD', 'EUR'])
-        .withMessage('Валюта может быть только ILS, USD или EUR')
+        .withMessage('המטבע יכול להיות רק ILS, USD או EUR'),
+
+    body('preferences.notifications.email')
+        .optional()
+        .isBoolean()
+        .withMessage('הגדרת התראות אימייל חייבת להיות true או false'),
+
+    body('preferences.notifications.sms')
+        .optional()
+        .isBoolean()
+        .withMessage('הגדרת התראות SMS חייבת להיות true או false'),
+
+    // Agent-specific validations
+    body('agentInfo.agency')
+        .optional()
+        .trim()
+        .isLength({ min: 2, max: 100 })
+        .withMessage('שם הסוכנות חייב להכיל בין 2 ל-100 תווים'),
+
+    body('agentInfo.bio')
+        .optional()
+        .trim()
+        .isLength({ max: 2000 })
+        .withMessage('התיאור המקצועי לא יכול לעלות על 2000 תווים'),
+
+    body('agentInfo.experience')
+        .optional()
+        .isInt({ min: 0, max: 50 })
+        .withMessage('ניסיון חייב להיות מספר שלם בין 0 ל-50'),
+
+    body('agentInfo.specializations')
+        .optional()
+        .isArray()
+        .withMessage('התמחויות חייבות להיות מערך'),
+
+    body('agentInfo.specializations.*')
+        .optional()
+        .isString()
+        .trim()
+        .isLength({ min: 2, max: 50 })
+        .withMessage('כל התמחות חייבת להכיל בין 2 ל-50 תווים')
 ];
 
 // Валидация сброса пароля

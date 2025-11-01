@@ -1,6 +1,7 @@
-import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, useState } from 'react';
 import { authAPI, tokenManager, handleApiError } from '../services/api';
 import toast from 'react-hot-toast';
+import EmailVerificationNotice from '../components/ui/EmailVerificationNotice';
 
 // Начальное состояние
 const initialState = {
@@ -71,6 +72,7 @@ const AuthContext = createContext(null);
 // Provider компонент
 export function AuthProvider({ children }) {
     const [state, dispatch] = useReducer(authReducer, initialState);
+    const [showEmailVerification, setShowEmailVerification] = useState(false);
 
     // Проверка аутентификации при загрузке приложения
     useEffect(() => {
@@ -135,7 +137,14 @@ export function AuthProvider({ children }) {
 
             dispatch({ type: AUTH_ACTIONS.SET_USER, payload: user });
 
-            toast.success('Регистрация успешна! Добро пожаловать!');
+            // Показываем уведомление о верификации, если email не подтвержден
+            if (!user.isVerified) {
+                setShowEmailVerification(true);
+                toast.success('Регистрация успешна! Пожалуйста, подтвердите ваш email.');
+            } else {
+                toast.success('Регистрация успешна! Добро пожаловать!');
+            }
+
             return { success: true, user };
 
         } catch (error) {
@@ -233,6 +242,12 @@ export function AuthProvider({ children }) {
     return (
         <AuthContext.Provider value={value}>
             {children}
+            {showEmailVerification && state.user && !state.user.isVerified && (
+                <EmailVerificationNotice
+                    userEmail={state.user.email}
+                    onClose={() => setShowEmailVerification(false)}
+                />
+            )}
         </AuthContext.Provider>
     );
 }
