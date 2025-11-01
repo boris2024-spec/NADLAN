@@ -49,8 +49,12 @@ function RegisterPage() {
         }
 
         try {
-            await register(formData);
-            navigate('/');
+            const result = await register(formData);
+            if (result.success) {
+                navigate('/');
+            } else {
+                setError(result.error?.message || 'שגיאה בהרשמה למערכת');
+            }
         } catch (err) {
             setError(err.message || 'שגיאה בהרשמה למערכת');
         } finally {

@@ -31,8 +31,12 @@ function LoginPage() {
         setError('');
 
         try {
-            await login(formData.email, formData.password);
-            navigate('/');
+            const result = await login(formData);
+            if (result.success) {
+                navigate('/');
+            } else {
+                setError(result.error?.message || 'שגיאה בכניסה למערכת');
+            }
         } catch (err) {
             setError(err.message || 'שגיאה בכניסה למערכת');
         } finally {
