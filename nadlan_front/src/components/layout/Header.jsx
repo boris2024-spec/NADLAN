@@ -36,7 +36,7 @@ function Header() {
     ] : [];
 
     return (
-        <header className="bg-white dark:bg-dark-50 shadow-sm border-b border-gray-200 dark:border-dark-300 transition-colors">
+        <header className="header-fixed bg-white dark:bg-dark-50 shadow-sm border-b border-gray-200 dark:border-dark-300 transition-colors">
             <div className="container-responsive">
                 <div className="flex items-center justify-between h-16">
                     {/* Logo */}

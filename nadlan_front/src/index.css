@@ -209,6 +209,27 @@ body {
   color: transparent;
 }
 
+/* Fixed header styles */
+.header-fixed {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  backdrop-filter: blur(8px);
+  background-color: rgba(255, 255, 255, 0.95);
+}
+
+.dark .header-fixed {
+  background-color: rgba(15, 23, 42, 0.95);
+}
+
+/* Body padding to compensate for fixed header */
+.body-with-fixed-header {
+  padding-top: 4rem;
+  /* 64px - height of the header */
+}
+
 /* Theme transition */
 * {
   transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
