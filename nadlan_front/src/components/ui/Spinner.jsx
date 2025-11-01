@@ -26,7 +26,7 @@ function LoadingOverlay({ children, loading = false, className, ...props }) {
         <div className={cn('relative', className)} {...props}>
             {children}
             {loading && (
-                <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center z-10">
+                <div className="absolute inset-0 bg-white dark:bg-dark-100 bg-opacity-75 flex items-center justify-center z-10">
                     <Spinner size="lg" />
                 </div>
             )}

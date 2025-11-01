@@ -95,14 +95,14 @@ function PropertiesPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-gray-50 dark:bg-dark-100">
             {/* Header */}
-            <div className="bg-white shadow-sm border-b">
+            <div className="bg-white dark:bg-dark-100 shadow-sm border-b">
                 <div className="container-responsive py-6">
-                    <h1 className="text-3xl font-bold text-gray-900 mb-4">
+                    <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-4">
                         חיפוש נכסים
                     </h1>
-                    <p className="text-lg text-gray-600">
+                    <p className="text-lg text-gray-600 dark:text-gray-300">
                         מצאו את הנכס המושלם עבורכם מתוך {filteredProperties.length} נכסים זמינים
                     </p>
                 </div>
@@ -121,7 +121,7 @@ function PropertiesPage() {
                             <div className="space-y-4">
                                 {/* Search */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                         חיפוש חופשי
                                     </label>
                                     <div className="relative">
@@ -138,13 +138,13 @@ function PropertiesPage() {
 
                                 {/* Transaction Type */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                         סוג עסקה
                                     </label>
                                     <select
                                         value={filters.transactionType}
                                         onChange={(e) => handleFilterChange('transactionType', e.target.value)}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500"
                                     >
                                         <option value="all">כל העסקאות</option>
                                         <option value="sale">מכירה</option>
@@ -154,13 +154,13 @@ function PropertiesPage() {
 
                                 {/* Property Type */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                         סוג נכס
                                     </label>
                                     <select
                                         value={filters.propertyType}
                                         onChange={(e) => handleFilterChange('propertyType', e.target.value)}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500"
                                     >
                                         <option value="all">כל הנכסים</option>
                                         <option value="apartment">דירה</option>
@@ -172,13 +172,13 @@ function PropertiesPage() {
 
                                 {/* Rooms */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                         מספר חדרים
                                     </label>
                                     <select
                                         value={filters.rooms}
                                         onChange={(e) => handleFilterChange('rooms', e.target.value)}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500"
                                     >
                                         <option value="all">כל מספר החדרים</option>
                                         <option value="1">1 חדר</option>
@@ -191,7 +191,7 @@ function PropertiesPage() {
 
                                 {/* Price Range */}
                                 <div>
-                                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                         טווח מחירים
                                     </label>
                                     <div className="grid grid-cols-2 gap-2">
@@ -247,10 +247,10 @@ function PropertiesPage() {
                             <div className="space-y-6">
                                 {/* Results Count */}
                                 <div className="flex justify-between items-center">
-                                    <p className="text-gray-600">
+                                    <p className="text-gray-600 dark:text-gray-300">
                                         נמצאו {filteredProperties.length} נכסים
                                     </p>
-                                    <select className="px-3 py-1 border border-gray-300 rounded-md text-sm">
+                                    <select className="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-md text-sm">
                                         <option>מיין לפי: רלוונטיות</option>
                                         <option>מחיר: מנמוך לגבוה</option>
                                         <option>מחיר: מגבוה לנמוך</option>
@@ -269,8 +269,8 @@ function PropertiesPage() {
                                                     className="w-full aspect-photo object-cover group-hover:scale-105 transition-transform duration-200"
                                                 />
                                                 <div className="absolute top-3 right-3">
-                                                    <button className="p-2 bg-white/80 backdrop-blur-sm rounded-full hover:bg-white transition-colors">
-                                                        <Heart className="h-4 w-4 text-gray-600 hover:text-red-500" />
+                                                    <button className="p-2 bg-white dark:bg-dark-100/80 backdrop-blur-sm rounded-full hover:bg-white dark:bg-dark-100 transition-colors">
+                                                        <Heart className="h-4 w-4 text-gray-600 dark:text-gray-300 hover:text-red-500" />
                                                     </button>
                                                 </div>
                                                 <div className="absolute bottom-3 right-3">
@@ -285,17 +285,17 @@ function PropertiesPage() {
 
                                             <div className="p-4">
                                                 <div className="flex justify-between items-start mb-2">
-                                                    <h3 className="text-lg font-semibold text-gray-900 line-clamp-2">
+                                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 line-clamp-2">
                                                         {property.title}
                                                     </h3>
                                                 </div>
 
-                                                <div className="flex items-center text-gray-600 mb-3">
+                                                <div className="flex items-center text-gray-600 dark:text-gray-300 mb-3">
                                                     <MapPin className="h-4 w-4 ml-1" />
                                                     <span className="text-sm">{property.address}</span>
                                                 </div>
 
-                                                <div className="flex items-center gap-4 text-sm text-gray-600 mb-4">
+                                                <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-300 mb-4">
                                                     <div className="flex items-center">
                                                         <Bed className="h-4 w-4 ml-1" />
                                                         <span>{property.rooms} חדרים</span>
@@ -310,7 +310,7 @@ function PropertiesPage() {
                                                     </div>
                                                 </div>
 
-                                                <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                                                <p className="text-gray-600 dark:text-gray-300 text-sm mb-4 line-clamp-2">
                                                     {property.description}
                                                 </p>
 
@@ -332,10 +332,10 @@ function PropertiesPage() {
                                         <div className="text-gray-400 mb-4">
                                             <Search className="h-12 w-12 mx-auto" />
                                         </div>
-                                        <h3 className="text-lg font-medium text-gray-900 mb-2">
+                                        <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
                                             לא נמצאו נכסים
                                         </h3>
-                                        <p className="text-gray-600">
+                                        <p className="text-gray-600 dark:text-gray-300">
                                             נסו לשנות את קריטריוני החיפוש או לנקות את הסינון
                                         </p>
                                     </div>

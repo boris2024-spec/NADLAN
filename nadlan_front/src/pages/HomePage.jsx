@@ -67,7 +67,7 @@ function HomePage() {
                                 <Button
                                     size="lg"
                                     variant="outline"
-                                    className="w-full sm:w-auto bg-transparent border-white text-white hover:bg-white hover:text-blue-600"
+                                    className="w-full sm:w-auto bg-transparent border-white text-white hover:bg-white dark:bg-dark-100 hover:text-blue-600"
                                 >
                                     <Home className="w-5 h-5 ml-2 rtl:ml-0 rtl:mr-2" />
                                     פרסם נכס
@@ -170,7 +170,7 @@ function HomePage() {
                                 <Button
                                     size="lg"
                                     variant="outline"
-                                    className="w-full sm:w-auto bg-transparent border-white text-white hover:bg-white hover:text-blue-600"
+                                    className="w-full sm:w-auto bg-transparent border-white text-white hover:bg-white dark:bg-dark-100 hover:text-blue-600"
                                 >
                                     הרשם עכשיו
                                 </Button>

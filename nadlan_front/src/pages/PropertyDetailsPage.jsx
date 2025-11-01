@@ -147,13 +147,13 @@ function PropertyDetailsPage() {
                                     <>
                                         <button
                                             onClick={prevImage}
-                                            className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white/80 backdrop-blur-sm p-2 rounded-full hover:bg-white"
+                                            className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white dark:bg-dark-100/80 backdrop-blur-sm p-2 rounded-full hover:bg-white dark:bg-dark-100"
                                         >
                                             <ChevronLeft className="w-5 h-5" />
                                         </button>
                                         <button
                                             onClick={nextImage}
-                                            className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white/80 backdrop-blur-sm p-2 rounded-full hover:bg-white"
+                                            className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white dark:bg-dark-100/80 backdrop-blur-sm p-2 rounded-full hover:bg-white dark:bg-dark-100"
                                         >
                                             <ChevronRight className="w-5 h-5" />
                                         </button>
@@ -165,15 +165,15 @@ function PropertyDetailsPage() {
                                     <button
                                         onClick={toggleFavorite}
                                         className={`p-2 rounded-full backdrop-blur-sm ${isFavorite
-                                            ? 'bg-red-500 text-white'
-                                            : 'bg-white/80 text-gray-600 hover:bg-white'
+                                            ? 'bg-red-50 dark:bg-red-900/200 text-white'
+                                            : 'bg-white dark:bg-dark-100/80 text-gray-600 dark:text-gray-300 hover:bg-white dark:bg-dark-100'
                                             }`}
                                     >
                                         <Heart className="w-5 h-5" fill={isFavorite ? 'currentColor' : 'none'} />
                                     </button>
                                     <button
                                         onClick={handleShare}
-                                        className="p-2 bg-white/80 dark:bg-dark-100/80 backdrop-blur-sm rounded-full hover:bg-white dark:hover:bg-dark-100"
+                                        className="p-2 bg-white dark:bg-dark-100/80 dark:bg-dark-100/80 backdrop-blur-sm rounded-full hover:bg-white dark:hover:bg-dark-100"
                                     >
                                         <Share2 className="w-5 h-5 text-gray-700 dark:text-gray-300" />
                                     </button>
@@ -235,41 +235,41 @@ function PropertyDetailsPage() {
                             </div>
 
                             {/* Property Stats */}
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-gray-50 rounded-lg mb-6">
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-gray-50 dark:bg-dark-100 rounded-lg mb-6">
                                 <div className="text-center">
                                     <Bed className="w-5 h-5 text-blue-600 mx-auto mb-1" />
-                                    <div className="text-sm text-gray-600">חדרים</div>
+                                    <div className="text-sm text-gray-600 dark:text-gray-300">חדרים</div>
                                     <div className="font-semibold">{property.rooms}</div>
                                 </div>
                                 <div className="text-center">
                                     <Bath className="w-5 h-5 text-blue-600 mx-auto mb-1" />
-                                    <div className="text-sm text-gray-600">שירותים</div>
+                                    <div className="text-sm text-gray-600 dark:text-gray-300">שירותים</div>
                                     <div className="font-semibold">{property.bathrooms}</div>
                                 </div>
                                 <div className="text-center">
                                     <Square className="w-5 h-5 text-blue-600 mx-auto mb-1" />
-                                    <div className="text-sm text-gray-600">שטח</div>
+                                    <div className="text-sm text-gray-600 dark:text-gray-300">שטח</div>
                                     <div className="font-semibold">{property.area} מ"ר</div>
                                 </div>
                                 <div className="text-center">
-                                    <div className="text-sm text-gray-600">קומה</div>
+                                    <div className="text-sm text-gray-600 dark:text-gray-300">קומה</div>
                                     <div className="font-semibold">{property.floor} מתוך {property.totalFloors}</div>
                                 </div>
                             </div>
 
                             {/* Description */}
                             <div className="mb-6">
-                                <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">
                                     תיאור הנכס
                                 </h3>
-                                <div className="text-gray-700 leading-relaxed whitespace-pre-line">
+                                <div className="text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-line">
                                     {property.description}
                                 </div>
                             </div>
 
                             {/* Features */}
                             <div>
-                                <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
                                     תכונות ומתקנים
                                 </h3>
                                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
@@ -278,7 +278,7 @@ function PropertyDetailsPage() {
                                             key={key}
                                             className={`flex items-center p-3 rounded-lg ${property.features[key]
                                                 ? 'bg-green-50 text-green-700'
-                                                : 'bg-gray-100 text-gray-400'
+                                                : 'bg-gray-100 dark:bg-dark-200 text-gray-400'
                                                 }`}
                                         >
                                             {Icon && <Icon className="w-4 h-4 ml-2" />}
@@ -296,7 +296,7 @@ function PropertyDetailsPage() {
                     <div className="lg:col-span-1 space-y-6">
                         {/* Contact Agent */}
                         <Card className="p-6">
-                            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
                                 פרטי קשר
                             </h3>
 
@@ -306,8 +306,8 @@ function PropertyDetailsPage() {
                                         {property.agent.name.charAt(0)}
                                     </span>
                                 </div>
-                                <h4 className="font-semibold text-gray-900">{property.agent.name}</h4>
-                                <p className="text-sm text-gray-600">{property.agent.company}</p>
+                                <h4 className="font-semibold text-gray-900 dark:text-gray-100">{property.agent.name}</h4>
+                                <p className="text-sm text-gray-600 dark:text-gray-300">{property.agent.company}</p>
                             </div>
 
                             <div className="space-y-3">
@@ -325,23 +325,23 @@ function PropertyDetailsPage() {
 
                         {/* Property Stats */}
                         <Card className="p-6">
-                            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
                                 פרטי הפרסום
                             </h3>
 
                             <div className="space-y-3 text-sm">
                                 <div className="flex justify-between">
-                                    <span className="text-gray-600">תאריך פרסום:</span>
+                                    <span className="text-gray-600 dark:text-gray-300">תאריך פרסום:</span>
                                     <span className="font-medium">
                                         {new Date(property.publishDate).toLocaleDateString('he-IL')}
                                     </span>
                                 </div>
                                 <div className="flex justify-between">
-                                    <span className="text-gray-600">צפיות:</span>
+                                    <span className="text-gray-600 dark:text-gray-300">צפיות:</span>
                                     <span className="font-medium">{property.views}</span>
                                 </div>
                                 <div className="flex justify-between">
-                                    <span className="text-gray-600">מספר נכס:</span>
+                                    <span className="text-gray-600 dark:text-gray-300">מספר נכס:</span>
                                     <span className="font-medium">#{property.id}</span>
                                 </div>
                             </div>
@@ -349,10 +349,10 @@ function PropertyDetailsPage() {
 
                         {/* Similar Properties */}
                         <Card className="p-6">
-                            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
                                 נכסים דומים
                             </h3>
-                            <p className="text-sm text-gray-600 text-center py-8">
+                            <p className="text-sm text-gray-600 dark:text-gray-300 text-center py-8">
                                 נכסים דומים יוצגו כאן בקרוב
                             </p>
                         </Card>

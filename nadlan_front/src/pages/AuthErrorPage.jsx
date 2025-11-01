@@ -9,15 +9,15 @@ function AuthErrorPage() {
     const errorMessage = searchParams.get('message') || 'שגיאה לא ידועה בתהליך ההתחברות';
 
     return (
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-6">
+        <div className="min-h-screen bg-gray-50 dark:bg-dark-100 flex items-center justify-center py-12 px-6">
             <div className="max-w-md w-full">
                 <Card className="p-8 text-center">
                     <div className="mb-6">
                         <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-                        <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
                             שגיאה בהתחברות
                         </h1>
-                        <p className="text-gray-600">
+                        <p className="text-gray-600 dark:text-gray-300">
                             {decodeURIComponent(errorMessage)}
                         </p>
                     </div>

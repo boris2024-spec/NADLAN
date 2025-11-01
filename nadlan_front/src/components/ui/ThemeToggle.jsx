@@ -8,7 +8,7 @@ function ThemeToggle() {
     return (
         <button
             onClick={toggleDarkMode}
-            className="relative p-2 rounded-lg bg-gray-100 hover:bg-gray-200 dark:bg-dark-200 dark:hover:bg-dark-300 transition-colors duration-200"
+            className="relative p-2 rounded-lg bg-gray-100 dark:bg-dark-200 hover:bg-gray-200 dark:bg-dark-200 dark:hover:bg-dark-300 transition-colors duration-200"
             aria-label={isDarkMode ? 'החלף למצב יום' : 'החלף למצב לילה'}
             title={isDarkMode ? 'החלף למצב יום' : 'החלף למצב לילה'}
         >

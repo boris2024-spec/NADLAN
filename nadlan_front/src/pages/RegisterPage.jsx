@@ -63,10 +63,10 @@ function RegisterPage() {
             <div className="max-w-md w-full space-y-8">
                 {/* Header */}
                 <div className="text-center">
-                    <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                    <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
                         הרשמה חדשה
                     </h1>
-                    <p className="text-gray-600">
+                    <p className="text-gray-600 dark:text-gray-300">
                         צרו חשבון חדש כדי להתחיל לחפש נכסים
                     </p>
                 </div>
@@ -75,8 +75,8 @@ function RegisterPage() {
                 <Card className="p-8 shadow-lg">
                     <form onSubmit={handleSubmit} className="space-y-6">
                         {error && (
-                            <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
-                                <p className="text-sm text-red-600 text-center">
+                            <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                                <p className="text-sm text-red-600 dark:text-red-400 text-center">
                                     {error}
                                 </p>
                             </div>
@@ -84,7 +84,7 @@ function RegisterPage() {
 
                         <div className="grid grid-cols-2 gap-4">
                             <div>
-                                <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-2">
+                                <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                     שם פרטי
                                 </label>
                                 <div className="relative">
@@ -98,12 +98,12 @@ function RegisterPage() {
                                         className="pl-10"
                                         required
                                     />
-                                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 dark:text-gray-400 h-4 w-4" />
                                 </div>
                             </div>
 
                             <div>
-                                <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-2">
+                                <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                     שם משפחה
                                 </label>
                                 <div className="relative">
@@ -117,13 +117,13 @@ function RegisterPage() {
                                         className="pl-10"
                                         required
                                     />
-                                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 dark:text-gray-400 h-4 w-4" />
                                 </div>
                             </div>
                         </div>
 
                         <div>
-                            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                            <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 כתובת אימייל
                             </label>
                             <div className="relative">
@@ -137,13 +137,13 @@ function RegisterPage() {
                                     className="pl-10"
                                     required
                                 />
-                                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 dark:text-gray-400 h-4 w-4" />
                             </div>
                         </div>
 
                         <div>
-                            <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-2">
-                                מספר טלפון <span className="text-gray-400 text-sm">(אופציונלי - ניתן להוסיף מאוחר יותר)</span>
+                            <label htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                מספר טלפון <span className="text-gray-400 dark:text-gray-500 dark:text-gray-400 text-sm">(אופציונלי - ניתן להוסיף מאוחר יותר)</span>
                             </label>
                             <div className="relative">
                                 <Input
@@ -155,12 +155,12 @@ function RegisterPage() {
                                     placeholder="050-1234567"
                                     className="pl-10"
                                 />
-                                <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                                <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 dark:text-gray-400 h-4 w-4" />
                             </div>
                         </div>
 
                         <div>
-                            <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-2">
+                            <label htmlFor="role" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 סוג המשתמש
                             </label>
                             <select
@@ -168,7 +168,7 @@ function RegisterPage() {
                                 name="role"
                                 value={formData.role}
                                 onChange={handleInputChange}
-                                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-dark-100 text-gray-900 dark:text-gray-100"
                             >
                                 <option value="buyer">קונה / שוכר</option>
                                 <option value="seller">מוכר / משכיר</option>
@@ -177,7 +177,7 @@ function RegisterPage() {
                         </div>
 
                         <div>
-                            <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                            <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 סיסמה
                             </label>
                             <div className="relative">
@@ -191,11 +191,11 @@ function RegisterPage() {
                                     className="pl-10 pr-10"
                                     required
                                 />
-                                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 dark:text-gray-400 h-4 w-4" />
                                 <button
                                     type="button"
                                     onClick={() => setShowPassword(!showPassword)}
-                                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-400"
                                 >
                                     {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                                 </button>
@@ -203,7 +203,7 @@ function RegisterPage() {
                         </div>
 
                         <div>
-                            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
+                            <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 אימוד סיסמה
                             </label>
                             <div className="relative">
@@ -217,11 +217,11 @@ function RegisterPage() {
                                     className="pl-10 pr-10"
                                     required
                                 />
-                                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 dark:text-gray-400 h-4 w-4" />
                                 <button
                                     type="button"
                                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 dark:text-gray-400 hover:text-gray-600 dark:hover:text-gray-400"
                                 >
                                     {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                                 </button>
@@ -233,16 +233,16 @@ function RegisterPage() {
                                 id="agree-terms"
                                 name="agree-terms"
                                 type="checkbox"
-                                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded"
                                 required
                             />
-                            <label htmlFor="agree-terms" className="mr-2 block text-sm text-gray-700">
+                            <label htmlFor="agree-terms" className="mr-2 block text-sm text-gray-700 dark:text-gray-300">
                                 אני מסכים/ה ל
-                                <Link to="/terms" className="text-blue-600 hover:text-blue-500">
+                                <Link to="/terms" className="text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300">
                                     תנאי השימוש
                                 </Link>
                                 {' '}ול
-                                <Link to="/privacy" className="text-blue-600 hover:text-blue-500">
+                                <Link to="/privacy" className="text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300">
                                     מדיניות הפרטיות
                                 </Link>
                             </label>
@@ -260,10 +260,10 @@ function RegisterPage() {
                     <div className="mt-6">
                         <div className="relative">
                             <div className="absolute inset-0 flex items-center">
-                                <div className="w-full border-t border-gray-300" />
+                                <div className="w-full border-t border-gray-300 dark:border-gray-600" />
                             </div>
                             <div className="relative flex justify-center text-sm">
-                                <span className="px-2 bg-white text-gray-500">או</span>
+                                <span className="px-2 bg-white dark:bg-dark-100 text-gray-500 dark:text-gray-400">או</span>
                             </div>
                         </div>
 
@@ -271,7 +271,7 @@ function RegisterPage() {
                             <Button
                                 type="button"
                                 variant="outline"
-                                className="w-full flex items-center justify-center gap-3 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                                className="w-full flex items-center justify-center gap-3 py-3 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-dark-200 transition-colors"
                                 onClick={() => window.location.href = `${import.meta.env.VITE_API_URL || 'http://localhost:3000/api'}/auth/google`}
                             >
                                 <svg className="w-5 h-5" viewBox="0 0 24 24">
@@ -285,9 +285,9 @@ function RegisterPage() {
                         </div>
 
                         <div className="mt-6 text-center">
-                            <p className="text-sm text-gray-600">
+                            <p className="text-sm text-gray-600 dark:text-gray-300">
                                 כבר יש לכם חשבון?{' '}
-                                <Link to="/login" className="text-blue-600 hover:text-blue-500 font-medium">
+                                <Link to="/login" className="text-blue-600 dark:text-blue-400 hover:text-blue-500 dark:hover:text-blue-300 font-medium">
                                     היכנסו כאן
                                 </Link>
                             </p>

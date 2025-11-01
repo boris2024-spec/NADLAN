@@ -97,7 +97,7 @@ function Header() {
                                         variant="ghost"
                                         size="sm"
                                         onClick={handleLogout}
-                                        className="flex items-center text-red-600 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-900/20"
+                                        className="flex items-center text-red-600 dark:text-red-400 hover:text-red-700 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-900/20"
                                     >
                                         <LogOut className="h-4 w-4 ml-1 rtl:ml-0 rtl:mr-1" />
                                         יציאה
@@ -156,7 +156,7 @@ function Header() {
                             })}
                         </div>
 
-                        <div className="mt-4 pt-4 border-t border-gray-200">
+                        <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                             {isAuthenticated ? (
                                 <div className="space-y-2">
                                     {user?.role === 'agent' && (
@@ -176,7 +176,7 @@ function Header() {
                                             <Link
                                                 key={item.name}
                                                 to={item.href}
-                                                className="flex items-center px-3 py-2 text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md"
+                                                className="flex items-center px-3 py-2 text-base font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:bg-dark-200 rounded-md"
                                                 onClick={() => setIsMenuOpen(false)}
                                             >
                                                 <Icon className="h-5 w-5 ml-2 rtl:ml-0 rtl:mr-2" />
@@ -190,7 +190,7 @@ function Header() {
                                             handleLogout();
                                             setIsMenuOpen(false);
                                         }}
-                                        className="flex items-center w-full px-3 py-2 text-base font-medium text-red-600 hover:text-red-700 hover:bg-red-50 rounded-md text-right rtl:text-left"
+                                        className="flex items-center w-full px-3 py-2 text-base font-medium text-red-600 dark:text-red-400 hover:text-red-700 hover:bg-red-50 dark:bg-red-900/20 rounded-md text-right rtl:text-left"
                                     >
                                         <LogOut className="h-5 w-5 ml-2 rtl:ml-0 rtl:mr-2" />
                                         יציאה
@@ -200,7 +200,7 @@ function Header() {
                                 <div className="space-y-2">
                                     <Link
                                         to="/login"
-                                        className="flex items-center px-3 py-2 text-base font-medium text-gray-700 hover:text-gray-900 hover:bg-gray-100 rounded-md"
+                                        className="flex items-center px-3 py-2 text-base font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:bg-dark-200 rounded-md"
                                         onClick={() => setIsMenuOpen(false)}
                                     >
                                         כניסה

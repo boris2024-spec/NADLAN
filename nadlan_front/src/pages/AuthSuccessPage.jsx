@@ -43,13 +43,13 @@ function AuthSuccessPage() {
     }, [searchParams, navigate]);
 
     return (
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="min-h-screen bg-gray-50 dark:bg-dark-100 flex items-center justify-center">
             <div className="text-center">
                 <Spinner className="mx-auto mb-4" />
-                <h2 className="text-xl font-semibold text-gray-900 mb-2">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
                     מעבד התחברות...
                 </h2>
-                <p className="text-gray-600">
+                <p className="text-gray-600 dark:text-gray-300">
                     אנא המתינו רגע בזמן שאנו מסיימים את תהליך ההתחברות
                 </p>
             </div>
