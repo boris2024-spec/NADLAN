@@ -37,7 +37,12 @@ function App() {
       <div dir="rtl" className="min-h-screen bg-gray-50 dark:bg-dark-50 font-hebrew transition-colors">
         <QueryClientProvider client={queryClient}>
           <AuthProvider>
-            <Router>
+            <Router
+              future={{
+                v7_startTransition: true,
+                v7_relativeSplatPath: true
+              }}
+            >
               <Layout>
                 <Routes>
                   {/* Public Routes */}
