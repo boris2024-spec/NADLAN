@@ -1,0 +1,50 @@
+import express from 'express';
+import {
+    getProperties,
+    getPropertyById,
+    createProperty,
+    updateProperty,
+    deleteProperty,
+    addToFavorites,
+    removeFromFavorites,
+    getFavorites,
+    addReview,
+    addContact,
+    getPropertyStats,
+    getSimilarProperties
+} from '../controllers/propertyController.js';
+import {
+    validatePropertyCreate,
+    validatePropertyUpdate,
+    validatePropertySearch,
+    validateObjectId
+} from '../middleware/validation.js';
+import {
+    authenticateToken,
+    optionalAuth,
+    authorizeRoles
+} from '../middleware/auth.js';
+
+const router = express.Router();
+
+// Публичные роуты
+router.get('/', validatePropertySearch, optionalAuth, getProperties);
+router.get('/stats', getPropertyStats);
+router.get('/:id', validateObjectId('id'), optionalAuth, getPropertyById);
+router.get('/:id/similar', validateObjectId('id'), getSimilarProperties);
+
+// Защищенные роуты
+router.post('/', authenticateToken, validatePropertyCreate, createProperty);
+router.put('/:id', authenticateToken, validateObjectId('id'), validatePropertyUpdate, updateProperty);
+router.delete('/:id', authenticateToken, validateObjectId('id'), deleteProperty);
+
+// Избранное
+router.get('/user/favorites', authenticateToken, getFavorites);
+router.post('/:id/favorites', authenticateToken, validateObjectId('id'), addToFavorites);
+router.delete('/:id/favorites', authenticateToken, validateObjectId('id'), removeFromFavorites);
+
+// Отзывы и контакты
+router.post('/:id/reviews', authenticateToken, validateObjectId('id'), addReview);
+router.post('/:id/contacts', authenticateToken, validateObjectId('id'), addContact);
+
+export default router;

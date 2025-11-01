@@ -1,0 +1,279 @@
+import React, { createContext, useContext, useReducer, useEffect } from 'react';
+import { authAPI, tokenManager, handleApiError } from '../services/api';
+import toast from 'react-hot-toast';
+
+// Начальное состояние
+const initialState = {
+    user: null,
+    isAuthenticated: false,
+    isLoading: true,
+    error: null,
+};
+
+// Action types
+const AUTH_ACTIONS = {
+    SET_LOADING: 'SET_LOADING',
+    SET_USER: 'SET_USER',
+    SET_ERROR: 'SET_ERROR',
+    LOGOUT: 'LOGOUT',
+    UPDATE_USER: 'UPDATE_USER',
+};
+
+// Reducer
+function authReducer(state, action) {
+    switch (action.type) {
+        case AUTH_ACTIONS.SET_LOADING:
+            return {
+                ...state,
+                isLoading: action.payload,
+                error: null,
+            };
+
+        case AUTH_ACTIONS.SET_USER:
+            return {
+                ...state,
+                user: action.payload,
+                isAuthenticated: !!action.payload,
+                isLoading: false,
+                error: null,
+            };
+
+        case AUTH_ACTIONS.SET_ERROR:
+            return {
+                ...state,
+                error: action.payload,
+                isLoading: false,
+            };
+
+        case AUTH_ACTIONS.LOGOUT:
+            return {
+                ...state,
+                user: null,
+                isAuthenticated: false,
+                isLoading: false,
+                error: null,
+            };
+
+        case AUTH_ACTIONS.UPDATE_USER:
+            return {
+                ...state,
+                user: { ...state.user, ...action.payload },
+            };
+
+        default:
+            return state;
+    }
+}
+
+// Создание контекста
+const AuthContext = createContext(null);
+
+// Provider компонент
+export function AuthProvider({ children }) {
+    const [state, dispatch] = useReducer(authReducer, initialState);
+
+    // Проверка аутентификации при загрузке приложения
+    useEffect(() => {
+        const initAuth = async () => {
+            const token = tokenManager.getAccessToken();
+
+            if (!token) {
+                dispatch({ type: AUTH_ACTIONS.SET_LOADING, payload: false });
+                return;
+            }
+
+            try {
+                const response = await authAPI.getProfile();
+                dispatch({ type: AUTH_ACTIONS.SET_USER, payload: response.data.data.user });
+            } catch (error) {
+                console.error('Ошибка проверки аутентификации:', error);
+                tokenManager.clearTokens();
+                dispatch({ type: AUTH_ACTIONS.LOGOUT });
+            }
+        };
+
+        initAuth();
+    }, []);
+
+    // Функция входа
+    const login = async (credentials) => {
+        try {
+            dispatch({ type: AUTH_ACTIONS.SET_LOADING, payload: true });
+
+            const response = await authAPI.login(credentials);
+            const { user, tokens } = response.data.data;
+
+            // Сохраняем токены
+            tokenManager.setAccessToken(tokens.accessToken);
+            tokenManager.setRefreshToken(tokens.refreshToken);
+
+            dispatch({ type: AUTH_ACTIONS.SET_USER, payload: user });
+
+            toast.success('Добро пожаловать!');
+            return { success: true, user };
+
+        } catch (error) {
+            const errorInfo = handleApiError(error);
+            dispatch({ type: AUTH_ACTIONS.SET_ERROR, payload: errorInfo });
+
+            toast.error(errorInfo.message);
+            return { success: false, error: errorInfo };
+        }
+    };
+
+    // Функция регистрации
+    const register = async (userData) => {
+        try {
+            dispatch({ type: AUTH_ACTIONS.SET_LOADING, payload: true });
+
+            const response = await authAPI.register(userData);
+            const { user, tokens } = response.data.data;
+
+            // Сохраняем токены
+            tokenManager.setAccessToken(tokens.accessToken);
+            tokenManager.setRefreshToken(tokens.refreshToken);
+
+            dispatch({ type: AUTH_ACTIONS.SET_USER, payload: user });
+
+            toast.success('Регистрация успешна! Добро пожаловать!');
+            return { success: true, user };
+
+        } catch (error) {
+            const errorInfo = handleApiError(error);
+            dispatch({ type: AUTH_ACTIONS.SET_ERROR, payload: errorInfo });
+
+            toast.error(errorInfo.message);
+            return { success: false, error: errorInfo };
+        }
+    };
+
+    // Функция выхода
+    const logout = async () => {
+        try {
+            const refreshToken = tokenManager.getRefreshToken();
+
+            if (refreshToken) {
+                await authAPI.logout(refreshToken);
+            }
+
+            tokenManager.clearTokens();
+            dispatch({ type: AUTH_ACTIONS.LOGOUT });
+
+            toast.success('Вы успешно вышли из системы');
+
+        } catch (error) {
+            console.error('Ошибка выхода:', error);
+            // Все равно очищаем токены и состояние
+            tokenManager.clearTokens();
+            dispatch({ type: AUTH_ACTIONS.LOGOUT });
+        }
+    };
+
+    // Функция обновления профиля
+    const updateProfile = async (profileData) => {
+        try {
+            const response = await authAPI.updateProfile(profileData);
+            const updatedUser = response.data.data.user;
+
+            dispatch({ type: AUTH_ACTIONS.UPDATE_USER, payload: updatedUser });
+
+            toast.success('Профиль успешно обновлен');
+            return { success: true, user: updatedUser };
+
+        } catch (error) {
+            const errorInfo = handleApiError(error);
+
+            toast.error(errorInfo.message);
+            return { success: false, error: errorInfo };
+        }
+    };
+
+    // Функция сброса ошибки
+    const clearError = () => {
+        dispatch({ type: AUTH_ACTIONS.SET_ERROR, payload: null });
+    };
+
+    // Проверка роли пользователя
+    const hasRole = (role) => {
+        return state.user?.role === role;
+    };
+
+    // Проверка разрешений
+    const hasPermission = (permission) => {
+        if (!state.user) return false;
+
+        const userRole = state.user.role;
+
+        // Администратор имеет все разрешения
+        if (userRole === 'admin') return true;
+
+        // Определяем разрешения для разных ролей
+        const rolePermissions = {
+            user: ['view_properties', 'create_property_request', 'manage_favorites'],
+            agent: ['view_properties', 'create_property', 'manage_own_properties', 'manage_favorites'],
+            admin: ['*'] // Все разрешения
+        };
+
+        const permissions = rolePermissions[userRole] || [];
+        return permissions.includes('*') || permissions.includes(permission);
+    };
+
+    // Значение контекста
+    const value = {
+        ...state,
+        login,
+        register,
+        logout,
+        updateProfile,
+        clearError,
+        hasRole,
+        hasPermission,
+    };
+
+    return (
+        <AuthContext.Provider value={value}>
+            {children}
+        </AuthContext.Provider>
+    );
+}
+
+// Hook для использования контекста аутентификации
+export function useAuth() {
+    const context = useContext(AuthContext);
+
+    if (!context) {
+        throw new Error('useAuth должен использоваться внутри AuthProvider');
+    }
+
+    return context;
+}
+
+// Hook для проверки аутентификации
+export function useRequireAuth() {
+    const auth = useAuth();
+
+    useEffect(() => {
+        if (!auth.isLoading && !auth.isAuthenticated) {
+            // Перенаправляем на страницу входа
+            window.location.href = '/login';
+        }
+    }, [auth.isAuthenticated, auth.isLoading]);
+
+    return auth;
+}
+
+// Hook для проверки роли
+export function useRequireRole(requiredRole) {
+    const auth = useRequireAuth();
+
+    useEffect(() => {
+        if (!auth.isLoading && auth.isAuthenticated && !auth.hasRole(requiredRole)) {
+            toast.error('У вас нет доступа к этой странице');
+            window.location.href = '/';
+        }
+    }, [auth.user, auth.isLoading, requiredRole]);
+
+    return auth;
+}
+
+export default AuthContext;
