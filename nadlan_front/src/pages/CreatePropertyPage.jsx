@@ -1,46 +1,236 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card, Button, Input } from '../components/ui';
-import { Upload, MapPin, Camera, Trash2 } from 'lucide-react';
+import { toast } from 'react-hot-toast';
+import { Card, Button, Input, Spinner, ValidationSummary } from '../components/ui';
+import { Upload, MapPin, Camera, Trash2, Check, AlertCircle, Save, Home } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { propertiesAPI, handleApiError } from '../services/api';
+import usePropertyValidation from '../hooks/usePropertyValidation';
+
+// Константы для валидации согласно MongoDB схемы
+const PROPERTY_TYPES = [
+    { value: 'apartment', label: 'דירה' },
+    { value: 'house', label: 'בית פרטי' },
+    { value: 'penthouse', label: 'פנטהאוז' },
+    { value: 'studio', label: 'סטודיו' },
+    { value: 'duplex', label: 'דופלקס' },
+    { value: 'villa', label: 'וילה' },
+    { value: 'townhouse', label: 'טאון האוס' },
+    { value: 'loft', label: 'לופט' },
+    { value: 'commercial', label: 'מסחרי' },
+    { value: 'office', label: 'משרד' },
+    { value: 'warehouse', label: 'מחסן' },
+    { value: 'land', label: 'קרקע' }
+];
+
+const TRANSACTION_TYPES = [
+    { value: 'sale', label: 'למכירה' },
+    { value: 'rent', label: 'להשכרה' },
+    { value: 'lease', label: 'בליסינג' }
+];
+
+const CURRENCIES = [
+    { value: 'ILS', label: '₪ (שקל)' },
+    { value: 'USD', label: '$ (דולר)' },
+    { value: 'EUR', label: '€ (יורו)' }
+];
+
+const CONDITIONS = [
+    { value: 'new', label: 'חדש' },
+    { value: 'excellent', label: 'מצוין' },
+    { value: 'good', label: 'טוב' },
+    { value: 'fair', label: 'סביר' },
+    { value: 'needs_renovation', label: 'דורש שיפוץ' }
+];
 
 function CreatePropertyPage() {
     const navigate = useNavigate();
+    const { user, isAuthenticated } = useAuth();
     const [currentStep, setCurrentStep] = useState(1);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isDraft, setIsDraft] = useState(false);
+    const [isAutoSaving, setIsAutoSaving] = useState(false);
+
     const [formData, setFormData] = useState({
         title: '',
         description: '',
-        transactionType: 'sale',
         propertyType: 'apartment',
-        price: '',
-        rooms: '',
-        bathrooms: '',
-        area: '',
-        floor: '',
-        parking: false,
-        elevator: false,
-        balcony: false,
-        garden: false,
-        address: '',
-        city: '',
-        neighborhood: '',
-        images: []
+        transactionType: 'sale',
+        price: {
+            amount: '',
+            currency: 'ILS',
+            period: 'month'
+        },
+        location: {
+            address: '',
+            city: '',
+            district: '',
+            coordinates: {
+                latitude: '',
+                longitude: ''
+            }
+        },
+        details: {
+            area: '',
+            rooms: '',
+            bedrooms: '',
+            bathrooms: '',
+            floor: '',
+            totalFloors: '',
+            buildYear: '',
+            condition: 'good'
+        },
+        features: {
+            hasParking: false,
+            hasElevator: false,
+            hasBalcony: false,
+            hasTerrace: false,
+            hasGarden: false,
+            hasPool: false,
+            hasAirConditioning: false,
+            hasSecurity: false,
+            hasStorage: false,
+            isAccessible: false,
+            allowsPets: false,
+            isFurnished: false
+        },
+        images: [],
+        virtualTour: {
+            url: '',
+            type: 'video'
+        },
+        additionalCosts: {
+            managementFee: '',
+            propertyTax: '',
+            utilities: '',
+            insurance: ''
+        },
+        availableFrom: '',
+        status: 'draft'
     });
 
-    const handleInputChange = (e) => {
-        const { name, value, type, checked } = e.target;
-        setFormData(prev => ({
+    // השתמש בהוק הולידציה
+    const {
+        errors: validationErrors,
+        setErrors: setValidationErrors,
+        validateField,
+        validateForm,
+        validateStep,
+        isValid,
+        isStepValid
+    } = usePropertyValidation(formData);
+
+    // בדיקת הרשאות - הפנייה לדף התחברות אם לא מחובר
+    useEffect(() => {
+        if (!isAuthenticated) {
+            toast.error('יש להתחבר כדי ליצור נכס חדש');
+            navigate('/login');
+        }
+    }, [isAuthenticated, navigate]);
+
+    // פונקציות עזר מהוק הולידציה
+
+    // עדכון נתונים עם התמקדות בנתיב הנתונים המקונן
+    const updateNestedField = (path, value) => {
+        const pathArray = path.split('.');
+        const newData = { ...formData };
+
+        let current = newData;
+        for (let i = 0; i < pathArray.length - 1; i++) {
+            if (!(pathArray[i] in current)) {
+                current[pathArray[i]] = {};
+            }
+            current = current[pathArray[i]];
+        }
+        current[pathArray[pathArray.length - 1]] = value;
+
+        setFormData(newData);
+
+        // ולידציה בזמן אמת
+        const fieldErrors = validateField(path, value);
+        setValidationErrors(prev => ({
             ...prev,
-            [name]: type === 'checkbox' ? checked : value
+            ...fieldErrors,
+            // מסיר שגיאות קיימות אם הם תוקנו
+            ...(Object.keys(fieldErrors).length === 0 ? { [path]: undefined } : {})
         }));
     };
 
-    const handleImageUpload = (e) => {
+    const handleInputChange = (e) => {
+        const { name, value, type, checked } = e.target;
+        const fieldValue = type === 'checkbox' ? checked : value;
+
+        if (name.includes('.')) {
+            updateNestedField(name, fieldValue);
+        } else {
+            setFormData(prev => ({
+                ...prev,
+                [name]: fieldValue
+            }));
+
+            // ולידציה בזמן אמת
+            const fieldErrors = validateField(name, fieldValue);
+            setValidationErrors(prev => ({
+                ...prev,
+                ...fieldErrors,
+                [name]: fieldErrors[name] ? fieldErrors[name] : undefined
+            }));
+        }
+
+        // שמירה אוטומטית כטיוטה - רק אם יש תוכן משמעותי
+        if (!isDraft && (formData.title?.trim() || formData.description?.trim() || value?.trim())) {
+            setIsDraft(true);
+        }
+    };
+
+    const handleImageUpload = async (e) => {
         const files = Array.from(e.target.files);
-        // In a real app, you would upload these to your server/cloud storage
-        setFormData(prev => ({
-            ...prev,
-            images: [...prev.images, ...files.map(file => URL.createObjectURL(file))]
-        }));
+
+        // בדיקת גודל וסוג קבצים
+        const validFiles = files.filter(file => {
+            const isValidType = file.type.startsWith('image/');
+            const isValidSize = file.size <= 10 * 1024 * 1024; // 10MB
+
+            if (!isValidType) {
+                toast.error(`${file.name} אינו קובץ תמונה תקין`);
+                return false;
+            }
+            if (!isValidSize) {
+                toast.error(`${file.name} גדול מדי. גודל מקסימלי: 10MB`);
+                return false;
+            }
+            return true;
+        });
+
+        if (validFiles.length === 0) return;
+
+        try {
+            // כאן תוכל להעלות לשרת או לשירות ענן
+            const imagePromises = validFiles.map(file => {
+                return new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        resolve({
+                            url: e.target.result,
+                            alt: file.name,
+                            isMain: formData.images.length === 0, // הראשונה היא הראשית
+                            order: formData.images.length
+                        });
+                    };
+                    reader.readAsDataURL(file);
+                });
+            });
+
+            const newImages = await Promise.all(imagePromises);
+            setFormData(prev => ({
+                ...prev,
+                images: [...prev.images, ...newImages]
+            }));
+
+            toast.success(`${validFiles.length} תמונות נוספו בהצלחה`);
+        } catch (error) {
+            toast.error('שגיאה בהעלאת התמונות');
+        }
     };
 
     const removeImage = (index) => {
@@ -50,16 +240,179 @@ function CreatePropertyPage() {
         }));
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        // Here you would submit the form data to your API
-        console.log('Submitting property:', formData);
-        // Navigate to properties page or property details
-        navigate('/properties');
+    const setMainImage = (index) => {
+        setFormData(prev => ({
+            ...prev,
+            images: prev.images.map((img, i) => ({
+                ...img,
+                isMain: i === index
+            }))
+        }));
     };
 
-    const nextStep = () => setCurrentStep(prev => Math.min(prev + 1, 3));
+    // שמירה כטיוטה
+    const saveDraft = async () => {
+        // בדיקה שהמשתמש מחובר
+        if (!user || !isAuthenticated) {
+            toast.error('יש להתחבר כדי לשמור נכס');
+            navigate('/login');
+            return;
+        }
+
+        // בדיקה שיש לפחות כותרת או תיאור לפני שמירה
+        if (!formData.title?.trim() && !formData.description?.trim()) {
+            return; // לא שומר אם אין נתונים בסיסיים
+        }
+
+        try {
+            setIsAutoSaving(true);
+
+            // הכן נתונים לשמירה
+            const draftData = {
+                ...formData,
+                status: 'draft',
+                // וודא ששדות חובה יש להם ערכים ברירת מחדל
+                title: formData.title?.trim() || 'טיוטה ללא כותרת',
+                description: formData.description?.trim() || 'טיוטה ללא תיאור',
+                price: {
+                    amount: formData.price?.amount || 0,
+                    currency: formData.price?.currency || 'ILS',
+                    period: formData.price?.period || 'month'
+                },
+                location: {
+                    address: formData.location?.address?.trim() || 'כתובת לא הוגדרה',
+                    city: formData.location?.city?.trim() || 'עיר לא הוגדרה',
+                    district: formData.location?.district?.trim() || '',
+                    coordinates: {
+                        latitude: formData.location?.coordinates?.latitude || '',
+                        longitude: formData.location?.coordinates?.longitude || ''
+                    }
+                },
+                details: {
+                    area: formData.details?.area || 1, // מינימום 1 מ"ר לולידציה
+                    rooms: formData.details?.rooms || '',
+                    bedrooms: formData.details?.bedrooms || '',
+                    bathrooms: formData.details?.bathrooms || '',
+                    floor: formData.details?.floor || '',
+                    totalFloors: formData.details?.totalFloors || '',
+                    buildYear: formData.details?.buildYear || '',
+                    condition: formData.details?.condition || 'good'
+                }
+            };
+
+            console.log('Saving draft with data:', draftData);
+            const response = await propertiesAPI.createProperty(draftData);
+
+            if (response.data.success) {
+                toast.success('הטיוטה נשמרה בהצלחה');
+                setIsDraft(false);
+            }
+        } catch (error) {
+            console.error('Draft save error:', error);
+            console.error('Error response:', error.response?.data);
+            const errorInfo = handleApiError(error);
+            toast.error(`שגיאה בשמירת טיוטה: ${errorInfo.message}`);
+        } finally {
+            setIsAutoSaving(false);
+        }
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+
+        const errors = validateForm(formData);
+        if (Object.keys(errors).length > 0) {
+            setValidationErrors(errors);
+            toast.error('יש לתקן את השגיאות בטופס');
+            return;
+        }
+
+        try {
+            setIsSubmitting(true);
+
+            const propertyData = {
+                ...formData,
+                status: user?.role === 'admin' || user?.role === 'agent' ? 'active' : 'draft'
+            };
+
+            const response = await propertiesAPI.createProperty(propertyData);
+
+            if (response.data.success) {
+                toast.success('הנכס נוצר בהצלחה!');
+                navigate(`/properties/${response.data.data.property._id}`);
+            }
+        } catch (error) {
+            console.error('Error creating property:', error);
+            const errorInfo = handleApiError(error);
+
+            if (errorInfo.errors && Array.isArray(errorInfo.errors)) {
+                // טיפול בשגיאות ולידציה מהשרת
+                const serverErrors = {};
+                errorInfo.errors.forEach(err => {
+                    serverErrors[err.param || err.path || 'general'] = err.msg || err.message;
+                });
+                setValidationErrors(serverErrors);
+                toast.error('יש שגיאות ולידציה מהשרת');
+            } else {
+                toast.error(errorInfo.message);
+            }
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const nextStep = () => {
+        // ולידציה לפני מעבר לשלב הבא
+        if (!isStepValid(currentStep)) {
+            const stepErrors = validateStep(currentStep, formData);
+            setValidationErrors(prev => ({ ...prev, ...stepErrors }));
+            toast.error('יש לתקן את השגיאות לפני המעבר לשלב הבא');
+            return;
+        }
+        setCurrentStep(prev => {
+            const newStep = Math.min(prev + 1, 4);
+            // גלילה לראש העמוד
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            return newStep;
+        });
+    };
+
     const prevStep = () => setCurrentStep(prev => Math.max(prev - 1, 1));
+
+    // שמירה אוטומטית כטיוטה
+    useEffect(() => {
+        // לא לשמור את השמירה האוטומטית מיד בהתחלה
+        if (!isDraft || !formData.title?.trim()) {
+            return;
+        }
+
+        const saveTimer = setTimeout(() => {
+            if (isDraft && formData.title?.trim() && !isAutoSaving) {
+                saveDraft();
+            }
+        }, 30000); // שמירה כל 30 שניות
+
+        return () => clearTimeout(saveTimer);
+    }, [formData, isDraft, isAutoSaving]);
+
+    // אל תציג את העמוד אם המשתמש לא מחובר
+    if (!isAuthenticated) {
+        return (
+            <div className="min-h-screen bg-gray-50 dark:bg-dark-50 flex items-center justify-center">
+                <div className="text-center">
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+                        נדרשת התחברות
+                    </h2>
+                    <p className="text-gray-600 dark:text-gray-300 mb-6">
+                        יש להתחבר למערכת כדי ליצור נכס חדש
+                    </p>
+                    <Button onClick={() => navigate('/login')}>
+                        התחבר למערכת
+                    </Button>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-dark-50">
@@ -75,30 +428,129 @@ function CreatePropertyPage() {
                         </p>
                     </div>
 
-                    {/* Progress Steps */}
-                    <div className="flex items-center justify-center mb-8">
-                        <div className="flex items-center space-x-4 rtl:space-x-reverse">
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${currentStep >= 1 ? 'bg-blue-600 text-white' : 'bg-gray-300 dark:bg-gray-600 dark:text-gray-300'}`}>
-                                1
+                    {/* Progress Bar */}
+                    <div className="mb-8">
+                        <div className="flex justify-between items-center mb-4">
+                            <div className="flex items-center space-x-2 rtl:space-x-reverse">
+                                <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                                    התקדמות:
+                                </span>
+                                <span className="text-sm text-blue-600 dark:text-blue-400">
+                                    שלב {currentStep} מתוך 4
+                                </span>
                             </div>
-                            <div className={`w-16 h-1 ${currentStep > 1 ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'}`}></div>
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${currentStep >= 2 ? 'bg-blue-600 text-white' : 'bg-gray-300 dark:bg-gray-600 dark:text-gray-300'}`}>
-                                2
+                            <div className="text-sm text-gray-600 dark:text-gray-400">
+                                {Math.round((currentStep / 4) * 100)}%
                             </div>
-                            <div className={`w-16 h-1 ${currentStep > 2 ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'}`}></div>
-                            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${currentStep >= 3 ? 'bg-blue-600 text-white' : 'bg-gray-300 dark:bg-gray-600 dark:text-gray-300'}`}>
-                                3
+                        </div>
+
+                        {/* Progress Bar */}
+                        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mb-6">
+                            <div
+                                className="bg-blue-600 h-2 rounded-full transition-all duration-300 ease-in-out"
+                                style={{ width: `${(currentStep / 4) * 100}%` }}
+                            ></div>
+                        </div>
+
+                        {/* Progress Steps */}
+                        <div className="flex items-center justify-center">
+                            <div className="flex items-center space-x-4 rtl:space-x-reverse">
+                                <div className={`relative w-10 h-10 rounded-full flex items-center justify-center font-medium transition-colors ${currentStep >= 1
+                                    ? 'bg-blue-600 text-white shadow-md'
+                                    : 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-300'
+                                    }`}>
+                                    {currentStep > 1 ? <Check className="w-5 h-5" /> : '1'}
+                                    {isStepValid(1) && currentStep > 1 && (
+                                        <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                                            <Check className="w-2 h-2 text-white" />
+                                        </div>
+                                    )}
+                                </div>
+                                <div className={`w-16 h-1 transition-colors ${currentStep > 1 ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'}`}></div>
+                                <div className={`relative w-10 h-10 rounded-full flex items-center justify-center font-medium transition-colors ${currentStep >= 2
+                                    ? 'bg-blue-600 text-white shadow-md'
+                                    : 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-300'
+                                    }`}>
+                                    {currentStep > 2 ? <Check className="w-5 h-5" /> : '2'}
+                                    {isStepValid(2) && currentStep > 2 && (
+                                        <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                                            <Check className="w-2 h-2 text-white" />
+                                        </div>
+                                    )}
+                                </div>
+                                <div className={`w-16 h-1 transition-colors ${currentStep > 2 ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'}`}></div>
+                                <div className={`relative w-10 h-10 rounded-full flex items-center justify-center font-medium transition-colors ${currentStep >= 3
+                                    ? 'bg-blue-600 text-white shadow-md'
+                                    : 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-300'
+                                    }`}>
+                                    {currentStep > 3 ? <Check className="w-5 h-5" /> : '3'}
+                                    {isStepValid(3) && currentStep > 3 && (
+                                        <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                                            <Check className="w-2 h-2 text-white" />
+                                        </div>
+                                    )}
+                                </div>
+                                <div className={`w-16 h-1 transition-colors ${currentStep > 3 ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'}`}></div>
+                                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-medium transition-colors ${currentStep >= 4
+                                    ? 'bg-blue-600 text-white shadow-md'
+                                    : 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-300'
+                                    }`}>
+                                    {isValid ? <Check className="w-5 h-5" /> : '4'}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Step Labels */}
+                        <div className="flex justify-center mt-4">
+                            <div className="flex items-center space-x-8 rtl:space-x-reverse text-sm text-gray-600 dark:text-gray-400">
+                                <span className={`transition-colors ${currentStep >= 1 ? 'text-blue-600 font-medium' : ''}`}>
+                                    מידע בסיסי
+                                </span>
+                                <span className={`transition-colors ${currentStep >= 2 ? 'text-blue-600 font-medium' : ''}`}>
+                                    פרטי הנכס
+                                </span>
+                                <span className={`transition-colors ${currentStep >= 3 ? 'text-blue-600 font-medium' : ''}`}>
+                                    תמונות
+                                </span>
+                                <span className={`transition-colors ${currentStep >= 4 ? 'text-blue-600 font-medium' : ''}`}>
+                                    סיכום ופרסום
+                                </span>
                             </div>
                         </div>
                     </div>
+
+                    {/* Draft Save Indicator */}
+                    {isDraft && (
+                        <div className="text-center mb-6">
+                            <div className="inline-flex items-center px-4 py-2 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg text-yellow-800 dark:text-yellow-200">
+                                <Save className="w-4 h-4 ml-2" />
+                                <span className="text-sm">
+                                    {isAutoSaving ? 'שומר...' : 'יש שינויים שלא נשמרו - שמירה אוטומטית כטיוטה'}
+                                </span>
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    size="sm"
+                                    className="mr-3"
+                                    onClick={saveDraft}
+                                    disabled={isSubmitting || isAutoSaving}
+                                >
+                                    {isAutoSaving ? <Spinner className="w-3 h-3" /> : 'שמור עכשיו'}
+                                </Button>
+                            </div>
+                        </div>
+                    )}
 
                     <form onSubmit={handleSubmit}>
                         {/* Step 1: Basic Information */}
                         {currentStep === 1 && (
                             <Card className="p-8">
-                                <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-6">
-                                    פרטים בסיסיים
-                                </h2>
+                                <div className="flex items-center mb-6">
+                                    <Home className="w-6 h-6 text-blue-600 ml-3" />
+                                    <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                                        מידע בסיסי על הנכס
+                                    </h2>
+                                </div>
 
                                 <div className="space-y-6">
                                     <div>
@@ -110,8 +562,18 @@ function CreatePropertyPage() {
                                             value={formData.title}
                                             onChange={handleInputChange}
                                             placeholder="למשל: דירת 4 חדרים מרווחת בלב העיר"
+                                            className={validationErrors.title ? 'border-red-500' : ''}
                                             required
                                         />
+                                        {validationErrors.title && (
+                                            <div className="flex items-center mt-1 text-red-600 text-sm">
+                                                <AlertCircle className="w-4 h-4 ml-1" />
+                                                {validationErrors.title}
+                                            </div>
+                                        )}
+                                        <div className="text-xs text-gray-500 mt-1">
+                                            {formData.title.length}/200 תווים
+                                        </div>
                                     </div>
 
                                     <div>
@@ -122,11 +584,21 @@ function CreatePropertyPage() {
                                             name="description"
                                             value={formData.description}
                                             onChange={handleInputChange}
-                                            rows={4}
-                                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-dark-100 text-gray-900 dark:text-gray-100"
-                                            placeholder="תארו את הנכס, את המיקום ואת היתרונות שלו..."
+                                            rows={6}
+                                            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-dark-100 text-gray-900 dark:text-gray-100 ${validationErrors.description ? 'border-red-500' : 'border-gray-300 dark:border-gray-600'
+                                                }`}
+                                            placeholder="תארו את הנכס בפירוט - המיקום, מצב הנכס, יתרונות מיוחדים, שכנים וכל מה שיכול לעזור לקונה או שוכר להתרשם..."
                                             required
                                         />
+                                        {validationErrors.description && (
+                                            <div className="flex items-center mt-1 text-red-600 text-sm">
+                                                <AlertCircle className="w-4 h-4 ml-1" />
+                                                {validationErrors.description}
+                                            </div>
+                                        )}
+                                        <div className="text-xs text-gray-500 mt-1">
+                                            {formData.description.length}/5000 תווים (מינימום 20)
+                                        </div>
                                     </div>
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -138,11 +610,14 @@ function CreatePropertyPage() {
                                                 name="transactionType"
                                                 value={formData.transactionType}
                                                 onChange={handleInputChange}
-                                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-dark-100 text-gray-900 dark:text-gray-100"
                                                 required
                                             >
-                                                <option value="sale">למכירה</option>
-                                                <option value="rent">להשכרה</option>
+                                                {TRANSACTION_TYPES.map(type => (
+                                                    <option key={type.value} value={type.value}>
+                                                        {type.label}
+                                                    </option>
+                                                ))}
                                             </select>
                                         </div>
 
@@ -154,14 +629,14 @@ function CreatePropertyPage() {
                                                 name="propertyType"
                                                 value={formData.propertyType}
                                                 onChange={handleInputChange}
-                                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-dark-100 text-gray-900 dark:text-gray-100"
                                                 required
                                             >
-                                                <option value="apartment">דירה</option>
-                                                <option value="house">בית פרטי</option>
-                                                <option value="penthouse">פנטהאוז</option>
-                                                <option value="studio">סטודיו</option>
-                                                <option value="duplex">דופלקס</option>
+                                                {PROPERTY_TYPES.map(type => (
+                                                    <option key={type.value} value={type.value}>
+                                                        {type.label}
+                                                    </option>
+                                                ))}
                                             </select>
                                         </div>
                                     </div>
@@ -170,19 +645,55 @@ function CreatePropertyPage() {
                                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                             מחיר *
                                         </label>
-                                        <div className="relative">
-                                            <Input
-                                                name="price"
-                                                type="number"
-                                                value={formData.price}
-                                                onChange={handleInputChange}
-                                                placeholder={formData.transactionType === 'sale' ? '2500000' : '8500'}
-                                                required
-                                            />
-                                            <span className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400">
-                                                ₪ {formData.transactionType === 'rent' && '/חודש'}
-                                            </span>
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                            <div className="md:col-span-2">
+                                                <div className="relative">
+                                                    <Input
+                                                        name="price.amount"
+                                                        type="number"
+                                                        value={formData.price.amount}
+                                                        onChange={handleInputChange}
+                                                        placeholder={formData.transactionType === 'sale' ? '2500000' : '8500'}
+                                                        className={validationErrors['price.amount'] ? 'border-red-500' : ''}
+                                                        required
+                                                    />
+                                                </div>
+                                                {validationErrors['price.amount'] && (
+                                                    <div className="flex items-center mt-1 text-red-600 text-sm">
+                                                        <AlertCircle className="w-4 h-4 ml-1" />
+                                                        {validationErrors['price.amount']}
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div>
+                                                <select
+                                                    name="price.currency"
+                                                    value={formData.price.currency}
+                                                    onChange={handleInputChange}
+                                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-dark-100 text-gray-900 dark:text-gray-100"
+                                                >
+                                                    {CURRENCIES.map(currency => (
+                                                        <option key={currency.value} value={currency.value}>
+                                                            {currency.label}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
                                         </div>
+                                        {formData.transactionType === 'rent' && (
+                                            <div className="mt-2">
+                                                <select
+                                                    name="price.period"
+                                                    value={formData.price.period}
+                                                    onChange={handleInputChange}
+                                                    className="w-full md:w-1/3 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-dark-100 text-gray-900 dark:text-gray-100"
+                                                >
+                                                    <option value="month">לחודש</option>
+                                                    <option value="year">לשנה</option>
+                                                    <option value="day">ליום</option>
+                                                </select>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </Card>
@@ -191,97 +702,210 @@ function CreatePropertyPage() {
                         {/* Step 2: Property Details */}
                         {currentStep === 2 && (
                             <Card className="p-8">
-                                <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-6">
-                                    מפרט הנכס
-                                </h2>
+                                <div className="flex items-center mb-6">
+                                    <MapPin className="w-6 h-6 text-blue-600 ml-3" />
+                                    <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                                        פרטי הנכס ומיקום
+                                    </h2>
+                                </div>
 
-                                <div className="space-y-6">
-                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                                חדרים *
-                                            </label>
-                                            <Input
-                                                name="rooms"
-                                                type="number"
-                                                value={formData.rooms}
-                                                onChange={handleInputChange}
-                                                placeholder="4"
-                                                min="1"
-                                                required
-                                            />
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                                שירותים
-                                            </label>
-                                            <Input
-                                                name="bathrooms"
-                                                type="number"
-                                                value={formData.bathrooms}
-                                                onChange={handleInputChange}
-                                                placeholder="2"
-                                                min="1"
-                                            />
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                                שטח (מ"ר) *
-                                            </label>
-                                            <Input
-                                                name="area"
-                                                type="number"
-                                                value={formData.area}
-                                                onChange={handleInputChange}
-                                                placeholder="120"
-                                                required
-                                            />
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                                קומה
-                                            </label>
-                                            <Input
-                                                name="floor"
-                                                type="number"
-                                                value={formData.floor}
-                                                onChange={handleInputChange}
-                                                placeholder="3"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    {/* Address */}
-                                    <div className="space-y-4">
-                                        <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 flex items-center">
-                                            <MapPin className="w-5 h-5 ml-2" />
-                                            מיקום הנכס
+                                <div className="space-y-8">
+                                    {/* Property Specifications */}
+                                    <div>
+                                        <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
+                                            מפרט הנכס
                                         </h3>
-
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                             <div>
                                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                                    עיר *
+                                                    שטח (מ"ר) *
                                                 </label>
                                                 <Input
-                                                    name="city"
-                                                    value={formData.city}
+                                                    name="details.area"
+                                                    type="number"
+                                                    value={formData.details.area}
                                                     onChange={handleInputChange}
-                                                    placeholder="תל אביב"
+                                                    placeholder="120"
+                                                    className={validationErrors['details.area'] ? 'border-red-500' : ''}
                                                     required
+                                                />
+                                                {validationErrors['details.area'] && (
+                                                    <div className="flex items-center mt-1 text-red-600 text-xs">
+                                                        <AlertCircle className="w-3 h-3 ml-1" />
+                                                        {validationErrors['details.area']}
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                    חדרים
+                                                </label>
+                                                <Input
+                                                    name="details.rooms"
+                                                    type="number"
+                                                    value={formData.details.rooms}
+                                                    onChange={handleInputChange}
+                                                    placeholder="4"
+                                                    min="0"
+                                                    max="50"
+                                                    className={validationErrors['details.rooms'] ? 'border-red-500' : ''}
+                                                />
+                                                {validationErrors['details.rooms'] && (
+                                                    <div className="flex items-center mt-1 text-red-600 text-xs">
+                                                        <AlertCircle className="w-3 h-3 ml-1" />
+                                                        {validationErrors['details.rooms']}
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                    חדרי שינה
+                                                </label>
+                                                <Input
+                                                    name="details.bedrooms"
+                                                    type="number"
+                                                    value={formData.details.bedrooms}
+                                                    onChange={handleInputChange}
+                                                    placeholder="3"
+                                                    min="0"
+                                                    max="20"
+                                                    className={validationErrors['details.bedrooms'] ? 'border-red-500' : ''}
+                                                />
+                                                {validationErrors['details.bedrooms'] && (
+                                                    <div className="flex items-center mt-1 text-red-600 text-xs">
+                                                        <AlertCircle className="w-3 h-3 ml-1" />
+                                                        {validationErrors['details.bedrooms']}
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                    חדרי רחצה
+                                                </label>
+                                                <Input
+                                                    name="details.bathrooms"
+                                                    type="number"
+                                                    value={formData.details.bathrooms}
+                                                    onChange={handleInputChange}
+                                                    placeholder="2"
+                                                    min="0"
+                                                    max="20"
+                                                    className={validationErrors['details.bathrooms'] ? 'border-red-500' : ''}
+                                                />
+                                                {validationErrors['details.bathrooms'] && (
+                                                    <div className="flex items-center mt-1 text-red-600 text-xs">
+                                                        <AlertCircle className="w-3 h-3 ml-1" />
+                                                        {validationErrors['details.bathrooms']}
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                    קומה
+                                                </label>
+                                                <Input
+                                                    name="details.floor"
+                                                    type="number"
+                                                    value={formData.details.floor}
+                                                    onChange={handleInputChange}
+                                                    placeholder="3"
+                                                    min="0"
                                                 />
                                             </div>
 
                                             <div>
                                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                                    שכונה
+                                                    מתוך קומות
                                                 </label>
                                                 <Input
-                                                    name="neighborhood"
-                                                    value={formData.neighborhood}
+                                                    name="details.totalFloors"
+                                                    type="number"
+                                                    value={formData.details.totalFloors}
+                                                    onChange={handleInputChange}
+                                                    placeholder="5"
+                                                    min="1"
+                                                />
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                    שנת בניה
+                                                </label>
+                                                <Input
+                                                    name="details.buildYear"
+                                                    type="number"
+                                                    value={formData.details.buildYear}
+                                                    onChange={handleInputChange}
+                                                    placeholder="2020"
+                                                    min="1800"
+                                                    max={new Date().getFullYear() + 5}
+                                                    className={validationErrors['details.buildYear'] ? 'border-red-500' : ''}
+                                                />
+                                                {validationErrors['details.buildYear'] && (
+                                                    <div className="flex items-center mt-1 text-red-600 text-xs">
+                                                        <AlertCircle className="w-3 h-3 ml-1" />
+                                                        {validationErrors['details.buildYear']}
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                    מצב הנכס
+                                                </label>
+                                                <select
+                                                    name="details.condition"
+                                                    value={formData.details.condition}
+                                                    onChange={handleInputChange}
+                                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-dark-100 text-gray-900 dark:text-gray-100"
+                                                >
+                                                    {CONDITIONS.map(condition => (
+                                                        <option key={condition.value} value={condition.value}>
+                                                            {condition.label}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Location */}
+                                    <div>
+                                        <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
+                                            מיקום הנכס
+                                        </h3>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                    עיר *
+                                                </label>
+                                                <Input
+                                                    name="location.city"
+                                                    value={formData.location.city}
+                                                    onChange={handleInputChange}
+                                                    placeholder="תל אביב"
+                                                    className={validationErrors['location.city'] ? 'border-red-500' : ''}
+                                                    required
+                                                />
+                                                {validationErrors['location.city'] && (
+                                                    <div className="flex items-center mt-1 text-red-600 text-sm">
+                                                        <AlertCircle className="w-4 h-4 ml-1" />
+                                                        {validationErrors['location.city']}
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                    שכונה/רובע
+                                                </label>
+                                                <Input
+                                                    name="location.district"
+                                                    value={formData.location.district}
                                                     onChange={handleInputChange}
                                                     placeholder="צפון הישן"
                                                 />
@@ -293,64 +917,53 @@ function CreatePropertyPage() {
                                                 כתובת מלאה *
                                             </label>
                                             <Input
-                                                name="address"
-                                                value={formData.address}
+                                                name="location.address"
+                                                value={formData.location.address}
                                                 onChange={handleInputChange}
-                                                placeholder="רחוב דיזנגוף 123"
+                                                placeholder="רחוב דיזנגוף 123, תל אביב"
+                                                className={validationErrors['location.address'] ? 'border-red-500' : ''}
                                                 required
                                             />
+                                            {validationErrors['location.address'] && (
+                                                <div className="flex items-center mt-1 text-red-600 text-sm">
+                                                    <AlertCircle className="w-4 h-4 ml-1" />
+                                                    {validationErrors['location.address']}
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
 
                                     {/* Features */}
                                     <div>
                                         <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
-                                            תכונות נוספות
+                                            תכונות ומתקנים
                                         </h3>
-                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                                            <label className="flex items-center">
-                                                <input
-                                                    type="checkbox"
-                                                    name="parking"
-                                                    checked={formData.parking}
-                                                    onChange={handleInputChange}
-                                                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded ml-2"
-                                                />
-                                                <span className="text-sm text-gray-700 dark:text-gray-300">חניה</span>
-                                            </label>
-
-                                            <label className="flex items-center">
-                                                <input
-                                                    type="checkbox"
-                                                    name="elevator"
-                                                    checked={formData.elevator}
-                                                    onChange={handleInputChange}
-                                                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded ml-2"
-                                                />
-                                                <span className="text-sm text-gray-700 dark:text-gray-300">מעלית</span>
-                                            </label>
-
-                                            <label className="flex items-center">
-                                                <input
-                                                    type="checkbox"
-                                                    name="balcony"
-                                                    checked={formData.balcony}
-                                                    onChange={handleInputChange}
-                                                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded ml-2"
-                                                />
-                                                <span className="text-sm text-gray-700 dark:text-gray-300">מרפסת</span>
-                                            </label>
-
-                                            <label className="flex items-center">
-                                                <input
-                                                    type="checkbox"
-                                                    name="garden"
-                                                    checked={formData.garden}
-                                                    onChange={handleInputChange}
-                                                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded ml-2"
-                                                />
-                                                <span className="text-sm text-gray-700 dark:text-gray-300">גינה</span>
-                                            </label>
+                                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                                            {Object.entries({
+                                                hasParking: 'חניה',
+                                                hasElevator: 'מעלית',
+                                                hasBalcony: 'מרפסת',
+                                                hasTerrace: 'גג/טרסה',
+                                                hasGarden: 'גינה',
+                                                hasPool: 'בריכה',
+                                                hasAirConditioning: 'מיזוג אוויר',
+                                                hasSecurity: 'שמירה/מאבטח',
+                                                hasStorage: 'מחסן',
+                                                isAccessible: 'נגיש לנכים',
+                                                allowsPets: 'מותר עם חיות מחמד',
+                                                isFurnished: 'מרוהט'
+                                            }).map(([key, label]) => (
+                                                <label key={key} className="flex items-center p-3 border border-gray-200 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer">
+                                                    <input
+                                                        type="checkbox"
+                                                        name={`features.${key}`}
+                                                        checked={formData.features[key]}
+                                                        onChange={handleInputChange}
+                                                        className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 dark:border-gray-600 rounded ml-2"
+                                                    />
+                                                    <span className="text-sm text-gray-700 dark:text-gray-300">{label}</span>
+                                                </label>
+                                            ))}
                                         </div>
                                     </div>
                                 </div>
@@ -360,19 +973,35 @@ function CreatePropertyPage() {
                         {/* Step 3: Images */}
                         {currentStep === 3 && (
                             <Card className="p-8">
-                                <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-6">
-                                    תמונות הנכס
-                                </h2>
+                                <div className="flex items-center mb-6">
+                                    <Camera className="w-6 h-6 text-blue-600 ml-3" />
+                                    <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                                        תמונות הנכס
+                                    </h2>
+                                </div>
 
                                 <div className="space-y-6">
+                                    <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                                        <div className="text-blue-800 dark:text-blue-200 text-sm">
+                                            <strong>טיפים להעלאת תמונות מוצלחות:</strong>
+                                            <ul className="mt-2 space-y-1">
+                                                <li>• העלו לפחות 5-10 תמונות איכותיות</li>
+                                                <li>• הקפידו על תאורה טובה ותמונות חדות</li>
+                                                <li>• צלמו את כל חדרי הבית ואזורים חיצוניים</li>
+                                                <li>• הראו את הנוף מהחלונות והמרפסות</li>
+                                                <li>• גודל מקסימלי: 10MB לתמונה</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+
                                     {/* Upload Area */}
-                                    <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6">
+                                    <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-8 hover:border-blue-400 dark:hover:border-blue-500 transition-colors">
                                         <div className="text-center">
-                                            <Camera className="mx-auto h-12 w-12 text-gray-400" />
+                                            <Camera className="mx-auto h-16 w-16 text-gray-400" />
                                             <div className="mt-4">
                                                 <label htmlFor="file-upload" className="cursor-pointer">
-                                                    <span className="mt-2 block text-sm font-medium text-gray-900 dark:text-gray-100">
-                                                        לחצו להעלאת תמונות
+                                                    <span className="mt-2 block text-lg font-medium text-gray-900 dark:text-gray-100">
+                                                        גרור תמונות או לחץ לבחירה
                                                     </span>
                                                     <input
                                                         id="file-upload"
@@ -383,14 +1012,14 @@ function CreatePropertyPage() {
                                                         className="sr-only"
                                                         onChange={handleImageUpload}
                                                     />
-                                                    <Button type="button" variant="outline" className="mt-2">
-                                                        <Upload className="w-4 h-4 ml-2" />
+                                                    <Button type="button" variant="outline" size="lg" className="mt-4">
+                                                        <Upload className="w-5 h-5 ml-2" />
                                                         בחר תמונות
                                                     </Button>
                                                 </label>
                                             </div>
-                                            <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                                                PNG, JPG, GIF עד 10MB
+                                            <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">
+                                                PNG, JPG, JPEG, WebP עד 10MB לכל תמונה
                                             </p>
                                         </div>
                                     </div>
@@ -398,50 +1027,299 @@ function CreatePropertyPage() {
                                     {/* Image Preview */}
                                     {formData.images.length > 0 && (
                                         <div>
-                                            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
-                                                תמונות שנבחרו ({formData.images.length})
-                                            </h3>
+                                            <div className="flex justify-between items-center mb-4">
+                                                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">
+                                                    תמונות שנבחרו ({formData.images.length})
+                                                </h3>
+                                                <div className="text-sm text-gray-600 dark:text-gray-400">
+                                                    התמונה הראשית מסומנת בכחול
+                                                </div>
+                                            </div>
                                             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                                                 {formData.images.map((image, index) => (
-                                                    <div key={index} className="relative">
+                                                    <div key={index} className={`relative group rounded-lg overflow-hidden ${image.isMain ? 'ring-2 ring-blue-500' : ''}`}>
                                                         <img
-                                                            src={image}
-                                                            alt={`תמונה ${index + 1}`}
-                                                            className="w-full h-24 object-cover rounded-lg"
+                                                            src={image.url}
+                                                            alt={image.alt || `תמונה ${index + 1}`}
+                                                            className="w-full h-32 object-cover"
                                                         />
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => removeImage(index)}
-                                                            className="absolute -top-2 -right-2 bg-red-50 dark:bg-red-900/200 text-white rounded-full p-1 hover:bg-red-600"
-                                                        >
-                                                            <Trash2 className="w-3 h-3" />
-                                                        </button>
+
+                                                        {/* Image Controls Overlay */}
+                                                        <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-50 transition-all duration-200 flex items-center justify-center">
+                                                            <div className="opacity-0 group-hover:opacity-100 flex space-x-2 rtl:space-x-reverse">
+                                                                {!image.isMain && (
+                                                                    <Button
+                                                                        type="button"
+                                                                        size="sm"
+                                                                        onClick={() => setMainImage(index)}
+                                                                        className="bg-white text-gray-800 hover:bg-gray-100"
+                                                                    >
+                                                                        עיקרית
+                                                                    </Button>
+                                                                )}
+                                                                <Button
+                                                                    type="button"
+                                                                    size="sm"
+                                                                    variant="destructive"
+                                                                    onClick={() => removeImage(index)}
+                                                                >
+                                                                    <Trash2 className="w-3 h-3" />
+                                                                </Button>
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Main Image Badge */}
+                                                        {image.isMain && (
+                                                            <div className="absolute top-2 right-2 bg-blue-600 text-white text-xs px-2 py-1 rounded">
+                                                                עיקרית
+                                                            </div>
+                                                        )}
+
+                                                        {/* Image Number */}
+                                                        <div className="absolute bottom-2 left-2 bg-black bg-opacity-50 text-white text-xs px-2 py-1 rounded">
+                                                            {index + 1}
+                                                        </div>
                                                     </div>
                                                 ))}
                                             </div>
+
+                                            {formData.images.length < 5 && (
+                                                <div className="mt-4 text-center">
+                                                    <p className="text-sm text-amber-600 dark:text-amber-400">
+                                                        מומלץ להעלות לפחות 5 תמונות לקבלת חשיפה מיטבית
+                                                    </p>
+                                                </div>
+                                            )}
                                         </div>
                                     )}
+
+                                    {/* Virtual Tour Section */}
+                                    <div className="border-t pt-6">
+                                        <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
+                                            סיור וירטואלי (אופציונלי)
+                                        </h3>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                    קישור לסיור וירטואלי
+                                                </label>
+                                                <Input
+                                                    name="virtualTour.url"
+                                                    type="url"
+                                                    value={formData.virtualTour.url}
+                                                    onChange={handleInputChange}
+                                                    placeholder="https://..."
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                    סוג סיור
+                                                </label>
+                                                <select
+                                                    name="virtualTour.type"
+                                                    value={formData.virtualTour.type}
+                                                    onChange={handleInputChange}
+                                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-dark-100 text-gray-900 dark:text-gray-100"
+                                                >
+                                                    <option value="video">וידאו</option>
+                                                    <option value="360">תמונות 360°</option>
+                                                    <option value="vr">VR</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </Card>
+                        )}
+
+                        {/* Step 4: Summary & Additional Info */}
+                        {currentStep === 4 && (
+                            <Card className="p-8">
+                                <div className="flex items-center mb-6">
+                                    <Check className="w-6 h-6 text-blue-600 ml-3" />
+                                    <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                                        סיכום ומידע נוסף
+                                    </h2>
+                                </div>
+
+                                <div className="space-y-8">
+                                    {/* Summary */}
+                                    <div>
+                                        <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
+                                            סיכום הנכס
+                                        </h3>
+                                        <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-6">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                <div>
+                                                    <h4 className="font-medium text-gray-900 dark:text-gray-100 mb-2">{formData.title}</h4>
+                                                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-3">{formData.description.substring(0, 100)}...</p>
+                                                    <div className="space-y-1 text-sm">
+                                                        <div>סוג: {PROPERTY_TYPES.find(t => t.value === formData.propertyType)?.label}</div>
+                                                        <div>עסקה: {TRANSACTION_TYPES.find(t => t.value === formData.transactionType)?.label}</div>
+                                                        <div>מחיר: {formData.price.amount && Number(formData.price.amount).toLocaleString('he-IL')} {formData.price.currency}</div>
+                                                        <div>שטח: {formData.details.area} מ"ר</div>
+                                                        <div>מיקום: {formData.location.city}, {formData.location.address}</div>
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <div className="text-sm space-y-1">
+                                                        {formData.details.rooms && <div>חדרים: {formData.details.rooms}</div>}
+                                                        {formData.details.bedrooms && <div>חדרי שינה: {formData.details.bedrooms}</div>}
+                                                        {formData.details.bathrooms && <div>חדרי רחצה: {formData.details.bathrooms}</div>}
+                                                        {formData.details.floor && <div>קומה: {formData.details.floor}</div>}
+                                                        {formData.details.buildYear && <div>שנת בניה: {formData.details.buildYear}</div>}
+                                                    </div>
+                                                    <div className="mt-3 text-sm text-blue-600">
+                                                        {formData.images.length} תמונות הועלו
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Additional Costs */}
+                                    <div>
+                                        <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
+                                            הוצאות נוספות (אופציונלי)
+                                        </h3>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                    דמי ניהול (חודשי)
+                                                </label>
+                                                <Input
+                                                    name="additionalCosts.managementFee"
+                                                    type="number"
+                                                    value={formData.additionalCosts.managementFee}
+                                                    onChange={handleInputChange}
+                                                    placeholder="500"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                    ארנונה (חודשי)
+                                                </label>
+                                                <Input
+                                                    name="additionalCosts.propertyTax"
+                                                    type="number"
+                                                    value={formData.additionalCosts.propertyTax}
+                                                    onChange={handleInputChange}
+                                                    placeholder="800"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                    שירותים (חודשי)
+                                                </label>
+                                                <Input
+                                                    name="additionalCosts.utilities"
+                                                    type="number"
+                                                    value={formData.additionalCosts.utilities}
+                                                    onChange={handleInputChange}
+                                                    placeholder="300"
+                                                />
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                    ביטוח (חודשי)
+                                                </label>
+                                                <Input
+                                                    name="additionalCosts.insurance"
+                                                    type="number"
+                                                    value={formData.additionalCosts.insurance}
+                                                    onChange={handleInputChange}
+                                                    placeholder="200"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Available From */}
+                                    <div>
+                                        <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
+                                            זמינות
+                                        </h3>
+                                        <div className="max-w-md">
+                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                זמין מתאריך
+                                            </label>
+                                            <Input
+                                                name="availableFrom"
+                                                type="date"
+                                                value={formData.availableFrom}
+                                                onChange={handleInputChange}
+                                                min={new Date().toISOString().split('T')[0]}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Validation Summary */}
+                                    <ValidationSummary
+                                        errors={validationErrors}
+                                        isValid={isValid}
+                                    />
                                 </div>
                             </Card>
                         )}
 
                         {/* Navigation Buttons */}
                         <div className="flex justify-between items-center mt-8">
-                            {currentStep > 1 && (
-                                <Button type="button" variant="outline" onClick={prevStep}>
-                                    שלב קודם
-                                </Button>
-                            )}
+                            <div className="flex space-x-3 rtl:space-x-reverse">
+                                {currentStep > 1 && (
+                                    <Button type="button" variant="outline" onClick={prevStep}>
+                                        שלב קודם
+                                    </Button>
+                                )}
 
-                            <div className="mr-auto">
-                                {currentStep < 3 ? (
+                                {isDraft && currentStep < 4 && (
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={saveDraft}
+                                        disabled={isSubmitting}
+                                    >
+                                        <Save className="w-4 h-4 ml-2" />
+                                        שמור כטיוטה
+                                    </Button>
+                                )}
+                            </div>
+
+                            <div className="flex space-x-3 rtl:space-x-reverse">
+                                {currentStep < 4 ? (
                                     <Button type="button" onClick={nextStep}>
                                         שלב הבא
                                     </Button>
                                 ) : (
-                                    <Button type="submit">
-                                        פרסם נכס
-                                    </Button>
+                                    <div className="flex space-x-2 rtl:space-x-reverse">
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            onClick={saveDraft}
+                                            disabled={isSubmitting || isAutoSaving}
+                                        >
+                                            {isAutoSaving ? (
+                                                <>
+                                                    <Spinner className="w-4 h-4 ml-2" />
+                                                    שומר...
+                                                </>
+                                            ) : (
+                                                'שמור כטיוטה'
+                                            )}
+                                        </Button>
+                                        <Button
+                                            type="submit"
+                                            disabled={isSubmitting || !isValid}
+                                        >
+                                            {isSubmitting ? (
+                                                <>
+                                                    <Spinner className="w-4 h-4 ml-2" />
+                                                    מפרסם...
+                                                </>
+                                            ) : (
+                                                'פרסם נכס'
+                                            )}
+                                        </Button>
+                                    </div>
                                 )}
                             </div>
                         </div>

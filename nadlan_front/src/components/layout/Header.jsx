@@ -70,14 +70,12 @@ function Header() {
 
                         {isAuthenticated ? (
                             <>
-                                {user?.role === 'agent' && (
-                                    <Link to="/properties/create">
-                                        <Button size="sm" className="flex items-center">
-                                            <Plus className="h-4 w-4 ml-1 rtl:ml-0 rtl:mr-1" />
-                                            הוסף נכס
-                                        </Button>
-                                    </Link>
-                                )}
+                                <Link to="/create-property">
+                                    <Button size="sm" className="flex items-center">
+                                        <Plus className="h-4 w-4 ml-1 rtl:ml-0 rtl:mr-1" />
+                                        הוסף נכס
+                                    </Button>
+                                </Link>
 
                                 <div className="flex items-center space-x-2 rtl:space-x-reverse">
                                     {userNavigation.map((item) => {
@@ -159,16 +157,14 @@ function Header() {
                         <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                             {isAuthenticated ? (
                                 <div className="space-y-2">
-                                    {user?.role === 'agent' && (
-                                        <Link
-                                            to="/properties/create"
-                                            className="flex items-center px-3 py-2 text-base font-medium text-blue-600 hover:text-primary-700 hover:bg-primary-50 rounded-md"
-                                            onClick={() => setIsMenuOpen(false)}
-                                        >
-                                            <Plus className="h-5 w-5 ml-2 rtl:ml-0 rtl:mr-2" />
-                                            הוסף נכס
-                                        </Link>
-                                    )}
+                                    <Link
+                                        to="/create-property"
+                                        className="flex items-center px-3 py-2 text-base font-medium text-blue-600 hover:text-primary-700 hover:bg-primary-50 rounded-md"
+                                        onClick={() => setIsMenuOpen(false)}
+                                    >
+                                        <Plus className="h-5 w-5 ml-2 rtl:ml-0 rtl:mr-2" />
+                                        הוסף נכס
+                                    </Link>
 
                                     {userNavigation.map((item) => {
                                         const Icon = item.icon;

@@ -65,6 +65,7 @@ function App() {
                   {/* Protected Routes */}
                   <Route path="/profile" element={<ProfilePage />} />
                   <Route path="/properties/create" element={<CreatePropertyPage />} />
+                  <Route path="/create-property" element={<CreatePropertyPage />} />
 
                   {/* 404 */}
                   <Route path="*" element={<NotFoundPage />} />
