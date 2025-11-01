@@ -30,13 +30,13 @@ export const validateRegister = [
 
     body('phone')
         .optional()
-        .matches(/^[\+]?[1-9][\d]{0,15}$/)
+        .matches(/^[\+]?[0-9][\d]{0,15}$/)
         .withMessage('מספר טלפון לא תקין'),
 
     body('role')
         .optional()
-        .isIn(['user', 'agent'])
-        .withMessage('התפקיד יכול להיות רק משתמש או סוכן')
+        .isIn(['user', 'buyer', 'seller', 'agent'])
+        .withMessage('התפקיד יכול להיות רק user, buyer, seller או agent')
 ];
 
 // Валидация входа

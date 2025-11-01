@@ -42,13 +42,13 @@ const userSchema = new mongoose.Schema({
         trim: true,
         required: false, // טלפון לא חובה
         match: [
-            /^[\+]?[1-9][\d]{0,15}$/,
+            /^[\+]?[0-9][\d]{0,15}$/,
             'מספר טלפון לא תקין'
         ]
     },
     role: {
         type: String,
-        enum: ['user', 'agent', 'admin'],
+        enum: ['user', 'buyer', 'seller', 'agent', 'admin'],
         default: 'user'
     },
     isVerified: {
