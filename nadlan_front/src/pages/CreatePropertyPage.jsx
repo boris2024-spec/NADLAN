@@ -751,7 +751,8 @@ function CreatePropertyPage() {
                                 <div className="space-y-6">
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                            כותרת הנכס *
+                                            כותרת הנכס
+                                            <span className="text-red-600"> *</span>
                                         </label>
                                         <Input
                                             name="title"
@@ -774,7 +775,8 @@ function CreatePropertyPage() {
 
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                            תיאור הנכס *
+                                            תיאור הנכס
+                                            <span className="text-red-600"> *</span>
                                         </label>
                                         <textarea
                                             name="description"
@@ -800,7 +802,8 @@ function CreatePropertyPage() {
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                                סוג עסקה *
+                                                סוג עסקה
+                                                <span className="text-red-600"> *</span>
                                             </label>
                                             <select
                                                 name="transactionType"
@@ -819,7 +822,8 @@ function CreatePropertyPage() {
 
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                                סוג נכס *
+                                                סוג נכס
+                                                <span className="text-red-600"> *</span>
                                             </label>
                                             <select
                                                 name="propertyType"
@@ -839,7 +843,8 @@ function CreatePropertyPage() {
 
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                            מחיר *
+                                            מחיר
+                                            <span className="text-red-600"> *</span>
                                         </label>
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                             <div className="md:col-span-2">
@@ -914,7 +919,8 @@ function CreatePropertyPage() {
                                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                             <div>
                                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                                    שטח (מ"ר) *
+                                                    שטח (מ"ר)
+                                                    <span className="text-red-600"> *</span>
                                                 </label>
                                                 <Input
                                                     name="details.area"
@@ -1077,7 +1083,8 @@ function CreatePropertyPage() {
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                                             <div>
                                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                                    עיר *
+                                                    עיר
+                                                    <span className="text-red-600"> *</span>
                                                 </label>
                                                 <Input
                                                     name="location.city"
@@ -1110,7 +1117,8 @@ function CreatePropertyPage() {
 
                                         <div>
                                             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                                כתובת מלאה *
+                                                כתובת מלאה
+                                                <span className="text-red-600"> *</span>
                                             </label>
                                             <Input
                                                 name="location.address"
