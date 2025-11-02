@@ -197,6 +197,23 @@ export function AuthProvider({ children }) {
         }
     };
 
+    // Обновление состояния пользователя локально (без запроса)
+    const updateUserState = (patch) => {
+        dispatch({ type: AUTH_ACTIONS.UPDATE_USER, payload: patch });
+    };
+
+    // Принудительно подтянуть профиль с сервера
+    const refreshProfile = async () => {
+        try {
+            const response = await authAPI.getProfile();
+            dispatch({ type: AUTH_ACTIONS.SET_USER, payload: response.data.data.user });
+            return { success: true, user: response.data.data.user };
+        } catch (error) {
+            console.error('Ошибка обновления профиля:', error);
+            return { success: false, error: handleApiError(error) };
+        }
+    };
+
     // Функция сброса ошибки
     const clearError = () => {
         dispatch({ type: AUTH_ACTIONS.SET_ERROR, payload: null });
@@ -234,6 +251,8 @@ export function AuthProvider({ children }) {
         register,
         logout,
         updateProfile,
+        updateUserState,
+        refreshProfile,
         clearError,
         hasRole,
         hasPermission,

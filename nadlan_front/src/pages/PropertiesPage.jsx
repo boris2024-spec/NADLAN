@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Filter, MapPin, Bed, Bath, Square, Heart } from 'lucide-react';
-import { Card, Button, Input } from '../components/ui';
+import { Card, Button, Input, LikeButton } from '../components/ui';
 import { propertiesAPI, handleApiError } from '../services/api';
 import { formatPrice } from '../utils/helpers';
 
@@ -271,9 +271,7 @@ function PropertiesPage() {
                                                     className="w-full aspect-photo object-cover group-hover:scale-105 transition-transform duration-200"
                                                 />
                                                 <div className="absolute top-3 right-3">
-                                                    <button className="p-2 bg-white dark:bg-dark-100/80 backdrop-blur-sm rounded-full hover:bg-white dark:bg-dark-100 transition-colors">
-                                                        <Heart className="h-4 w-4 text-gray-600 dark:text-gray-300 hover:text-red-500" />
-                                                    </button>
+                                                    <LikeButton propertyId={property._id || property.id} size={18} />
                                                 </div>
                                                 <div className="absolute bottom-3 right-3">
                                                     <span className={`px-2 py-1 text-xs font-medium rounded-full ${property.transactionType === 'sale'

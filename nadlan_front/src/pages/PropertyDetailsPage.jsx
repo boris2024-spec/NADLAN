@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Card, Button, Spinner } from '../components/ui';
+import { Card, Button, Spinner, LikeButton } from '../components/ui';
 import { propertiesAPI, handleApiError } from '../services/api';
 import { formatPrice as formatPriceUtil } from '../utils/helpers';
 import {
@@ -26,7 +26,6 @@ function PropertyDetailsPage() {
     const { id } = useParams();
     const navigate = useNavigate();
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
-    const [isFavorite, setIsFavorite] = useState(false);
     const [property, setProperty] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -70,9 +69,7 @@ function PropertyDetailsPage() {
         );
     };
 
-    const toggleFavorite = () => {
-        setIsFavorite(!isFavorite);
-    };
+    // Like handled by LikeButton component
 
     const handleShare = () => {
         if (navigator.share) {
@@ -176,15 +173,7 @@ function PropertyDetailsPage() {
 
                                     {/* Action Buttons */}
                                     <div className="absolute top-4 right-4 flex space-x-2 rtl:space-x-reverse">
-                                        <button
-                                            onClick={toggleFavorite}
-                                            className={`p-2 rounded-full backdrop-blur-sm ${isFavorite
-                                                ? 'bg-red-50 dark:bg-red-900/200 text-white'
-                                                : 'bg-white dark:bg-dark-100/80 text-gray-600 dark:text-gray-300 hover:bg-white dark:bg-dark-100'
-                                                }`}
-                                        >
-                                            <Heart className="w-5 h-5" fill={isFavorite ? 'currentColor' : 'none'} />
-                                        </button>
+                                        <LikeButton propertyId={id} size={20} />
                                         <button
                                             onClick={handleShare}
                                             className="p-2 bg-white dark:bg-dark-100/80 dark:bg-dark-100/80 backdrop-blur-sm rounded-full hover:bg-white dark:hover:bg-dark-100"
