@@ -73,8 +73,7 @@ export const PROPERTY_TYPES = {
  */
 export const TRANSACTION_TYPES = {
     sale: 'מכירה',
-    rent: 'השכרה',
-    lease: 'חכירה'
+    rent: 'השכרה'
 };
 
 /**

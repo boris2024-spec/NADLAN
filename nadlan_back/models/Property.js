@@ -40,8 +40,8 @@ const propertySchema = new mongoose.Schema({
         type: String,
         required: [true, 'Тип сделки обязателен'],
         enum: {
-            values: ['sale', 'rent', 'lease'],
-            message: 'Тип сделки может быть: продажа, аренда или лизинг'
+            values: ['sale', 'rent'],
+            message: 'Тип сделки может быть: продажа или аренда'
         }
     },
     price: {

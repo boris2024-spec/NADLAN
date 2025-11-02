@@ -1,0 +1,11 @@
+{
+    "title": "Test Draft Fixed",
+    "propertyType": "apartment",
+    "transactionType": "sale",
+    "location": {
+        "coordinates": {
+            "latitude": "",
+            "longitude": ""
+        }
+    }
+}

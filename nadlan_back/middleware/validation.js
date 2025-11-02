@@ -162,8 +162,8 @@ export const validatePropertyCreate = [
         .withMessage('Некорректный тип недвижимости'),
 
     body('transactionType')
-        .isIn(['sale', 'rent', 'lease'])
-        .withMessage('Тип сделки может быть только продажа, аренда или лизинг'),
+        .isIn(['sale', 'rent'])
+        .withMessage('Тип сделки может быть только продажа или аренда'),
 
     body('price.amount')
         .isFloat({ min: 0 })
@@ -224,6 +224,119 @@ export const validatePropertyCreate = [
         .withMessage('Некорректный год постройки')
 ];
 
+// Валидация создания черновика недвижимости (более мягкая)
+export const validatePropertyDraft = [
+    body('title')
+        .optional()
+        .trim()
+        .isLength({ min: 1, max: 200 })
+        .withMessage('Заголовок не должен превышать 200 символов'),
+
+    body('description')
+        .optional()
+        .trim()
+        .isLength({ min: 1, max: 5000 })
+        .withMessage('Описание не должно превышать 5000 символов'),
+
+    body('propertyType')
+        .optional()
+        .isIn(['apartment', 'house', 'penthouse', 'studio', 'duplex', 'villa', 'townhouse', 'loft', 'commercial', 'office', 'warehouse', 'land'])
+        .withMessage('Некорректный тип недвижимости'),
+
+    body('transactionType')
+        .optional()
+        .isIn(['sale', 'rent'])
+        .withMessage('Тип сделки может быть только продажа или аренда'),
+
+    body('price.amount')
+        .optional()
+        .isFloat({ min: 0 })
+        .withMessage('Цена должна быть положительным числом'),
+
+    body('price.currency')
+        .optional()
+        .isIn(['ILS', 'USD', 'EUR'])
+        .withMessage('Валюта может быть только ILS, USD или EUR'),
+
+    body('location.address')
+        .optional()
+        .trim()
+        .isLength({ min: 1 })
+        .withMessage('Адрес не может быть пустым'),
+
+    body('location.city')
+        .optional()
+        .trim()
+        .isLength({ min: 1 })
+        .withMessage('Город не может быть пустым'),
+
+    // Координаты для черновиков - без строгой валидации
+    body('location.coordinates.latitude')
+        .optional()
+        .custom((value) => {
+            // Если значение пустое, пропускаем валидацию
+            if (value === '' || value === null || value === undefined) {
+                return true;
+            }
+            // Если есть значение, проверяем только что это число в допустимом диапазоне
+            const num = parseFloat(value);
+            if (!isNaN(num) && num >= -90 && num <= 90) {
+                return true;
+            }
+            throw new Error('Широта должна быть числом между -90 и 90');
+        }),
+
+    body('location.coordinates.longitude')
+        .optional()
+        .custom((value) => {
+            // Если значение пустое, пропускаем валидацию
+            if (value === '' || value === null || value === undefined) {
+                return true;
+            }
+            // Если есть значение, проверяем только что это число в допустимом диапазоне
+            const num = parseFloat(value);
+            if (!isNaN(num) && num >= -180 && num <= 180) {
+                return true;
+            }
+            throw new Error('Долгота должна быть числом между -180 и 180');
+        }),
+
+    body('details.area')
+        .optional()
+        .isFloat({ min: 0.1 })
+        .withMessage('Площадь должна быть положительным числом'),
+
+    body('details.rooms')
+        .optional()
+        .isInt({ min: 0, max: 50 })
+        .withMessage('Количество комнат должно быть от 0 до 50'),
+
+    body('details.bedrooms')
+        .optional()
+        .isInt({ min: 0, max: 20 })
+        .withMessage('Количество спален должно быть от 0 до 20'),
+
+    body('details.bathrooms')
+        .optional()
+        .isInt({ min: 0, max: 20 })
+        .withMessage('Количество ванных должно быть от 0 до 20'),
+
+    body('details.floor')
+        .optional()
+        .isInt({ min: 0 })
+        .withMessage('Этаж не может быть отрицательным'),
+
+    body('details.buildYear')
+        .optional()
+        .isInt({ min: 1800, max: new Date().getFullYear() + 5 })
+        .withMessage('Некорректный год постройки'),
+
+    body('status')
+        .optional()
+        .isIn(['active', 'pending', 'sold', 'rented', 'inactive', 'draft'])
+        .withMessage('Некорректный статус объявления')
+];
+
 // Валидация обновления объекта недвижимости
 export const validatePropertyUpdate = [
     body('title')
@@ -245,8 +358,8 @@ export const validatePropertyUpdate = [
 
     body('transactionType')
         .optional()
-        .isIn(['sale', 'rent', 'lease'])
-        .withMessage('Тип сделки может быть только продажа, аренда или лизинг'),
+        .isIn(['sale', 'rent'])
+        .withMessage('Тип сделки может быть только продажа или аренда'),
 
     body('price.amount')
         .optional()
@@ -278,7 +391,7 @@ export const validatePropertySearch = [
 
     query('transactionType')
         .optional()
-        .isIn(['sale', 'rent', 'lease'])
+        .isIn(['sale', 'rent'])
         .withMessage('Некорректный тип сделки'),
 
     query('priceMin')

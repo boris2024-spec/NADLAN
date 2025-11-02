@@ -36,7 +36,7 @@ export const usePropertyValidation = (formData) => {
                 break;
 
             case 'transactionType':
-                if (!['sale', 'rent', 'lease'].includes(value)) {
+                if (!['sale', 'rent'].includes(value)) {
                     fieldErrors.transactionType = 'סוג עסקה לא תקין';
                 }
                 break;

@@ -190,6 +190,127 @@ export const createProperty = async (req, res) => {
 
     } catch (error) {
         console.error('Ошибка создания объекта недвижимости:', error);
+
+        // Если это ошибка валидации MongoDB
+        if (error.name === 'ValidationError') {
+            const validationErrors = {};
+            for (let field in error.errors) {
+                validationErrors[field] = error.errors[field].message;
+            }
+
+            return res.status(400).json({
+                success: false,
+                message: 'Ошибки валидации данных',
+                errors: [{ param: 'validation', msg: 'Проверьте заполненные поля', details: validationErrors }]
+            });
+        }
+
+        res.status(500).json({
+            success: false,
+            message: 'Внутренняя ошибка сервера'
+        });
+    }
+};
+
+// Создать или сохранить черновик недвижимости
+export const saveDraft = async (req, res) => {
+    try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({
+                success: false,
+                message: 'Ошибки валидации',
+                errors: errors.array()
+            });
+        }
+
+        const propertyData = {
+            ...req.body,
+            agent: req.user._id,
+            status: 'draft'
+        };
+
+        // Если пользователь не агент и не администратор, устанавливаем его как владельца
+        if (req.user.role === 'user') {
+            propertyData.owner = req.user._id;
+        }
+
+        // Устанавливаем минимальные значения по умолчанию только если поля пусты
+        if (!propertyData.title?.trim()) {
+            propertyData.title = `Черновик ${new Date().toLocaleDateString('he-IL')}`;
+        }
+
+        if (!propertyData.description?.trim()) {
+            propertyData.description = 'Описание будет добавлено позже';
+        }
+
+        if (!propertyData.location?.address?.trim()) {
+            propertyData.location = {
+                ...propertyData.location,
+                address: 'Адрес будет добавлен позже'
+            };
+        }
+
+        if (!propertyData.location?.city?.trim()) {
+            propertyData.location = {
+                ...propertyData.location,
+                city: 'Город будет добавлен позже'
+            };
+        }
+
+        if (!propertyData.details?.area || propertyData.details.area <= 0) {
+            propertyData.details = {
+                ...propertyData.details,
+                area: 1 // Минимальное значение для прохождения валидации
+            };
+        }
+
+        if (!propertyData.price?.amount || propertyData.price.amount <= 0) {
+            propertyData.price = {
+                ...propertyData.price,
+                amount: 1 // Минимальное значение для прохождения валидации
+            };
+        }
+
+        // Очистка координат если они пустые или некорректные
+        if (propertyData.location?.coordinates) {
+            const { latitude, longitude } = propertyData.location.coordinates;
+
+            // Удаляем координаты если они пустые или некорректные
+            if (latitude === '' || latitude === null || latitude === undefined ||
+                longitude === '' || longitude === null || longitude === undefined) {
+                delete propertyData.location.coordinates;
+            }
+        }
+
+        const property = new Property(propertyData);
+        await property.save();
+
+        await property.populate('agent', 'firstName lastName email phone avatar agentInfo');
+
+        res.status(201).json({
+            success: true,
+            message: 'Черновик успешно сохранен',
+            data: { property }
+        });
+
+    } catch (error) {
+        console.error('Ошибка сохранения черновика:', error);
+
+        // Если это ошибка валидации MongoDB
+        if (error.name === 'ValidationError') {
+            const validationErrors = {};
+            for (let field in error.errors) {
+                validationErrors[field] = error.errors[field].message;
+            }
+
+            return res.status(400).json({
+                success: false,
+                message: 'Ошибки валидации данных',
+                errors: [{ param: 'validation', msg: 'Проверьте заполненные поля', details: validationErrors }]
+            });
+        }
+
         res.status(500).json({
             success: false,
             message: 'Внутренняя ошибка сервера'

@@ -11,10 +11,12 @@ import {
     addReview,
     addContact,
     getPropertyStats,
-    getSimilarProperties
+    getSimilarProperties,
+    saveDraft
 } from '../controllers/propertyController.js';
 import {
     validatePropertyCreate,
+    validatePropertyDraft,
     validatePropertyUpdate,
     validatePropertySearch,
     validateObjectId
@@ -35,6 +37,7 @@ router.get('/:id/similar', validateObjectId('id'), getSimilarProperties);
 
 // Защищенные роуты
 router.post('/', authenticateToken, validatePropertyCreate, createProperty);
+router.post('/draft', authenticateToken, validatePropertyDraft, saveDraft);
 router.put('/:id', authenticateToken, validateObjectId('id'), validatePropertyUpdate, updateProperty);
 router.delete('/:id', authenticateToken, validateObjectId('id'), deleteProperty);
 

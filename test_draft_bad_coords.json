@@ -1,0 +1,11 @@
+{
+    "title": "Test Draft with bad coordinates",
+    "propertyType": "apartment",
+    "transactionType": "sale",
+    "location": {
+        "coordinates": {
+            "latitude": "invalid",
+            "longitude": "also_invalid"
+        }
+    }
+}

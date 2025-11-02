@@ -25,8 +25,7 @@ const PROPERTY_TYPES = [
 
 const TRANSACTION_TYPES = [
     { value: 'sale', label: 'למכירה' },
-    { value: 'rent', label: 'להשכרה' },
-    { value: 'lease', label: 'בליסינג' }
+    { value: 'rent', label: 'להשכרה' }
 ];
 
 const CURRENCIES = [
@@ -267,41 +266,14 @@ function CreatePropertyPage() {
         try {
             setIsAutoSaving(true);
 
-            // הכן נתונים לשמירה
+            // הכן נתונים לשמירה - שולח רק את הנתונים שקיימים
             const draftData = {
                 ...formData,
-                status: 'draft',
-                // וודא ששדות חובה יש להם ערכים ברירת מחדל
-                title: formData.title?.trim() || 'טיוטה ללא כותרת',
-                description: formData.description?.trim() || 'טיוטה ללא תיאור',
-                price: {
-                    amount: formData.price?.amount || 0,
-                    currency: formData.price?.currency || 'ILS',
-                    period: formData.price?.period || 'month'
-                },
-                location: {
-                    address: formData.location?.address?.trim() || 'כתובת לא הוגדרה',
-                    city: formData.location?.city?.trim() || 'עיר לא הוגדרה',
-                    district: formData.location?.district?.trim() || '',
-                    coordinates: {
-                        latitude: formData.location?.coordinates?.latitude || '',
-                        longitude: formData.location?.coordinates?.longitude || ''
-                    }
-                },
-                details: {
-                    area: formData.details?.area || 1, // מינימום 1 מ"ר לולידציה
-                    rooms: formData.details?.rooms || '',
-                    bedrooms: formData.details?.bedrooms || '',
-                    bathrooms: formData.details?.bathrooms || '',
-                    floor: formData.details?.floor || '',
-                    totalFloors: formData.details?.totalFloors || '',
-                    buildYear: formData.details?.buildYear || '',
-                    condition: formData.details?.condition || 'good'
-                }
+                status: 'draft'
             };
 
             console.log('Saving draft with data:', draftData);
-            const response = await propertiesAPI.createProperty(draftData);
+            const response = await propertiesAPI.saveDraft(draftData);
 
             if (response.data.success) {
                 toast.success('הטיוטה נשמרה בהצלחה');
@@ -311,7 +283,20 @@ function CreatePropertyPage() {
             console.error('Draft save error:', error);
             console.error('Error response:', error.response?.data);
             const errorInfo = handleApiError(error);
-            toast.error(`שגיאה בשמירת טיוטה: ${errorInfo.message}`);
+
+            // אם יש שגיאות וולידציה ספציפיות, הצג אותן
+            if (errorInfo.errors && Array.isArray(errorInfo.errors)) {
+                const firstError = errorInfo.errors[0];
+                if (firstError.details) {
+                    // הצג את השגיאה הראשונה מה-details
+                    const firstDetailError = Object.values(firstError.details)[0];
+                    toast.error(`שגיאה בשמירת טיוטה: ${firstDetailError}`);
+                } else {
+                    toast.error(`שגיאה בשמירת טיוטה: ${firstError.msg}`);
+                }
+            } else {
+                toast.error(`שגיאה בשמירת טיוטה: ${errorInfo.message}`);
+            }
         } finally {
             setIsAutoSaving(false);
         }

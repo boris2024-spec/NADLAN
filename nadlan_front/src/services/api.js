@@ -143,6 +143,9 @@ export const propertiesAPI = {
     // Создание объекта недвижимости
     createProperty: (propertyData) => api.post('/properties', propertyData),
 
+    // Сохранение черновика недвижимости
+    saveDraft: (draftData) => api.post('/properties/draft', draftData),
+
     // Обновление объекта недвижимости
     updateProperty: (id, propertyData) => api.put(`/properties/${id}`, propertyData),
 
