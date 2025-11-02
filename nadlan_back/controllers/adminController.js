@@ -1,4 +1,5 @@
 import { User, Property } from '../models/index.js';
+import { validationResult } from 'express-validator';
 
 // GET /api/admin/users
 export const listUsers = async (req, res) => {
@@ -55,8 +56,27 @@ export const listUsers = async (req, res) => {
 // PATCH /api/admin/users/:id
 export const updateUser = async (req, res) => {
     try {
+        // Handle validation errors from middleware
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({
+                success: false,
+                message: 'שגיאות בוולידציה',
+                errors: errors.array()
+            });
+        }
+
         const { id } = req.params;
-        const { role, isActive, isVerified } = req.body;
+        const {
+            role,
+            isActive,
+            isVerified,
+            firstName,
+            lastName,
+            phone,
+            preferences,
+            agentInfo
+        } = req.body;
 
         // Нельзя деактивировать или разжаловать самих себя
         if (req.user._id.toString() === id) {
@@ -75,6 +95,11 @@ export const updateUser = async (req, res) => {
         }
         if (typeof isActive === 'boolean') update.isActive = isActive;
         if (typeof isVerified === 'boolean') update.isVerified = isVerified;
+        if (typeof firstName === 'string') update.firstName = firstName;
+        if (typeof lastName === 'string') update.lastName = lastName;
+        if (typeof phone === 'string') update.phone = phone;
+        if (preferences && typeof preferences === 'object') update.preferences = preferences;
+        if (agentInfo && typeof agentInfo === 'object') update.agentInfo = agentInfo;
 
         const user = await User.findByIdAndUpdate(id, update, { new: true, runValidators: true })
             .select('-password -refreshToken -emailVerificationToken -passwordResetToken');

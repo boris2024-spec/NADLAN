@@ -1,5 +1,6 @@
 import express from 'express';
 import { authenticateToken, requireRole } from '../middleware/auth.js';
+import { validateProfileUpdate } from '../middleware/validation.js';
 import {
     listUsers,
     updateUser,
@@ -16,7 +17,7 @@ router.use(authenticateToken, requireRole('admin'));
 
 // Users management
 router.get('/users', listUsers);
-router.patch('/users/:id', updateUser);
+router.patch('/users/:id', validateProfileUpdate, updateUser);
 router.delete('/users/:id', deleteUser);
 
 // Properties management

@@ -139,6 +139,38 @@ export default function AdminPage() {
         onError: (e) => toast.error(handleApiError(e).message)
     });
 
+    // Edit user modal state
+    const [editingUser, setEditingUser] = useState(null);
+    const [userForm, setUserForm] = useState({ firstName: '', lastName: '', phone: '', role: 'user', isActive: true, isVerified: false });
+
+    const openEdit = (u) => {
+        setEditingUser(u);
+        setUserForm({
+            firstName: u.firstName || '',
+            lastName: u.lastName || '',
+            phone: u.phone || '',
+            role: u.role || 'user',
+            isActive: !!u.isActive,
+            isVerified: !!u.isVerified,
+        });
+    };
+
+    const saveEdit = async () => {
+        if (!editingUser) return;
+        const patch = {
+            firstName: userForm.firstName,
+            lastName: userForm.lastName,
+            phone: userForm.phone,
+            role: userForm.role,
+            isActive: userForm.isActive,
+            isVerified: userForm.isVerified,
+        };
+        try {
+            await updateUserMut.mutateAsync({ id: editingUser._id, patch });
+            setEditingUser(null);
+        } catch (_) { }
+    };
+
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-dark-50">
             {/* Header */}
@@ -433,7 +465,14 @@ export default function AdminPage() {
                                                     </label>
                                                 </td>
                                                 <td className="py-2 pr-3 text-xs text-gray-500">{new Date(u.createdAt).toLocaleDateString('he-IL')}</td>
-                                                <td className="py-2 pr-3">
+                                                <td className="py-2 pr-3 flex gap-2">
+                                                    <Button
+                                                        variant="outline"
+                                                        size="sm"
+                                                        onClick={() => openEdit(u)}
+                                                    >
+                                                        ערוך
+                                                    </Button>
                                                     <Button
                                                         variant="ghost"
                                                         size="sm"
@@ -456,6 +495,58 @@ export default function AdminPage() {
                                     </tbody>
                                 </table>
                             </div>
+
+                            {/* Edit User Modal */}
+                            {editingUser && (
+                                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+                                    <div className="w-full max-w-lg bg-white dark:bg-dark-100 rounded-lg shadow-lg">
+                                        <div className="px-6 py-4 border-b border-gray-200 dark:border-dark-300">
+                                            <h3 className="text-lg font-semibold">עריכת משתמש</h3>
+                                            <p className="text-sm text-gray-500">{editingUser.email}</p>
+                                        </div>
+                                        <div className="p-6 space-y-4">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div>
+                                                    <label className="block text-sm text-gray-600 mb-1">שם פרטי</label>
+                                                    <input className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-dark-100" value={userForm.firstName} onChange={(e) => setUserForm(v => ({ ...v, firstName: e.target.value }))} />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm text-gray-600 mb-1">שם משפחה</label>
+                                                    <input className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-dark-100" value={userForm.lastName} onChange={(e) => setUserForm(v => ({ ...v, lastName: e.target.value }))} />
+                                                </div>
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm text-gray-600 mb-1">טלפון</label>
+                                                <input className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-dark-100" value={userForm.phone} onChange={(e) => setUserForm(v => ({ ...v, phone: e.target.value }))} />
+                                            </div>
+                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                                <div>
+                                                    <label className="block text-sm text-gray-600 mb-1">תפקיד</label>
+                                                    <select className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-dark-100" value={userForm.role} onChange={(e) => setUserForm(v => ({ ...v, role: e.target.value }))}>
+                                                        <option value="user">משתמש</option>
+                                                        <option value="buyer">קונה</option>
+                                                        <option value="seller">מוכר</option>
+                                                        <option value="agent">סוכן</option>
+                                                        <option value="admin">אדמין</option>
+                                                    </select>
+                                                </div>
+                                                <label className="flex items-center gap-2 mt-6">
+                                                    <input type="checkbox" checked={userForm.isActive} onChange={(e) => setUserForm(v => ({ ...v, isActive: e.target.checked }))} />
+                                                    <span>פעיל</span>
+                                                </label>
+                                                <label className="flex items-center gap-2 mt-6">
+                                                    <input type="checkbox" checked={userForm.isVerified} onChange={(e) => setUserForm(v => ({ ...v, isVerified: e.target.checked }))} />
+                                                    <span>מאומת אימייל</span>
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div className="px-6 py-4 border-t border-gray-200 dark:border-dark-300 flex justify-end gap-2">
+                                            <Button variant="outline" onClick={() => setEditingUser(null)}>ביטול</Button>
+                                            <Button onClick={saveEdit}>שמור</Button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
 
                             {/* Pagination */}
                             {usersPagination && usersPagination.totalPages > 1 && (
