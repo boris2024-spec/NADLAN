@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { Card, Button, Input, Spinner, ValidationSummary } from '../components/ui';
 import { Upload, MapPin, Camera, Trash2, Check, AlertCircle, Save, Home } from 'lucide-react';
@@ -44,6 +44,8 @@ const CONDITIONS = [
 
 function CreatePropertyPage() {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const editId = searchParams.get('edit');
     const { user, isAuthenticated } = useAuth();
     const [currentStep, setCurrentStep] = useState(1);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -126,6 +128,83 @@ function CreatePropertyPage() {
             navigate('/login');
         }
     }, [isAuthenticated, navigate]);
+
+    // טעינת נכס לעריכה במידת הצורך
+    useEffect(() => {
+        const loadForEdit = async () => {
+            if (!editId) return;
+            try {
+                const res = await propertiesAPI.getPropertyById(editId);
+                const p = res.data?.data?.property || res.data?.data;
+                if (!p) return;
+
+                const toStr = (v) => v === null || v === undefined ? '' : String(v);
+                setFormData({
+                    title: p.title || '',
+                    description: p.description || '',
+                    propertyType: p.propertyType || 'apartment',
+                    transactionType: p.transactionType || 'sale',
+                    price: {
+                        amount: toStr(p.price?.amount || ''),
+                        currency: p.price?.currency || 'ILS',
+                        period: p.transactionType === 'rent' ? (p.price?.period || 'month') : 'month'
+                    },
+                    location: {
+                        address: p.location?.address || '',
+                        city: p.location?.city || '',
+                        district: p.location?.district || '',
+                        coordinates: {
+                            latitude: p.location?.coordinates?.latitude ?? '',
+                            longitude: p.location?.coordinates?.longitude ?? ''
+                        }
+                    },
+                    details: {
+                        area: toStr(p.details?.area || ''),
+                        rooms: toStr(p.details?.rooms || ''),
+                        bedrooms: toStr(p.details?.bedrooms || ''),
+                        bathrooms: toStr(p.details?.bathrooms || ''),
+                        floor: toStr(p.details?.floor || ''),
+                        totalFloors: toStr(p.details?.totalFloors || ''),
+                        buildYear: toStr(p.details?.buildYear || ''),
+                        condition: p.details?.condition || 'good'
+                    },
+                    features: {
+                        hasParking: !!p.features?.hasParking,
+                        hasElevator: !!p.features?.hasElevator,
+                        hasBalcony: !!p.features?.hasBalcony,
+                        hasTerrace: !!p.features?.hasTerrace,
+                        hasGarden: !!p.features?.hasGarden,
+                        hasPool: !!p.features?.hasPool,
+                        hasAirConditioning: !!p.features?.hasAirConditioning,
+                        hasSecurity: !!p.features?.hasSecurity,
+                        hasStorage: !!p.features?.hasStorage,
+                        isAccessible: !!p.features?.isAccessible,
+                        allowsPets: !!p.features?.allowsPets,
+                        isFurnished: !!p.features?.isFurnished,
+                    },
+                    images: Array.isArray(p.images) ? p.images : [],
+                    virtualTour: {
+                        url: p.virtualTour?.url || '',
+                        type: p.virtualTour?.type || 'video'
+                    },
+                    additionalCosts: {
+                        managementFee: toStr(p.additionalCosts?.managementFee || ''),
+                        propertyTax: toStr(p.additionalCosts?.propertyTax || ''),
+                        utilities: toStr(p.additionalCosts?.utilities || ''),
+                        insurance: toStr(p.additionalCosts?.insurance || '')
+                    },
+                    availableFrom: p.availableFrom ? new Date(p.availableFrom).toISOString().slice(0, 10) : '',
+                    status: p.status || 'draft'
+                });
+            } catch (e) {
+                const info = handleApiError(e);
+                toast.error(info.message || 'נכשלה טעינת נכס לעריכה');
+            }
+        };
+
+        loadForEdit();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [editId]);
 
     // פונקציות עזר מהוק הולידציה
 
@@ -439,11 +518,17 @@ function CreatePropertyPage() {
                 }
             }
 
-            const response = await propertiesAPI.createProperty(propertyData);
+            let response;
+            if (editId) {
+                response = await propertiesAPI.updateProperty(editId, propertyData);
+            } else {
+                response = await propertiesAPI.createProperty(propertyData);
+            }
 
             if (response.data.success) {
-                toast.success('הנכס נוצר בהצלחה!');
-                navigate(`/properties/${response.data.data.property._id}`);
+                toast.success(editId ? 'הנכס עודכן בהצלחה!' : 'הנכס נוצר בהצלחה!');
+                const id = response.data.data?.property?._id || editId;
+                navigate(`/properties/${id}`);
             }
         } catch (error) {
             console.error('Error creating property:', error);
@@ -525,10 +610,10 @@ function CreatePropertyPage() {
                     {/* Header */}
                     <div className="text-center mb-8">
                         <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mb-2">
-                            הוספת נכס חדש
+                            {editId ? 'עריכת נכס' : 'הוספת נכס חדש'}
                         </h1>
                         <p className="text-gray-600 dark:text-gray-300">
-                            מלאו את הפרטים כדי לפרסם את הנכס שלכם
+                            {editId ? 'עדכנו את פרטי הנכס שלכם' : 'מלאו את הפרטים כדי לפרסם את הנכס שלכם'}
                         </p>
                     </div>
 
@@ -1417,10 +1502,10 @@ function CreatePropertyPage() {
                                             {isSubmitting ? (
                                                 <>
                                                     <Spinner className="w-4 h-4 ml-2" />
-                                                    מפרסם...
+                                                    {editId ? 'מעדכן...' : 'מפרסם...'}
                                                 </>
                                             ) : (
-                                                'פרסם נכס'
+                                                editId ? 'עדכן נכס' : 'פרסם נכס'
                                             )}
                                         </Button>
                                     </div>

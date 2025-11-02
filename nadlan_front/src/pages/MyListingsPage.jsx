@@ -3,7 +3,8 @@ import { useRequireAuth } from '../context/AuthContext';
 import { propertiesAPI, handleApiError } from '../services/api';
 import { Card, Button } from '../components/ui';
 import { Plus, AlertCircle, Building2, Clock, Edit3, Eye, Trash2, Filter } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { toast } from 'react-hot-toast';
 
 function StatusBadge({ status }) {
     const map = {
@@ -28,6 +29,7 @@ function formatPrice(price) {
 
 export default function MyListingsPage() {
     const { isLoading: authLoading } = useRequireAuth();
+    const navigate = useNavigate();
     const [items, setItems] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -36,6 +38,7 @@ export default function MyListingsPage() {
     const [pagination, setPagination] = useState(null);
     const [status, setStatus] = useState('');
     const [transactionType, setTransactionType] = useState('');
+    const [deletingId, setDeletingId] = useState(null);
 
     const loadData = async (p = page) => {
         try {
@@ -58,6 +61,28 @@ export default function MyListingsPage() {
         loadData(1);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [authLoading, status, transactionType]);
+
+    const handleEdit = (id) => {
+        navigate(`/create-property?edit=${id}`);
+    };
+
+    const handleDelete = async (id) => {
+        const item = items.find(x => x._id === id);
+        const title = item?.title ? `"${item.title}"` : '';
+        if (!window.confirm(`האם למחוק את המודעה ${title}? הפעולה בלתי הפיכה.`)) return;
+
+        try {
+            setDeletingId(id);
+            await propertiesAPI.deleteProperty(id);
+            setItems(prev => prev.filter(p => p._id !== id));
+            toast.success('המודעה נמחקה בהצלחה');
+        } catch (e) {
+            const info = handleApiError(e);
+            toast.error(info.message || 'נכשלה מחיקה');
+        } finally {
+            setDeletingId(null);
+        }
+    };
 
     const emptyState = (
         <div className="text-center py-12">
@@ -177,13 +202,23 @@ export default function MyListingsPage() {
                                             <Link to={`/properties/${p._id}`} className="inline-flex items-center text-sm text-blue-600 hover:text-blue-700">
                                                 <Eye className="w-4 h-4 ml-1 rtl:ml-0 rtl:mr-1" /> לצפייה
                                             </Link>
-                                            {/* Placeholder actions: edit/delete could be wired later */}
                                             <div className="flex gap-2">
-                                                <Button variant="outline" size="sm" disabled className="inline-flex items-center">
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="inline-flex items-center"
+                                                    onClick={() => handleEdit(p._id)}
+                                                >
                                                     <Edit3 className="w-4 h-4 ml-1 rtl:ml-0 rtl:mr-1" /> ערוך
                                                 </Button>
-                                                <Button variant="ghost" size="sm" disabled className="inline-flex items-center text-red-600 dark:text-red-400">
-                                                    <Trash2 className="w-4 h-4 ml-1 rtl:ml-0 rtl:mr-1" /> מחק
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className="inline-flex items-center text-red-600 dark:text-red-400"
+                                                    disabled={deletingId === p._id}
+                                                    onClick={() => handleDelete(p._id)}
+                                                >
+                                                    <Trash2 className="w-4 h-4 ml-1 rtl:ml-0 rtl:mr-1" /> {deletingId === p._id ? 'מוחק…' : 'מחק'}
                                                 </Button>
                                             </div>
                                         </div>
