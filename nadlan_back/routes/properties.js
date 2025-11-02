@@ -26,6 +26,7 @@ import {
     optionalAuth,
     authorizeRoles
 } from '../middleware/auth.js';
+import { uploadPropertyImages, handleUploadError, processUploadedImages } from '../middleware/upload.js';
 
 const router = express.Router();
 
@@ -49,5 +50,14 @@ router.delete('/:id/favorites', authenticateToken, validateObjectId('id'), remov
 // Отзывы и контакты
 router.post('/:id/reviews', authenticateToken, validateObjectId('id'), addReview);
 router.post('/:id/contacts', authenticateToken, validateObjectId('id'), addContact);
+
+// Загрузка изображений недвижимости
+router.post('/upload-images', authenticateToken, uploadPropertyImages, handleUploadError, processUploadedImages, (req, res) => {
+    res.status(200).json({
+        success: true,
+        message: 'Изображения успешно загружены',
+        images: req.uploadedImages
+    });
+});
 
 export default router;

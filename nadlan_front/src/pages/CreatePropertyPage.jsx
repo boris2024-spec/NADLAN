@@ -997,7 +997,7 @@ function CreatePropertyPage() {
                                                         className="sr-only"
                                                         onChange={handleImageUpload}
                                                     />
-                                                    <Button type="button" variant="outline" size="lg" className="mt-4">
+                                                    <Button type="button" variant="outline" size="lg" className="mt-4" onClick={() => document.getElementById('file-upload').click()}>
                                                         <Upload className="w-5 h-5 ml-2" />
                                                         בחר תמונות
                                                     </Button>
