@@ -197,6 +197,21 @@ export const uploadAPI = {
         });
     },
 
+    // Временная загрузка изображений (без propertyId) для создания объявления
+    uploadTempPropertyImages: (files) => {
+        const formData = new FormData();
+        Array.from(files).forEach((file) => {
+            formData.append('images', file);
+        });
+
+        // Бэкенд роут: POST /api/properties/upload-images
+        return api.post(`/properties/upload-images`, formData, {
+            headers: {
+                'Content-Type': 'multipart/form-data',
+            },
+        });
+    },
+
     // Удаление изображения недвижимости
     deletePropertyImage: (propertyId, imageId) =>
         api.delete(`/upload/properties/${propertyId}/images/${imageId}`),

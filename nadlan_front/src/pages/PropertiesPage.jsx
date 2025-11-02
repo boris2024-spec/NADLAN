@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Filter, MapPin, Bed, Bath, Square, Heart } from 'lucide-react';
 import { Card, Button, Input } from '../components/ui';
+import { propertiesAPI, handleApiError } from '../services/api';
+import { formatPrice } from '../utils/helpers';
 
 function PropertiesPage() {
     const [properties, setProperties] = useState([]);
@@ -15,77 +17,75 @@ function PropertiesPage() {
         city: 'all'
     });
 
-    // Mock data for properties
+    // Mock data fallback (используется только если API недоступен)
     const mockProperties = [
         {
-            id: 1,
+            _id: 'mock-1',
             title: 'דירת 4 חדרים בתל אביב',
-            address: 'רחוב דיזנגוף 123, תל אביב',
-            price: '₪ 2,500,000',
+            location: { address: 'רחוב דיזנגוף 123', city: 'תל אביב' },
+            price: { amount: 2500000, currency: 'ILS' },
             transactionType: 'sale',
             propertyType: 'apartment',
-            rooms: 4,
-            bathrooms: 2,
-            area: 120,
-            image: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400',
+            details: { rooms: 4, bathrooms: 2, area: 120 },
+            images: [{ url: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400' }],
             description: 'דירה מרווחת וחדשה במיקום מעולה'
         },
         {
-            id: 2,
+            _id: 'mock-2',
             title: 'דירת 3 חדרים להשכרה',
-            address: 'רחוב אלנבי 45, תל אביב',
-            price: '₪ 8,500/חודש',
+            location: { address: 'רחוב אלנבי 45', city: 'תל אביב' },
+            price: { amount: 8500, currency: 'ILS', period: 'month' },
             transactionType: 'rent',
             propertyType: 'apartment',
-            rooms: 3,
-            bathrooms: 1,
-            area: 85,
-            image: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400',
+            details: { rooms: 3, bathrooms: 1, area: 85 },
+            images: [{ url: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=400' }],
             description: 'דירה מעוצבת ומרוהטת במרכז העיר'
         },
         {
-            id: 3,
+            _id: 'mock-3',
             title: 'בית פרטי ברמת גן',
-            address: 'רחוב הרצל 67, רמת גן',
-            price: '₪ 4,200,000',
+            location: { address: 'רחוב הרצל 67', city: 'רמת גן' },
+            price: { amount: 4200000, currency: 'ILS' },
             transactionType: 'sale',
             propertyType: 'house',
-            rooms: 6,
-            bathrooms: 3,
-            area: 200,
-            image: 'https://images.unsplash.com/photo-1613977257363-707ba9348227?w=400',
+            details: { rooms: 6, bathrooms: 3, area: 200 },
+            images: [{ url: 'https://images.unsplash.com/photo-1613977257363-707ba9348227?w=400' }],
             description: 'בית פרטי עם גינה ובריכה'
         }
     ];
 
     useEffect(() => {
-        // Simulate API call
-        const loadProperties = () => {
+        const loadProperties = async () => {
             setLoading(true);
-            setTimeout(() => {
+            try {
+                // Map UI filters to API query parameters
+                const apiFilters = {
+                    transactionType: filters.transactionType !== 'all' ? filters.transactionType : undefined,
+                    propertyType: filters.propertyType !== 'all' ? filters.propertyType : undefined,
+                    city: filters.city !== 'all' ? filters.city : undefined,
+                    rooms: filters.rooms !== 'all' ? filters.rooms : undefined,
+                    priceMin: filters.minPrice || undefined,
+                    priceMax: filters.maxPrice || undefined,
+                    search: searchTerm || undefined,
+                };
+
+                const { data } = await propertiesAPI.getProperties(apiFilters, { page: 1, limit: 12, sort: '-createdAt' });
+                const list = data?.data?.properties || [];
+                setProperties(list);
+            } catch (err) {
+                console.warn('API getProperties failed, using mock data instead:', handleApiError(err));
                 setProperties(mockProperties);
+            } finally {
                 setLoading(false);
-            }, 1000);
+            }
         };
 
         loadProperties();
-    }, []);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchTerm, filters]);
 
-    const filteredProperties = properties.filter(property => {
-        const matchesSearch = property.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            property.address.toLowerCase().includes(searchTerm.toLowerCase());
-
-        const matchesTransaction = filters.transactionType === 'all' ||
-            property.transactionType === filters.transactionType;
-
-        const matchesType = filters.propertyType === 'all' ||
-            property.propertyType === filters.propertyType;
-
-        const matchesRooms = filters.rooms === 'all' ||
-            property.rooms.toString() === filters.rooms;
-
-        return matchesSearch && matchesTransaction && matchesType && matchesRooms;
-    });
+    // Сервер уже применяет фильтры; оставляем список как есть
+    const filteredProperties = properties;
 
     const handleFilterChange = (key, value) => {
         setFilters(prev => ({
@@ -261,10 +261,10 @@ function PropertiesPage() {
                                 {/* Properties Grid */}
                                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                                     {filteredProperties.map((property) => (
-                                        <Card key={property.id} className="overflow-hidden hover:shadow-lg transition-shadow group">
+                                        <Card key={property._id || property.id} className="overflow-hidden hover:shadow-lg transition-shadow group">
                                             <div className="relative">
                                                 <img
-                                                    src={property.image}
+                                                    src={property.mainImage?.url || property.images?.[0]?.url}
                                                     alt={property.title}
                                                     className="w-full aspect-photo object-cover group-hover:scale-105 transition-transform duration-200"
                                                 />
@@ -275,8 +275,8 @@ function PropertiesPage() {
                                                 </div>
                                                 <div className="absolute bottom-3 right-3">
                                                     <span className={`px-2 py-1 text-xs font-medium rounded-full ${property.transactionType === 'sale'
-                                                            ? 'bg-green-100 text-green-800'
-                                                            : 'bg-blue-100 text-blue-800'
+                                                        ? 'bg-green-100 text-green-800'
+                                                        : 'bg-blue-100 text-blue-800'
                                                         }`}>
                                                         {property.transactionType === 'sale' ? 'למכירה' : 'להשכרה'}
                                                     </span>
@@ -292,21 +292,21 @@ function PropertiesPage() {
 
                                                 <div className="flex items-center text-gray-600 dark:text-gray-300 mb-3">
                                                     <MapPin className="h-4 w-4 ml-1" />
-                                                    <span className="text-sm">{property.address}</span>
+                                                    <span className="text-sm">{property.location?.address}{property.location?.city ? `, ${property.location.city}` : ''}</span>
                                                 </div>
 
                                                 <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-300 mb-4">
                                                     <div className="flex items-center">
                                                         <Bed className="h-4 w-4 ml-1" />
-                                                        <span>{property.rooms} חדרים</span>
+                                                        <span>{property.details?.rooms ?? property.rooms} חדרים</span>
                                                     </div>
                                                     <div className="flex items-center">
                                                         <Bath className="h-4 w-4 ml-1" />
-                                                        <span>{property.bathrooms} אמבטיות</span>
+                                                        <span>{property.details?.bathrooms ?? property.bathrooms} אמבטיות</span>
                                                     </div>
                                                     <div className="flex items-center">
                                                         <Square className="h-4 w-4 ml-1" />
-                                                        <span>{property.area} מ"ר</span>
+                                                        <span>{property.details?.area ?? property.area} מ"ר</span>
                                                     </div>
                                                 </div>
 
@@ -316,7 +316,7 @@ function PropertiesPage() {
 
                                                 <div className="flex justify-between items-center">
                                                     <span className="text-xl font-bold text-blue-600">
-                                                        {property.price}
+                                                        {formatPrice(property.price?.amount ?? 0, property.price?.currency ?? 'ILS', { period: property.price?.period })}
                                                     </span>
                                                     <Button size="sm">
                                                         פרטים נוספים

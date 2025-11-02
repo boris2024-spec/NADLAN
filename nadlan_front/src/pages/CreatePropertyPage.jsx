@@ -4,7 +4,7 @@ import { toast } from 'react-hot-toast';
 import { Card, Button, Input, Spinner, ValidationSummary } from '../components/ui';
 import { Upload, MapPin, Camera, Trash2, Check, AlertCircle, Save, Home } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { propertiesAPI, handleApiError } from '../services/api';
+import { propertiesAPI, uploadAPI, handleApiError } from '../services/api';
 import usePropertyValidation from '../hooks/usePropertyValidation';
 
 // Константы для валидации согласно MongoDB схемы
@@ -283,31 +283,38 @@ function CreatePropertyPage() {
         if (validFiles.length === 0) return;
 
         try {
-            // כאן תוכל להעלות לשרת או לשירות ענן
-            const imagePromises = validFiles.map(file => {
-                return new Promise((resolve) => {
-                    const reader = new FileReader();
-                    reader.onload = (e) => {
-                        resolve({
-                            url: e.target.result,
-                            alt: file.name,
-                            isMain: formData.images.length === 0, // הראשונה היא הראשית
-                            order: formData.images.length
-                        });
-                    };
-                    reader.readAsDataURL(file);
-                });
-            });
+            // העלאה לשרת -> Cloudinary וקבלת url/publicId
+            const res = await uploadAPI.uploadTempPropertyImages(validFiles);
+            const uploaded = res?.data?.images || res?.data?.data?.images || res?.data?.data || [];
 
-            const newImages = await Promise.all(imagePromises);
+            if (!Array.isArray(uploaded) || uploaded.length === 0) {
+                toast.error('שגיאה: השרת לא החזיר תמונות');
+                return;
+            }
+
+            const base = formData.images.length;
+            const normalized = uploaded.map((img, idx) => ({
+                url: img.url,
+                publicId: img.publicId,
+                alt: img.alt || `תמונה ${base + idx + 1}`,
+                isMain: (base === 0 && idx === 0) ? true : false,
+                order: base + idx
+            })).filter(x => x.url && x.publicId);
+
+            if (normalized.length === 0) {
+                toast.error('שגיאה: לא התקבלו קישורי תמונות תקינים');
+                return;
+            }
+
             setFormData(prev => ({
                 ...prev,
-                images: [...prev.images, ...newImages]
+                images: [...prev.images, ...normalized]
             }));
 
-            toast.success(`${validFiles.length} תמונות נוספו בהצלחה`);
+            toast.success(`${normalized.length} תמונות הועלו בהצלחה`);
         } catch (error) {
-            toast.error('שגיאה בהעלאת התמונות');
+            const info = handleApiError(error);
+            toast.error(info.message || 'שגיאה בהעלאת התמונות');
         }
     };
 
