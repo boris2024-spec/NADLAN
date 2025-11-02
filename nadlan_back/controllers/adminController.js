@@ -88,6 +88,38 @@ export const updateUser = async (req, res) => {
     }
 };
 
+// DELETE /api/admin/users/:id
+export const deleteUser = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // Защита: нельзя удалить самого себя
+        if (req.user._id.toString() === id) {
+            return res.status(400).json({ success: false, message: 'Нельзя удалить собственный аккаунт' });
+        }
+
+        const user = await User.findById(id);
+        if (!user) return res.status(404).json({ success: false, message: 'משתמש לא נמצא' });
+
+        // Удаляем все объявления, где пользователь является агентом или владельцем
+        const deleteFilter = { $or: [{ agent: id }, { owner: id }] };
+        const { deletedCount } = await Property.deleteMany(deleteFilter);
+
+        // TODO: при необходимости добавить очистку ресурсов (изображений) в Cloudinary
+
+        await User.findByIdAndDelete(id);
+
+        res.json({
+            success: true,
+            message: 'המשתמש והמודעות שלו נמחקו',
+            data: { deletedProperties: deletedCount || 0 }
+        });
+    } catch (error) {
+        console.error('Admin deleteUser error:', error);
+        res.status(500).json({ success: false, message: 'שגיאת שרת פנימית' });
+    }
+};
+
 // GET /api/admin/properties
 export const listProperties = async (req, res) => {
     try {

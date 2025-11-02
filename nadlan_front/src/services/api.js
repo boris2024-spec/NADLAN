@@ -194,6 +194,7 @@ export const adminAPI = {
         return api.get(`/admin/users?${params.toString()}`);
     },
     updateUser: (id, payload) => api.patch(`/admin/users/${id}`, payload),
+    deleteUser: (id) => api.delete(`/admin/users/${id}`),
 
     // Properties
     getProperties: (page = 1, limit = 20, filters = {}, sort = '-createdAt') => {

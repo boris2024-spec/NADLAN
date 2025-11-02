@@ -3,6 +3,7 @@ import { authenticateToken, requireRole } from '../middleware/auth.js';
 import {
     listUsers,
     updateUser,
+    deleteUser,
     listProperties,
     updatePropertyStatus,
     deletePropertyAdmin
@@ -16,6 +17,7 @@ router.use(authenticateToken, requireRole('admin'));
 // Users management
 router.get('/users', listUsers);
 router.patch('/users/:id', updateUser);
+router.delete('/users/:id', deleteUser);
 
 // Properties management
 router.get('/properties', listProperties);

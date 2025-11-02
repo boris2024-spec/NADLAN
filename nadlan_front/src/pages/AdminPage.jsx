@@ -128,6 +128,17 @@ export default function AdminPage() {
         onError: (e) => toast.error(handleApiError(e).message)
     });
 
+    const deleteUserMut = useMutation({
+        mutationFn: async (id) => {
+            await adminAPI.deleteUser(id);
+        },
+        onSuccess: () => {
+            toast.success('המשתמש נמחק');
+            qc.invalidateQueries({ queryKey: ['admin', 'users'] });
+        },
+        onError: (e) => toast.error(handleApiError(e).message)
+    });
+
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-dark-50">
             {/* Header */}
@@ -385,6 +396,7 @@ export default function AdminPage() {
                                             <th className="py-2 pr-3">אימייל</th>
                                             <th className="py-2 pr-3">תפקיד</th>
                                             <th className="py-2 pr-3">מצב</th>
+                                            <th className="py-2 pr-3">נוצר</th>
                                             <th className="py-2 pr-3">פעולות</th>
                                         </tr>
                                     </thead>
@@ -420,7 +432,25 @@ export default function AdminPage() {
                                                         <span>{u.isActive ? 'פעיל' : 'לא פעיל'}</span>
                                                     </label>
                                                 </td>
-                                                <td className="py-2 pr-3 text-xs text-gray-500">נוצר: {new Date(u.createdAt).toLocaleDateString('he-IL')}</td>
+                                                <td className="py-2 pr-3 text-xs text-gray-500">{new Date(u.createdAt).toLocaleDateString('he-IL')}</td>
+                                                <td className="py-2 pr-3">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        className="text-red-600"
+                                                        onClick={() => {
+                                                            if (u._id === auth.user?._id) {
+                                                                toast.error('אי אפשר למחוק את עצמך');
+                                                                return;
+                                                            }
+                                                            if (confirm('למחוק משתמש זה? כל המודעות שלו ימחקו.')) {
+                                                                deleteUserMut.mutate(u._id);
+                                                            }
+                                                        }}
+                                                    >
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </Button>
+                                                </td>
                                             </tr>
                                         ))}
                                     </tbody>
