@@ -157,6 +157,12 @@ export const getPropertyById = async (req, res) => {
 // Создать новый объект недвижимости
 export const createProperty = async (req, res) => {
     try {
+        // Debug logging of incoming create payload (trimmed for readability)
+        try {
+            const preview = JSON.stringify(req.body).slice(0, 1000);
+            console.log('[createProperty] Incoming body preview:', preview);
+        } catch (_) { /* noop */ }
+
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             return res.status(400).json({
@@ -176,6 +182,34 @@ export const createProperty = async (req, res) => {
             propertyData.owner = req.user._id;
             propertyData.status = 'draft'; // Обычные пользователи создают черновики
         }
+
+        // Санитизация изображений: удаляем элементы без обязательных полей (publicId/url)
+        if (Array.isArray(propertyData.images)) {
+            const originalCount = propertyData.images.length;
+            propertyData.images = propertyData.images.filter(img => img && img.url && img.publicId);
+            const filteredCount = propertyData.images.length;
+            if (filteredCount === 0) {
+                delete propertyData.images; // не сохраняем пустой массив
+            }
+            if (originalCount !== filteredCount) {
+                console.log(`[createProperty] Filtered images without publicId/url: ${originalCount - filteredCount} removed`);
+            }
+        }
+
+        // Очистка координат если они пустые или некорректные
+        if (propertyData.location?.coordinates) {
+            const { latitude, longitude } = propertyData.location.coordinates || {};
+            if (latitude === '' || latitude === null || latitude === undefined ||
+                longitude === '' || longitude === null || longitude === undefined) {
+                delete propertyData.location.coordinates;
+            }
+        }
+
+        // Финальный предпросмотр данных перед сохранением
+        try {
+            const preview = JSON.stringify(propertyData).slice(0, 1200);
+            console.log('[createProperty] Sanitized propertyData preview:', preview);
+        } catch (_) { /* noop */ }
 
         const property = new Property(propertyData);
         await property.save();
@@ -197,6 +231,7 @@ export const createProperty = async (req, res) => {
             for (let field in error.errors) {
                 validationErrors[field] = error.errors[field].message;
             }
+            console.warn('[createProperty] Mongoose validation errors:', validationErrors);
 
             return res.status(400).json({
                 success: false,
@@ -215,8 +250,16 @@ export const createProperty = async (req, res) => {
 // Создать или сохранить черновик недвижимости
 export const saveDraft = async (req, res) => {
     try {
+        // Debug logging of incoming draft payload (trimmed for readability)
+        try {
+            const preview = JSON.stringify(req.body).slice(0, 1000);
+            console.log('[saveDraft] Incoming body preview:', preview);
+        } catch (_) { /* noop */ }
+
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
+            // Log validation errors from request validators
+            console.warn('[saveDraft] Request validation errors:', errors.array());
             return res.status(400).json({
                 success: false,
                 message: 'Ошибки валидации',
@@ -272,6 +315,21 @@ export const saveDraft = async (req, res) => {
             };
         }
 
+        // Санитизация изображений: удаляем элементы без обязательных полей (publicId/url)
+        if (Array.isArray(propertyData.images)) {
+            const originalCount = propertyData.images.length;
+            propertyData.images = propertyData.images.filter(img => img && img.url && img.publicId);
+            const filteredCount = propertyData.images.length;
+
+            if (filteredCount === 0) {
+                delete propertyData.images; // не сохраняем пустой массив
+            }
+
+            if (originalCount !== filteredCount) {
+                console.log(`[saveDraft] Filtered images without publicId/url: ${originalCount - filteredCount} removed`);
+            }
+        }
+
         // Очистка координат если они пустые или некорректные
         if (propertyData.location?.coordinates) {
             const { latitude, longitude } = propertyData.location.coordinates;
@@ -282,6 +340,12 @@ export const saveDraft = async (req, res) => {
                 delete propertyData.location.coordinates;
             }
         }
+
+        // Финальный предпросмотр данных перед сохранением
+        try {
+            const preview = JSON.stringify(propertyData).slice(0, 1200);
+            console.log('[saveDraft] Sanitized propertyData preview:', preview);
+        } catch (_) { /* noop */ }
 
         const property = new Property(propertyData);
         await property.save();
@@ -303,6 +367,8 @@ export const saveDraft = async (req, res) => {
             for (let field in error.errors) {
                 validationErrors[field] = error.errors[field].message;
             }
+
+            console.warn('[saveDraft] Mongoose validation errors:', validationErrors);
 
             return res.status(400).json({
                 success: false,

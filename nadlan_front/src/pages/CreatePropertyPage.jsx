@@ -266,11 +266,83 @@ function CreatePropertyPage() {
         try {
             setIsAutoSaving(true);
 
-            // הכן נתונים לשמירה - שולח רק את הנתונים שקיימים
-            const draftData = {
-                ...formData,
-                status: 'draft'
+            // בונה payload נקי ושולח רק שדות רלוונטיים לטיוטה
+            const buildDraftPayload = (data) => {
+                const toNumber = (v) => (v === '' || v === null || v === undefined ? undefined : Number(v));
+
+                const payload = {
+                    title: data.title?.trim() || undefined,
+                    description: data.description?.trim() || undefined,
+                    propertyType: data.propertyType || undefined,
+                    transactionType: data.transactionType || undefined,
+                    price: {
+                        amount: toNumber(data.price?.amount),
+                        currency: data.price?.currency || undefined,
+                        period: data.price?.period || undefined
+                    },
+                    location: {
+                        address: data.location?.address?.trim() || undefined,
+                        city: data.location?.city?.trim() || undefined,
+                        district: data.location?.district?.trim() || undefined,
+                        coordinates: {
+                            latitude: data.location?.coordinates?.latitude,
+                            longitude: data.location?.coordinates?.longitude
+                        }
+                    },
+                    details: {
+                        area: toNumber(data.details?.area),
+                        rooms: toNumber(data.details?.rooms),
+                        bedrooms: toNumber(data.details?.bedrooms),
+                        bathrooms: toNumber(data.details?.bathrooms),
+                        floor: toNumber(data.details?.floor),
+                        totalFloors: toNumber(data.details?.totalFloors),
+                        buildYear: toNumber(data.details?.buildYear),
+                        condition: data.details?.condition || undefined
+                    },
+                    features: { ...data.features },
+                    status: 'draft'
+                };
+
+                // הסרת קואורדינטות ריקות כדי למנוע ולידציית מינ/מקס במונגוס
+                if (
+                    payload.location?.coordinates &&
+                    (payload.location.coordinates.latitude === '' || payload.location.coordinates.latitude === undefined ||
+                        payload.location.coordinates.longitude === '' || payload.location.coordinates.longitude === undefined)
+                ) {
+                    delete payload.location.coordinates;
+                }
+
+                // לא לשלוח תמונות ללא publicId (טיוטה ללא העלאה לשרת)
+                if (Array.isArray(data.images)) {
+                    const validImages = data.images.filter(img => img && img.publicId && img.url);
+                    if (validImages.length > 0) {
+                        payload.images = validImages;
+                    }
+                }
+
+                // פונקציה רקורסיבית להסרת שדות ריקים/undefined
+                const prune = (obj) => {
+                    if (!obj || typeof obj !== 'object') return obj;
+                    Object.keys(obj).forEach((key) => {
+                        const val = obj[key];
+                        if (val && typeof val === 'object' && !Array.isArray(val)) {
+                            prune(val);
+                            if (Object.keys(val).length === 0) delete obj[key];
+                        } else if (
+                            val === undefined ||
+                            val === null ||
+                            (typeof val === 'string' && val.trim() === '')
+                        ) {
+                            delete obj[key];
+                        }
+                    });
+                    return obj;
+                };
+
+                return prune(payload);
             };
+
+            const draftData = buildDraftPayload(formData);
 
             console.log('Saving draft with data:', draftData);
             const response = await propertiesAPI.saveDraft(draftData);
@@ -315,10 +387,57 @@ function CreatePropertyPage() {
         try {
             setIsSubmitting(true);
 
+            // בניית payload נקי ליצירה (מסיר תמונות ללא publicId וקואורדינטות ריקות, ממיר מספרים)
+            const toNumber = (v) => (v === '' || v === null || v === undefined ? undefined : Number(v));
             const propertyData = {
-                ...formData,
+                title: formData.title?.trim(),
+                description: formData.description?.trim(),
+                propertyType: formData.propertyType,
+                transactionType: formData.transactionType,
+                price: {
+                    amount: toNumber(formData.price?.amount),
+                    currency: formData.price?.currency || 'ILS',
+                    period: formData.transactionType === 'rent' ? (formData.price?.period || 'month') : undefined
+                },
+                location: {
+                    address: formData.location?.address?.trim(),
+                    city: formData.location?.city?.trim(),
+                    district: formData.location?.district?.trim() || undefined,
+                    coordinates: {
+                        latitude: formData.location?.coordinates?.latitude,
+                        longitude: formData.location?.coordinates?.longitude
+                    }
+                },
+                details: {
+                    area: toNumber(formData.details?.area),
+                    rooms: toNumber(formData.details?.rooms),
+                    bedrooms: toNumber(formData.details?.bedrooms),
+                    bathrooms: toNumber(formData.details?.bathrooms),
+                    floor: toNumber(formData.details?.floor),
+                    totalFloors: toNumber(formData.details?.totalFloors),
+                    buildYear: toNumber(formData.details?.buildYear),
+                    condition: formData.details?.condition || undefined
+                },
+                features: { ...formData.features },
                 status: user?.role === 'admin' || user?.role === 'agent' ? 'active' : 'draft'
             };
+
+            // הסרת קואורדינטות ריקות
+            if (
+                propertyData.location?.coordinates &&
+                (propertyData.location.coordinates.latitude === '' || propertyData.location.coordinates.latitude === undefined ||
+                    propertyData.location.coordinates.longitude === '' || propertyData.location.coordinates.longitude === undefined)
+            ) {
+                delete propertyData.location.coordinates;
+            }
+
+            // הסרת תמונות ללא publicId
+            if (Array.isArray(formData.images)) {
+                const validImages = formData.images.filter(img => img && img.publicId && img.url);
+                if (validImages.length > 0) {
+                    propertyData.images = validImages;
+                }
+            }
 
             const response = await propertiesAPI.createProperty(propertyData);
 

@@ -217,81 +217,81 @@ export const validatePropertyCreate = [
 // Валидация создания черновика недвижимости (более мягкая)
 export const validatePropertyDraft = [
     body('title')
-        .optional()
+        .optional({ checkFalsy: true })
         .trim()
         .isLength({ min: 1, max: 200 })
         .withMessage('Заголовок не должен превышать 200 символов'),
 
     body('description')
-        .optional()
+        .optional({ checkFalsy: true })
         .trim()
         .isLength({ min: 1, max: 5000 })
         .withMessage('Описание не должно превышать 5000 символов'),
 
     body('propertyType')
-        .optional()
+        .optional({ checkFalsy: true })
         .isIn(['apartment', 'house', 'penthouse', 'studio', 'duplex', 'villa', 'townhouse', 'loft', 'commercial', 'office', 'warehouse', 'land'])
         .withMessage('Некорректный тип недвижимости'),
 
     body('transactionType')
-        .optional()
+        .optional({ checkFalsy: true })
         .isIn(['sale', 'rent'])
         .withMessage('Тип сделки может быть только продажа или аренда'),
 
     body('price.amount')
-        .optional()
+        .optional({ checkFalsy: true })
         .isFloat({ min: 0 })
         .withMessage('Цена должна быть положительным числом'),
 
     body('price.currency')
-        .optional()
+        .optional({ checkFalsy: true })
         .isIn(['ILS', 'USD', 'EUR'])
         .withMessage('Валюта может быть только ILS, USD или EUR'),
 
     body('location.address')
-        .optional()
+        .optional({ checkFalsy: true })
         .trim()
         .isLength({ min: 1 })
         .withMessage('Адрес не может быть пустым'),
 
     body('location.city')
-        .optional()
+        .optional({ checkFalsy: true })
         .trim()
         .isLength({ min: 1 })
         .withMessage('Город не может быть пустым'),
 
     body('details.area')
-        .optional()
+        .optional({ checkFalsy: true })
         .isFloat({ min: 0.1 })
         .withMessage('Площадь должна быть положительным числом'),
 
     body('details.rooms')
-        .optional()
+        .optional({ checkFalsy: true })
         .isInt({ min: 0, max: 50 })
         .withMessage('Количество комнат должно быть от 0 до 50'),
 
     body('details.bedrooms')
-        .optional()
+        .optional({ checkFalsy: true })
         .isInt({ min: 0, max: 20 })
         .withMessage('Количество спален должно быть от 0 до 20'),
 
     body('details.bathrooms')
-        .optional()
+        .optional({ checkFalsy: true })
         .isInt({ min: 0, max: 20 })
         .withMessage('Количество ванных должно быть от 0 до 20'),
 
     body('details.floor')
-        .optional()
+        .optional({ checkFalsy: true })
         .isInt({ min: 0 })
         .withMessage('Этаж не может быть отрицательным'),
 
     body('details.buildYear')
-        .optional()
+        .optional({ checkFalsy: true })
         .isInt({ min: 1800, max: new Date().getFullYear() + 5 })
         .withMessage('Некорректный год постройки'),
 
     body('status')
-        .optional()
+        .optional({ checkFalsy: true })
         .isIn(['active', 'pending', 'sold', 'rented', 'inactive', 'draft'])
         .withMessage('Некорректный статус объявления')
 ];
