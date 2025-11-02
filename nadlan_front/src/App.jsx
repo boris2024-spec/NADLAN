@@ -19,6 +19,7 @@ import AuthErrorPage from './pages/AuthErrorPage';
 import EmailVerificationPage from './pages/EmailVerificationPage';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
+import MyListingsPage from './pages/MyListingsPage';
 
 // Layout
 import Layout from './components/layout/Layout';
@@ -64,6 +65,7 @@ function App() {
 
                   {/* Protected Routes */}
                   <Route path="/profile" element={<ProfilePage />} />
+                  <Route path="/my-listings" element={<MyListingsPage />} />
                   <Route path="/properties/create" element={<CreatePropertyPage />} />
                   <Route path="/create-property" element={<CreatePropertyPage />} />
 

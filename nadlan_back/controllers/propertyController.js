@@ -1,6 +1,64 @@
 import { Property } from '../models/index.js';
 import { validationResult } from 'express-validator';
 
+// Получить объекты недвижимости текущего пользователя (агента или владельца)
+export const getMyProperties = async (req, res) => {
+    try {
+        const {
+            page = 1,
+            limit = 12,
+            sort = '-createdAt',
+            status,
+            transactionType,
+            propertyType
+        } = req.query;
+
+        const userId = req.user._id;
+
+        // Базовый фильтр: объекты, где пользователь — агент или владелец
+        const filter = {
+            $or: [{ agent: userId }, { owner: userId }]
+        };
+
+        if (status) filter.status = status;
+        if (transactionType) filter.transactionType = transactionType;
+        if (propertyType) filter.propertyType = propertyType;
+
+        const total = await Property.countDocuments(filter);
+        const totalPages = Math.ceil(total / parseInt(limit));
+
+        const properties = await Property.findWithFilters(filter, {
+            page: parseInt(page),
+            limit: parseInt(limit),
+            sort,
+            select:
+                'title description propertyType transactionType price location details features images status averageRating views agent owner createdAt updatedAt'
+        });
+
+        res.json({
+            success: true,
+            data: {
+                properties,
+                pagination: {
+                    currentPage: parseInt(page),
+                    totalPages,
+                    totalItems: total,
+                    itemsPerPage: parseInt(limit),
+                    hasNextPage: parseInt(page) < totalPages,
+                    hasPrevPage: parseInt(page) > 1
+                },
+                filters: { status, transactionType, propertyType }
+            }
+        });
+    } catch (error) {
+        console.error('Ошибка получения объектов пользователя:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Внутренняя ошибка сервера'
+        });
+    }
+};
+
 // Получить все объекты недвижимости с фильтрацией
 export const getProperties = async (req, res) => {
     try {

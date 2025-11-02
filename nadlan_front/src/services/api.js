@@ -158,6 +158,17 @@ export const propertiesAPI = {
     // Получение статистики
     getStats: () => api.get('/properties/stats'),
 
+    // Мои объявления (пользователя)
+    getMyProperties: (page = 1, limit = 12, filters = {}) => {
+        const params = new URLSearchParams();
+        params.append('page', page);
+        params.append('limit', limit);
+        Object.entries(filters).forEach(([k, v]) => {
+            if (v !== undefined && v !== null && v !== '') params.append(k, v);
+        });
+        return api.get(`/properties/mine?${params.toString()}`);
+    },
+
     // Избранное
     getFavorites: (page = 1, limit = 12) => api.get(`/properties/user/favorites?page=${page}&limit=${limit}`),
     addToFavorites: (id) => api.post(`/properties/${id}/favorites`),

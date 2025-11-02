@@ -12,6 +12,7 @@ import {
     addContact,
     getPropertyStats,
     getSimilarProperties,
+    getMyProperties,
     saveDraft
 } from '../controllers/propertyController.js';
 import {
@@ -33,10 +34,13 @@ const router = express.Router();
 // Публичные роуты
 router.get('/', validatePropertySearch, optionalAuth, getProperties);
 router.get('/stats', getPropertyStats);
+
+// Защищенные роуты (располагаем до параметризованных путей)
+router.get('/mine', authenticateToken, getMyProperties);
+
+// Параметризованные роуты — в конце, чтобы не перехватывать статические пути
 router.get('/:id', validateObjectId('id'), optionalAuth, getPropertyById);
 router.get('/:id/similar', validateObjectId('id'), getSimilarProperties);
-
-// Защищенные роуты
 router.post('/', authenticateToken, validatePropertyCreate, createProperty);
 router.post('/draft', authenticateToken, validatePropertyDraft, saveDraft);
 router.put('/:id', authenticateToken, validateObjectId('id'), validatePropertyUpdate, updateProperty);

@@ -31,6 +31,7 @@ function Header() {
     ];
 
     const userNavigation = isAuthenticated ? [
+        { name: 'הנכסים שלי', href: '/my-listings', icon: Building2 },
         { name: 'המועדפים שלי', href: '/favorites', icon: Heart },
         { name: 'פרופיל', href: '/profile', icon: User },
     ] : [];
