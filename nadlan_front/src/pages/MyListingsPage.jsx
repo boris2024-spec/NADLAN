@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRequireAuth } from '../context/AuthContext';
 import { propertiesAPI, handleApiError } from '../services/api';
 import { Card, Button } from '../components/ui';
@@ -27,7 +27,7 @@ function formatPrice(price) {
 }
 
 export default function MyListingsPage() {
-    const { user, isLoading: authLoading } = useRequireAuth();
+    const { isLoading: authLoading } = useRequireAuth();
     const [items, setItems] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
