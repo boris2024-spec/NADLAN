@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Search, Filter, MapPin, Bed, Bath, Square, Heart } from 'lucide-react';
 import { Card, Button, Input } from '../components/ui';
 import { propertiesAPI, handleApiError } from '../services/api';
 import { formatPrice } from '../utils/helpers';
 
 function PropertiesPage() {
+    const navigate = useNavigate();
     const [properties, setProperties] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
@@ -318,7 +320,15 @@ function PropertiesPage() {
                                                     <span className="text-xl font-bold text-blue-600">
                                                         {formatPrice(property.price?.amount ?? 0, property.price?.currency ?? 'ILS', { period: property.price?.period })}
                                                     </span>
-                                                    <Button size="sm">
+                                                    <Button
+                                                        size="sm"
+                                                        onClick={() => {
+                                                            const id = property._id || property.id;
+                                                            if (id) {
+                                                                navigate(`/properties/${id}`);
+                                                            }
+                                                        }}
+                                                    >
                                                         פרטים נוספים
                                                     </Button>
                                                 </div>
