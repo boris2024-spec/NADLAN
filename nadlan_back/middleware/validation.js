@@ -184,16 +184,6 @@ export const validatePropertyCreate = [
         .isLength({ min: 2 })
         .withMessage('Город обязателен и должен содержать минимум 2 символа'),
 
-    body('location.coordinates.latitude')
-        .optional()
-        .isFloat({ min: -90, max: 90 })
-        .withMessage('Широта должна быть между -90 и 90'),
-
-    body('location.coordinates.longitude')
-        .optional()
-        .isFloat({ min: -180, max: 180 })
-        .withMessage('Долгота должна быть между -180 и 180'),
-
     body('details.area')
         .isFloat({ min: 1 })
         .withMessage('Площадь должна быть положительным числом'),
@@ -269,37 +259,6 @@ export const validatePropertyDraft = [
         .trim()
         .isLength({ min: 1 })
         .withMessage('Город не может быть пустым'),
-
-    // Координаты для черновиков - без строгой валидации
-    body('location.coordinates.latitude')
-        .optional()
-        .custom((value) => {
-            // Если значение пустое, пропускаем валидацию
-            if (value === '' || value === null || value === undefined) {
-                return true;
-            }
-            // Если есть значение, проверяем только что это число в допустимом диапазоне
-            const num = parseFloat(value);
-            if (!isNaN(num) && num >= -90 && num <= 90) {
-                return true;
-            }
-            throw new Error('Широта должна быть числом между -90 и 90');
-        }),
-
-    body('location.coordinates.longitude')
-        .optional()
-        .custom((value) => {
-            // Если значение пустое, пропускаем валидацию
-            if (value === '' || value === null || value === undefined) {
-                return true;
-            }
-            // Если есть значение, проверяем только что это число в допустимом диапазоне
-            const num = parseFloat(value);
-            if (!isNaN(num) && num >= -180 && num <= 180) {
-                return true;
-            }
-            throw new Error('Долгота должна быть числом между -180 и 180');
-        }),
 
     body('details.area')
         .optional()
