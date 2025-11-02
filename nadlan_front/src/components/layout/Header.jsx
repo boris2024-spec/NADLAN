@@ -12,7 +12,8 @@ import {
     Menu,
     X,
     Plus,
-    Heart
+    Heart,
+    Shield
 } from 'lucide-react';
 
 function Header() {
@@ -63,6 +64,15 @@ function Header() {
                                 </Link>
                             );
                         })}
+                        {isAuthenticated && user?.role === 'admin' && (
+                            <Link
+                                to="/admin"
+                                className="nav-link text-amber-600 dark:text-amber-400 hover:text-amber-700"
+                            >
+                                <Shield className="h-4 w-4 ml-1 rtl:ml-0 rtl:mr-1" />
+                                ניהול
+                            </Link>
+                        )}
                     </nav>
 
                     {/* Desktop User Menu */}
@@ -153,6 +163,16 @@ function Header() {
                                     </Link>
                                 );
                             })}
+                            {isAuthenticated && user?.role === 'admin' && (
+                                <Link
+                                    to="/admin"
+                                    className="flex items-center px-3 py-2 text-base font-medium text-amber-700 dark:text-amber-400 hover:text-amber-800 hover:bg-amber-50 dark:hover:bg-dark-200 rounded-md transition-colors"
+                                    onClick={() => setIsMenuOpen(false)}
+                                >
+                                    <Shield className="h-5 w-5 ml-2 rtl:ml-0 rtl:mr-2" />
+                                    ניהול
+                                </Link>
+                            )}
                         </div>
 
                         <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">

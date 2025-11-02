@@ -21,6 +21,7 @@ import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
 import MyListingsPage from './pages/MyListingsPage';
 import FavoritesPage from './pages/FavoritesPage';
+import AdminPage from './pages/AdminPage';
 
 // Layout
 import Layout from './components/layout/Layout';
@@ -70,6 +71,7 @@ function App() {
                   <Route path="/properties/create" element={<CreatePropertyPage />} />
                   <Route path="/create-property" element={<CreatePropertyPage />} />
                   <Route path="/favorites" element={<FavoritesPage />} />
+                  <Route path="/admin" element={<AdminPage />} />
 
                   {/* 404 */}
                   <Route path="*" element={<NotFoundPage />} />

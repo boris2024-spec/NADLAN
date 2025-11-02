@@ -181,6 +181,35 @@ export const propertiesAPI = {
     addContact: (id, contactData) => api.post(`/properties/${id}/contacts`, contactData),
 };
 
+// Admin API
+export const adminAPI = {
+    // Users
+    getUsers: (page = 1, limit = 20, filters = {}) => {
+        const params = new URLSearchParams();
+        params.append('page', page);
+        params.append('limit', limit);
+        Object.entries(filters).forEach(([k, v]) => {
+            if (v !== undefined && v !== null && v !== '') params.append(k, v);
+        });
+        return api.get(`/admin/users?${params.toString()}`);
+    },
+    updateUser: (id, payload) => api.patch(`/admin/users/${id}`, payload),
+
+    // Properties
+    getProperties: (page = 1, limit = 20, filters = {}, sort = '-createdAt') => {
+        const params = new URLSearchParams();
+        params.append('page', page);
+        params.append('limit', limit);
+        params.append('sort', sort);
+        Object.entries(filters).forEach(([k, v]) => {
+            if (v !== undefined && v !== null && v !== '') params.append(k, v);
+        });
+        return api.get(`/admin/properties?${params.toString()}`);
+    },
+    updatePropertyStatus: (id, status) => api.patch(`/admin/properties/${id}/status`, { status }),
+    deleteProperty: (id) => api.delete(`/admin/properties/${id}`),
+};
+
 // Upload API
 export const uploadAPI = {
     // Загрузка изображений недвижимости
