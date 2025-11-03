@@ -247,3 +247,84 @@ export const deletePropertyAdmin = async (req, res) => {
         res.status(500).json({ success: false, message: 'שגיאת שרת פנימית' });
     }
 };
+
+// PATCH /api/admin/properties/:id
+export const updatePropertyAdmin = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        // Валидация из middleware
+        const result = validationResult(req);
+        if (!result.isEmpty()) {
+            return res.status(400).json({
+                success: false,
+                message: 'Ошибки валидации',
+                errors: result.array()
+            });
+        }
+
+        const property = await Property.findById(id);
+        if (!property) {
+            return res.status(404).json({ success: false, message: 'מודעה לא נמצאה' });
+        }
+
+        // Безопасное обновление: точечно обновляем поля, не затирая вложенные объекты целиком
+        const {
+            title,
+            description,
+            propertyType,
+            transactionType,
+            status,
+            price,
+            location,
+            details,
+        } = req.body || {};
+
+        if (typeof title === 'string') property.title = title;
+        if (typeof description === 'string') property.description = description;
+        if (typeof propertyType === 'string') property.propertyType = propertyType;
+        if (typeof transactionType === 'string') property.transactionType = transactionType;
+        if (typeof status === 'string') property.status = status;
+
+        if (price && typeof price === 'object') {
+            if (!property.price) property.price = {};
+            if (price.amount !== undefined) property.price.amount = price.amount;
+            if (price.currency !== undefined) property.price.currency = price.currency;
+        }
+
+        if (location && typeof location === 'object') {
+            if (!property.location) property.location = {};
+            if (location.city !== undefined) property.location.city = location.city;
+            if (location.address !== undefined) property.location.address = location.address;
+            if (location.country !== undefined) property.location.country = location.country;
+            if (location.coordinates && Array.isArray(location.coordinates)) {
+                property.location.coordinates = location.coordinates;
+            }
+        }
+
+        if (details && typeof details === 'object') {
+            if (!property.details) property.details = {};
+            const allowedDetailFields = [
+                'area', 'rooms', 'bedrooms', 'bathrooms', 'floor', 'buildYear',
+                'parking', 'balcony', 'elevator', 'furnished', 'airConditioning'
+            ];
+            for (const key of Object.keys(details)) {
+                if (allowedDetailFields.includes(key)) {
+                    property.details[key] = details[key];
+                }
+            }
+        }
+
+        const saved = await property.save();
+
+        const populated = await Property.findById(saved._id)
+            .select('title propertyType transactionType price location details images status averageRating views agent owner createdAt updatedAt')
+            .populate('agent', 'firstName lastName email')
+            .populate('owner', 'firstName lastName email');
+
+        res.json({ success: true, data: { property: populated } });
+    } catch (error) {
+        console.error('Admin updateProperty error:', error);
+        res.status(500).json({ success: false, message: 'שגיאת שרת פנימית' });
+    }
+};

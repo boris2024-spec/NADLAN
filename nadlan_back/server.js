@@ -44,9 +44,13 @@ app.use(limiter);
 
 // CORS настройки
 const corsOptions = {
-    origin: process.env.CLIENT_ORIGIN ? process.env.CLIENT_ORIGIN.split(',') : ['http://localhost:5173'],
+    // Разрешаем несколько локальных портов по умолчанию (5173, 5174)
+    origin: process.env.CLIENT_ORIGIN
+        ? process.env.CLIENT_ORIGIN.split(',')
+        : ['http://localhost:5173', 'http://localhost:5174'],
     credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    // Добавляем PATCH (и HEAD на всякий случай)
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'],
     allowedHeaders: ['Content-Type', 'Authorization'],
 };
 app.use(cors(corsOptions));

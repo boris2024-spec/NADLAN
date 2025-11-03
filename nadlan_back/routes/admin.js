@@ -1,13 +1,14 @@
 import express from 'express';
 import { authenticateToken, requireRole } from '../middleware/auth.js';
-import { validateProfileUpdate } from '../middleware/validation.js';
+import { validateProfileUpdate, validatePropertyUpdate } from '../middleware/validation.js';
 import {
     listUsers,
     updateUser,
     deleteUser,
     listProperties,
     updatePropertyStatus,
-    deletePropertyAdmin
+    deletePropertyAdmin,
+    updatePropertyAdmin
 } from '../controllers/adminController.js';
 
 const router = express.Router();
@@ -22,6 +23,7 @@ router.delete('/users/:id', deleteUser);
 
 // Properties management
 router.get('/properties', listProperties);
+router.patch('/properties/:id', validatePropertyUpdate, updatePropertyAdmin);
 router.patch('/properties/:id/status', updatePropertyStatus);
 router.delete('/properties/:id', deletePropertyAdmin);
 

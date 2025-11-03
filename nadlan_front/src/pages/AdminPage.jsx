@@ -83,6 +83,57 @@ export default function AdminPage() {
         onError: (e) => toast.error(handleApiError(e).message)
     });
 
+    // Edit property modal state
+    const [editingProp, setEditingProp] = useState(null);
+    const [propForm, setPropForm] = useState({
+        title: '',
+        city: '',
+        price: '',
+        status: 'pending',
+        transactionType: 'sale',
+        propertyType: 'apartment'
+    });
+
+    const openEditProp = (p) => {
+        setEditingProp(p);
+        setPropForm({
+            title: p.title || '',
+            city: p?.location?.city || '',
+            price: p?.price?.amount != null ? String(p.price.amount) : '',
+            status: p.status || 'pending',
+            transactionType: p.transactionType || 'sale',
+            propertyType: p.propertyType || 'apartment'
+        });
+    };
+
+    const updatePropMut = useMutation({
+        mutationFn: async ({ id, patch }) => {
+            await adminAPI.updateProperty(id, patch);
+        },
+        onSuccess: () => {
+            toast.success('המודעה עודכנה');
+            setEditingProp(null);
+            qc.invalidateQueries({ queryKey: ['admin', 'properties'] });
+        },
+        onError: (e) => toast.error(handleApiError(e).message)
+    });
+
+    const savePropEdit = async () => {
+        if (!editingProp) return;
+        const patch = {};
+        if (propForm.title?.trim()) patch.title = propForm.title.trim();
+        if (propForm.propertyType) patch.propertyType = propForm.propertyType;
+        if (propForm.transactionType) patch.transactionType = propForm.transactionType;
+        if (propForm.status) patch.status = propForm.status;
+        if (propForm.price !== '') {
+            const amount = Number(propForm.price);
+            if (!Number.isNaN(amount)) patch.price = { amount };
+        }
+        if (propForm.city?.trim()) patch.location = { city: propForm.city.trim() };
+
+        await updatePropMut.mutateAsync({ id: editingProp._id, patch });
+    };
+
     const propStatusOptions = useMemo(() => ([
         { value: '', label: 'כל הסטטוסים' },
         { value: 'pending', label: 'ממתין' },
@@ -360,6 +411,9 @@ export default function AdminPage() {
                                                 </td>
                                                 <td className="py-2 pr-3">
                                                     <div className="flex gap-2">
+                                                        <Button variant="outline" size="sm" onClick={() => openEditProp(p)}>
+                                                            ערוך
+                                                        </Button>
                                                         <Button variant="ghost" size="sm" onClick={() => updatePropStatusMut.mutate({ id: p._id, status: 'active' })}>
                                                             <CheckCircle2 className="w-4 h-4" />
                                                         </Button>
@@ -378,6 +432,72 @@ export default function AdminPage() {
                                     </tbody>
                                 </table>
                             </div>
+
+                            {/* Edit Property Modal */}
+                            {editingProp && (
+                                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+                                    <div className="w-full max-w-2xl bg-white dark:bg-dark-100 rounded-lg shadow-lg">
+                                        <div className="px-6 py-4 border-b border-gray-200 dark:border-dark-300">
+                                            <h3 className="text-lg font-semibold">עריכת מודעה</h3>
+                                            <p className="text-sm text-gray-500">{editingProp._id}</p>
+                                        </div>
+                                        <div className="p-6 space-y-4">
+                                            <div>
+                                                <label className="block text-sm text-gray-600 mb-1">כותרת</label>
+                                                <input className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-dark-100" value={propForm.title} onChange={(e) => setPropForm(v => ({ ...v, title: e.target.value }))} />
+                                            </div>
+                                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                                <div>
+                                                    <label className="block text-sm text-gray-600 mb-1">סטטוס</label>
+                                                    <select className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-dark-100" value={propForm.status} onChange={(e) => setPropForm(v => ({ ...v, status: e.target.value }))}>
+                                                        {propStatusOptions.filter(o => o.value !== '').map(o => (
+                                                            <option key={o.value} value={o.value}>{o.label}</option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm text-gray-600 mb-1">סוג עסקה</label>
+                                                    <select className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-dark-100" value={propForm.transactionType} onChange={(e) => setPropForm(v => ({ ...v, transactionType: e.target.value }))}>
+                                                        <option value="sale">מכירה</option>
+                                                        <option value="rent">השכרה</option>
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm text-gray-600 mb-1">סוג נכס</label>
+                                                    <select className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-dark-100" value={propForm.propertyType} onChange={(e) => setPropForm(v => ({ ...v, propertyType: e.target.value }))}>
+                                                        <option value="apartment">דירה</option>
+                                                        <option value="house">בית</option>
+                                                        <option value="penthouse">פנטהאוז</option>
+                                                        <option value="studio">סטודיו</option>
+                                                        <option value="duplex">דופלקס</option>
+                                                        <option value="villa">וילה</option>
+                                                        <option value="townhouse">טאוןהאוס</option>
+                                                        <option value="loft">לופט</option>
+                                                        <option value="commercial">מסחרי</option>
+                                                        <option value="office">משרד</option>
+                                                        <option value="warehouse">מחסן</option>
+                                                        <option value="land">מגרש</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                <div>
+                                                    <label className="block text-sm text-gray-600 mb-1">עיר</label>
+                                                    <input className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-dark-100" value={propForm.city} onChange={(e) => setPropForm(v => ({ ...v, city: e.target.value }))} />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm text-gray-600 mb-1">מחיר (₪)</label>
+                                                    <input type="number" className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-dark-100" value={propForm.price} onChange={(e) => setPropForm(v => ({ ...v, price: e.target.value }))} />
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div className="px-6 py-4 border-t border-gray-200 dark:border-dark-300 flex justify-end gap-2">
+                                            <Button variant="outline" onClick={() => setEditingProp(null)}>ביטול</Button>
+                                            <Button onClick={savePropEdit} loading={updatePropMut.isPending}>שמור</Button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
 
                             {/* Pagination */}
                             {propsPagination && propsPagination.totalPages > 1 && (

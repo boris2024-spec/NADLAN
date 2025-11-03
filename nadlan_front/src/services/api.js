@@ -209,6 +209,7 @@ export const adminAPI = {
     },
     updatePropertyStatus: (id, status) => api.patch(`/admin/properties/${id}/status`, { status }),
     deleteProperty: (id) => api.delete(`/admin/properties/${id}`),
+    updateProperty: (id, payload) => api.patch(`/admin/properties/${id}`, payload),
 };
 
 // Upload API
