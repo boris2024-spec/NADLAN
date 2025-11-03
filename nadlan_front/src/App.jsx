@@ -25,6 +25,7 @@ import AdminPage from './pages/AdminPage';
 
 // Layout
 import Layout from './components/layout/Layout';
+import ScrollToTop from './components/ui/ScrollToTop';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -49,6 +50,7 @@ function App() {
                 v7_relativeSplatPath: true
               }}
             >
+              <ScrollToTop behavior="smooth" />
               <Layout>
                 <Routes>
                   {/* Public Routes */}
