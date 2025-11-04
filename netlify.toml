@@ -1,0 +1,48 @@
+[build]
+  # Репозиторий монорепо — билдим фронт из подпапки
+  base = "nadlan_front"
+  command = "npm ci && npm run build"
+  # publish указывается ОТНОСИТЕЛЬНО base
+  publish = "dist"
+
+[build.environment]
+  # фиксируем Node.js версию
+  NODE_VERSION = "20"
+  # РЕКОМЕНДАЦИЯ: задайте это в UI Netlify (Site settings → Environment variables)
+  # VITE_API_URL = "https://<your-backend-domain>/api"
+  # VITE_API_TIMEOUT = "10000"
+
+# Для SPA-роутинга (React Router / Vite)
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Кэш статики из Vite (/assets/*) — долгий кеш с immutable
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+# index.html — без кеша, чтобы подтягивались свежие бандлы
+[[headers]]
+  for = "/index.html"
+  [headers.values]
+    Cache-Control = "no-cache"
+
+# Базовые заголовки безопасности (совместимы с текущим приложением)
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    # CSP согласована с использованием шрифтов Google и изображений Cloudinary
+    Content-Security-Policy = "default-src 'self'; img-src 'self' data: https://res.cloudinary.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self'"
+
+# (Опционально) Netlify Dev — локальный превью (netlify dev)
+[dev]
+  framework = "vite"
+  command = "npm run dev"
+  targetPort = 5173
+  port = 8888
