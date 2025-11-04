@@ -43,17 +43,27 @@ const limiter = rateLimit({
 app.use(limiter);
 
 // CORS настройки
+const allowedOrigins = (
+    process.env.CLIENT_ORIGIN || process.env.FRONTEND_URL || ''
+)
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+
 const corsOptions = {
-    // Разрешаем несколько локальных портов по умолчанию (5173, 5174)
-    origin: process.env.CLIENT_ORIGIN
-        ? process.env.CLIENT_ORIGIN.split(',')
-        : ['http://localhost:5173', 'http://localhost:5174'],
+    origin(origin, callback) {
+        // Разрешаем запросы без Origin (например, health-checkи, Postman)
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.includes(origin)) return callback(null, true);
+        return callback(new Error(`Not allowed by CORS: ${origin}`));
+    },
     credentials: true,
-    // Добавляем PATCH (и HEAD на всякий случай)
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'],
     allowedHeaders: ['Content-Type', 'Authorization'],
 };
+// Ставим CORS как можно раньше и явно обрабатываем preflight
 app.use(cors(corsOptions));
+app.options('*', cors(corsOptions));
 
 // Middleware для парсинга JSON
 app.use(express.json({ limit: '10mb' }));
@@ -66,6 +76,7 @@ app.use(session({
     saveUninitialized: false,
     cookie: {
         secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
         maxAge: 24 * 60 * 60 * 1000 // 24 часа
     }
 }));
