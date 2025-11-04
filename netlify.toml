@@ -9,8 +9,6 @@
 [build.environment]
   # фиксируем Node.js версию
   NODE_VERSION = "20"
-  # Пробрасываем флаг для npm install на этапе Netlify (устранение peer deps конфликтов)
-  NPM_FLAGS = "--legacy-peer-deps"
   # РЕКОМЕНДАЦИЯ: задайте это в UI Netlify (Site settings → Environment variables)
   # VITE_API_URL = "https://<your-backend-domain>/api"
   # VITE_API_TIMEOUT = "10000"
