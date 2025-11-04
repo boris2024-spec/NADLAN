@@ -7,3 +7,4 @@ export { default as ThemeToggle } from './ThemeToggle';
 export { default as EmailVerificationNotice } from './EmailVerificationNotice';
 export { default as ValidationSummary } from './ValidationSummary';
 export { default as LikeButton } from './LikeButton';
+export { default as CloudinaryUploadWidget } from './CloudinaryUploadWidget';

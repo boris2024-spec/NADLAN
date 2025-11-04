@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
-import { Card, Button, Input, Spinner, ValidationSummary } from '../components/ui';
+import { Card, Button, Input, Spinner, ValidationSummary, CloudinaryUploadWidget } from '../components/ui';
 import { Upload, MapPin, Camera, Trash2, Check, AlertCircle, Save, Home } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { propertiesAPI, uploadAPI, handleApiError } from '../services/api';
@@ -1216,10 +1216,34 @@ function CreatePropertyPage() {
                                                         className="sr-only"
                                                         onChange={handleImageUpload}
                                                     />
-                                                    <Button type="button" variant="outline" size="lg" className="mt-4" onClick={() => document.getElementById('file-upload').click()}>
-                                                        <Upload className="w-5 h-5 ml-2" />
-                                                        בחר תמונות
-                                                    </Button>
+                                                    <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mt-4">
+                                                        <Button type="button" variant="outline" size="lg" onClick={() => document.getElementById('file-upload').click()}>
+                                                            <Upload className="w-5 h-5 ml-2" />
+                                                            בחר תמונות מהמכשיר
+                                                        </Button>
+                                                        <CloudinaryUploadWidget
+                                                            size="lg"
+                                                            variant="outline"
+                                                            sources={['camera', 'local']}
+                                                            multiple={true}
+                                                            folder="nadlan/properties"
+                                                            onUpload={(file) => {
+                                                                // Нормализуем загруженный объект к формату схемы
+                                                                setFormData(prev => {
+                                                                    const base = prev.images.length;
+                                                                    const newImg = {
+                                                                        url: file.url,
+                                                                        publicId: file.publicId,
+                                                                        alt: `תמונה ${base + 1}`,
+                                                                        isMain: base === 0,
+                                                                        order: base
+                                                                    };
+                                                                    return { ...prev, images: [...prev.images, newImg] };
+                                                                });
+                                                                toast.success('תמונה הועלתה בהצלחה');
+                                                            }}
+                                                        />
+                                                    </div>
                                                 </label>
                                             </div>
                                             <p className="mt-3 text-sm text-gray-500 dark:text-gray-400">
