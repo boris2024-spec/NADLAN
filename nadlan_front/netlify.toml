@@ -1,0 +1,16 @@
+[build]
+  # <— имя папки из твоего репо
+  base = "nadlan_front"
+  command = "npm ci && npm run build"
+  # publish указывается ОТНОСИТЕЛЬНО base
+  publish = "dist"
+
+[build.environment]
+  # опционально, чтобы не было расхождений по Node
+  NODE_VERSION = "20"
+
+# Для SPA-роутинга (React Router / Vite)
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
