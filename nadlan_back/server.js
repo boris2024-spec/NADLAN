@@ -120,6 +120,7 @@ import authRoutes from './routes/auth.js';
 import propertyRoutes from './routes/properties.js';
 import uploadRoutes from './routes/upload.js';
 import adminRoutes from './routes/admin.js';
+import cloudinaryRoutes from './routes/cloudinary.js';
 // import userRoutes from './routes/users.js';
 
 // Использование роутов
@@ -127,6 +128,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/properties', propertyRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/cloudinary', cloudinaryRoutes);
 // app.use('/api/users', userRoutes);
 
 // Обработка 404

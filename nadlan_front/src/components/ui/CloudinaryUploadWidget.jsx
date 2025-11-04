@@ -38,9 +38,9 @@ const CloudinaryUploadWidget = ({
     }, []);
 
     const openWidget = () => {
-        const cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
-        const uploadPreset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
-        const defaultFolder = import.meta.env.VITE_CLOUDINARY_FOLDER;
+        const cloudName = (import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || '').trim();
+        const uploadPreset = (import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET || '').trim();
+        const defaultFolder = (import.meta.env.VITE_CLOUDINARY_FOLDER || '').trim();
         const targetFolder = folder || defaultFolder;
 
         if (!cloudName || !uploadPreset) {
@@ -50,37 +50,65 @@ const CloudinaryUploadWidget = ({
         }
 
         if (!widgetRef.current) {
-            widgetRef.current = window.cloudinary.createUploadWidget(
-                {
-                    cloudName,
-                    uploadPreset,
-                    sources,
-                    multiple,
-                    clientAllowedFormats: ['image'],
-                    maxFileSize,
-                    folder: targetFolder,
-                    resourceType: 'image',
-                    showAdvancedOptions: false,
-                    cropping: false,
-                    // Небольшая кастомизация стилей
-                    styles: {
-                        palette: {
-                            window: '#ffffff',
-                            sourceBg: '#f7f9fb',
-                            windowBorder: '#90a0b3',
-                            tabIcon: '#2563eb',
-                            textDark: '#0f172a',
-                            inactiveTabIcon: '#64748b',
-                            error: '#ef4444',
-                            inProgress: '#2563eb',
-                            complete: '#16a34a',
-                            sourceBorder: '#e2e8f0',
-                            frame: '#e2e8f0',
-                            icons: '#64748b',
-                            textLight: '#ffffff'
-                        }
+            if (import.meta.env.DEV) {
+                // Диагностика в dev-режиме
+                // eslint-disable-next-line no-console
+                console.log('[CloudinaryWidget] cloud:', cloudName, 'preset:', uploadPreset, 'folder:', targetFolder);
+            }
+            const widgetOptions = {
+                cloudName,
+                uploadPreset,
+                sources,
+                multiple,
+                clientAllowedFormats: ['image'],
+                maxFileSize,
+                folder: targetFolder,
+                resourceType: 'image',
+                showAdvancedOptions: false,
+                cropping: false,
+                styles: {
+                    palette: {
+                        window: '#ffffff',
+                        sourceBg: '#f7f9fb',
+                        windowBorder: '#90a0b3',
+                        tabIcon: '#2563eb',
+                        textDark: '#0f172a',
+                        inactiveTabIcon: '#64748b',
+                        error: '#ef4444',
+                        inProgress: '#2563eb',
+                        complete: '#16a34a',
+                        sourceBorder: '#e2e8f0',
+                        frame: '#e2e8f0',
+                        icons: '#64748b',
+                        textLight: '#ffffff'
                     }
-                },
+                }
+            };
+
+            // Если используем подписанные загрузки (например, пресет ml_default), добавим колбэк подписи
+            const wantSigned = uploadPreset === 'ml_default' || (import.meta.env.VITE_CLOUDINARY_SIGNED === 'true');
+            if (wantSigned) {
+                widgetOptions.apiKey = import.meta.env.VITE_CLOUDINARY_API_KEY;
+                widgetOptions.uploadSignature = async (callback, paramsToSign) => {
+                    try {
+                        const apiBase = (import.meta.env.VITE_API_URL || 'http://localhost:3000/api').replace(/\/$/, '');
+                        const res = await fetch(`${apiBase}/cloudinary/sign`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ paramsToSign })
+                        });
+                        const data = await res.json();
+                        if (!data?.signature) throw new Error('Signature missing');
+                        callback(data.signature);
+                    } catch (e) {
+                        console.error('Cloudinary sign error:', e);
+                        alert('Ошибка подписи загрузки. Проверьте /api/cloudinary/sign');
+                    }
+                };
+            }
+
+            widgetRef.current = window.cloudinary.createUploadWidget(
+                widgetOptions,
                 (error, result) => {
                     if (error) {
                         // Больше контекста по частой проблеме: неверный upload preset
