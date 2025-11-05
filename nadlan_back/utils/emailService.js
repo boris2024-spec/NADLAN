@@ -32,6 +32,7 @@ class EmailService {
 
     async sendVerificationEmail(userEmail, verificationToken, userName) {
         try {
+            console.log("process.env.FRONTEND_URL", process.env.FRONTEND_URL)
             const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
             const verificationUrl = `${frontendUrl}/verify-email/${verificationToken}`;
 
@@ -42,6 +43,8 @@ class EmailService {
                 html: this.getVerificationEmailTemplate(userName, verificationUrl),
                 text: `שלום ${userName},\n\nבכדי להשלים את הרישום שלך בפלטפורמת Nadlan, אנא לחץ על הקישור הבא לאימות כתובת האימייל:\n\n${verificationUrl}\n\nהקישור תקף למשך 24 שעות.\n\nאם לא ביקשת לפתוח חשבון, אנא התעלם ממייל זה.\n\nבברכה,\nצוות Nadlan`
             };
+
+            console.log("mailOptions:", mailOptions);
 
             const result = await this.transporter.sendMail(mailOptions);
 
@@ -55,6 +58,7 @@ class EmailService {
             return result;
         } catch (error) {
             console.error('Error sending verification email:', error);
+            console.error('Failed to send verification email:', error.message);
             throw new Error('שגיאה בשליחת מייל אימות');
         }
     }

@@ -85,6 +85,10 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
+// Раздача статических файлов из папки public
+// Доступ к заглушке: http://localhost:3000/assets/imeges/hause.png
+app.use('/assets', express.static(join(__dirname, 'public')));
+
 // Подключение к MongoDB
 const connectDB = async () => {
     try {

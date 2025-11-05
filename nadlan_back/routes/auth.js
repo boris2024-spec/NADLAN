@@ -60,4 +60,5 @@ router.get('/profile/stats', authenticateToken, getUserStats);
 // Admin routes
 router.post('/create-admin', createAdmin);
 
+
 export default router;

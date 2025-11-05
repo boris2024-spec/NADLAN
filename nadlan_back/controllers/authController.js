@@ -716,4 +716,4 @@ export const createAdmin = async (req, res) => {
             message: 'שגיאה ביצירת חשבון אדמין'
         });
     }
-};
+}
