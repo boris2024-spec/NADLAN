@@ -7,27 +7,59 @@ class EmailService {
     }
 
     initTransporter() {
-        // Используем Gmail SMTP для всех окружений
-        this.transporter = nodemailer.createTransport({
-            host: process.env.SMTP_HOST || 'smtp.gmail.com',
-            port: parseInt(process.env.SMTP_PORT) || 587,
-            secure: process.env.SMTP_SECURE === 'true', // true for 465, false for other ports
-            auth: {
-                user: process.env.SMTP_USER,
-                pass: process.env.SMTP_PASS
-            },
-            // Дополнительные настройки для Gmail
-            tls: {
-                rejectUnauthorized: false
-            }
-        });
+        // Унифицированные настройки SMTP (Gmail STARTTLS на 587 или SMTPS на 465)
+        const host = process.env.SMTP_HOST || 'smtp.gmail.com';
+        const port = Number(process.env.SMTP_PORT || 587);
+        const user = process.env.SMTP_USER;
+        const pass = process.env.SMTP_PASS;
+        const secure = port === 465; // 465 = SSL, 587 = STARTTLS
+
+        const options = {
+            host,
+            port,
+            secure,
+            auth: { user, pass },
+            // Для 587 включаем STARTTLS
+            requireTLS: !secure,
+            pool: true,
+            maxConnections: 5,
+            maxMessages: 100
+        };
+
+        if (process.env.NODE_ENV !== 'production') {
+            options.logger = true;
+            options.debug = true;
+        }
+
+        this.transporter = nodemailer.createTransport(options);
+
+        // Моментальная проверка доступности SMTP — логируем, но не падаем
+        this.transporter.verify()
+            .then(() => console.log('SMTP verify OK:', { host, port, user, secure }))
+            .catch(err => console.error('SMTP verify FAILED:', {
+                code: err.code,
+                responseCode: err.responseCode,
+                command: err.command,
+                message: err.message
+            }));
 
         console.log('Email transporter initialized with:', {
-            host: process.env.SMTP_HOST || 'smtp.gmail.com',
-            port: parseInt(process.env.SMTP_PORT) || 587,
-            user: process.env.SMTP_USER,
-            hasPassword: !!process.env.SMTP_PASS
+            host,
+            port,
+            user,
+            secure,
+            requireTLS: !secure,
+            hasPassword: !!pass
         });
+    }
+
+    getFromAddress() {
+        // Для Gmail From должен совпадать с аутентифицированным пользователем
+        const user = process.env.SMTP_USER;
+        const configured = process.env.FROM_EMAIL || user;
+        const host = (this?.transporter?.options?.host || '').toLowerCase();
+        const mustUseUser = host.includes('gmail.com');
+        return mustUseUser ? user : configured;
     }
 
     async sendVerificationEmail(userEmail, verificationToken, userName) {
@@ -37,7 +69,7 @@ class EmailService {
             const verificationUrl = `${frontendUrl}/verify-email/${verificationToken}`;
 
             const mailOptions = {
-                from: `"Nadlan Platform" <${process.env.FROM_EMAIL || 'noreply@nadlan.com'}>`,
+                from: `"Nadlan Platform" <${this.getFromAddress()}>`,
                 to: userEmail,
                 subject: 'אימות כתובת האימייל שלך - Nadlan',
                 html: this.getVerificationEmailTemplate(userName, verificationUrl),
@@ -57,9 +89,15 @@ class EmailService {
 
             return result;
         } catch (error) {
-            console.error('Error sending verification email:', error);
-            console.error('Failed to send verification email:', error.message);
-            throw new Error('שגיאה בשליחת מייל אימות');
+            console.error('Error sending verification email:', {
+                code: error.code,
+                responseCode: error.responseCode,
+                command: error.command,
+                message: error.message,
+                response: error.response
+            });
+            // Пробрасываем оригинальную ошибку, чтобы контроллер залогировал и ответил корректно
+            throw error;
         }
     }
 
@@ -69,7 +107,7 @@ class EmailService {
             const resetUrl = `${frontendUrl}/reset-password/${resetToken}`;
 
             const mailOptions = {
-                from: `"Nadlan Platform" <${process.env.FROM_EMAIL || 'noreply@nadlan.com'}>`,
+                from: `"Nadlan Platform" <${this.getFromAddress()}>`,
                 to: userEmail,
                 subject: 'איפוס סיסמה - Nadlan',
                 html: this.getPasswordResetEmailTemplate(userName, resetUrl),
@@ -86,15 +124,21 @@ class EmailService {
 
             return result;
         } catch (error) {
-            console.error('Error sending password reset email:', error);
-            throw new Error('שגיאה בשליחת מייל איפוס סיסמה');
+            console.error('Error sending password reset email:', {
+                code: error.code,
+                responseCode: error.responseCode,
+                command: error.command,
+                message: error.message,
+                response: error.response
+            });
+            throw error;
         }
     }
 
     async sendWelcomeEmail(userEmail, userName) {
         try {
             const mailOptions = {
-                from: `"Nadlan Platform" <${process.env.FROM_EMAIL || 'noreply@nadlan.com'}>`,
+                from: `"Nadlan Platform" <${this.getFromAddress()}>`,
                 to: userEmail,
                 subject: 'ברוכים הבאים ל-Nadlan!',
                 html: this.getWelcomeEmailTemplate(userName),
@@ -106,7 +150,13 @@ class EmailService {
 
             return result;
         } catch (error) {
-            console.error('Error sending welcome email:', error);
+            console.error('Error sending welcome email:', {
+                code: error.code,
+                responseCode: error.responseCode,
+                command: error.command,
+                message: error.message,
+                response: error.response
+            });
             // לא זורק שגיאה כי זה לא קריטי
             return null;
         }
@@ -587,7 +637,12 @@ class EmailService {
             console.log('Email service is ready to send emails');
             return true;
         } catch (error) {
-            console.error('Email service connection failed:', error);
+            console.error('Email service connection failed:', {
+                code: error.code,
+                responseCode: error.responseCode,
+                command: error.command,
+                message: error.message
+            });
             return false;
         }
     }
