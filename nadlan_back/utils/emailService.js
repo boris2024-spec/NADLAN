@@ -65,11 +65,11 @@ class EmailService {
 
     async sendPasswordResetEmail(userEmail, resetToken, userName) {
         try {
-            const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+            const frontendUrl = process.env.FRONTEND_URL;
             const resetUrl = `${frontendUrl}/reset-password/${resetToken}`;
 
             const mailOptions = {
-                from: `"Nadlan Platform" <${process.env.FROM_EMAIL || 'boriaa85@gmail.com'}>`,
+                from: `"Nadlan Platform" <${process.env.FROM_EMAIL || 'noreply@nadlan.com'}>`,
                 to: userEmail,
                 subject: 'איפוס סיסמה - Nadlan',
                 html: this.getPasswordResetEmailTemplate(userName, resetUrl),
