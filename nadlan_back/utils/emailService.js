@@ -69,7 +69,7 @@ class EmailService {
             const resetUrl = `${frontendUrl}/reset-password/${resetToken}`;
 
             const mailOptions = {
-                from: `"Nadlan Platform" <${process.env.FROM_EMAIL || 'noreply@nadlan.com'}>`,
+                from: `"Nadlan Platform" <${process.env.FROM_EMAIL || 'boriaa85@gmail.com'}>`,
                 to: userEmail,
                 subject: 'איפוס סיסמה - Nadlan',
                 html: this.getPasswordResetEmailTemplate(userName, resetUrl),
