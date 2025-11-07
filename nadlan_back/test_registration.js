@@ -7,7 +7,7 @@ const testRegistration = async () => {
         email: 'test@example.com',
         password: 'Test123!',
         phone: '0501234567',
-        role: 'buyer'
+        role: 'user'
     };
 
     console.log('Отправляю данные регистрации:');

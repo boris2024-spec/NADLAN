@@ -516,8 +516,6 @@ export default function AdminPage() {
                                     <select value={userRole} onChange={(e) => { setUserPage(1); setUserRole(e.target.value); }} className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-dark-100">
                                         <option value="">כל התפקידים</option>
                                         <option value="user">משתמש</option>
-                                        <option value="buyer">קונה</option>
-                                        <option value="seller">מוכר</option>
                                         <option value="agent">סוכן</option>
                                         <option value="admin">אדמין</option>
                                     </select>
@@ -568,8 +566,6 @@ export default function AdminPage() {
                                                         className="px-2 py-1 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-dark-100"
                                                     >
                                                         <option value="user">משתמש</option>
-                                                        <option value="buyer">קונה</option>
-                                                        <option value="seller">מוכר</option>
                                                         <option value="agent">סוכן</option>
                                                         <option value="admin">אדמין</option>
                                                     </select>
@@ -644,8 +640,6 @@ export default function AdminPage() {
                                                     <label className="block text-sm text-gray-600 mb-1">תפקיד</label>
                                                     <select className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-dark-100" value={userForm.role} onChange={(e) => setUserForm(v => ({ ...v, role: e.target.value }))}>
                                                         <option value="user">משתמש</option>
-                                                        <option value="buyer">קונה</option>
-                                                        <option value="seller">מוכר</option>
                                                         <option value="agent">סוכן</option>
                                                         <option value="admin">אדמין</option>
                                                     </select>

@@ -4,10 +4,10 @@ $userData = @{
     email = "tom.cohen@example.com"
     password = "Test123!"
     phone = "0501234567"
-    role = "buyer"
+    role = "user"
 } | ConvertTo-Json -Depth 3
 
-Write-Host "Sending registration data with buyer role:"
+Write-Host "Sending registration data with user role:"
 Write-Host $userData
 
 try {

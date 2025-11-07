@@ -38,6 +38,7 @@ app.post('/api/auth/register', (req, res) => {
         console.log('- firstName:', firstName, typeof firstName);
         console.log('- lastName:', lastName, typeof lastName);
         console.log('- email:', email, typeof email);
+        console.log('- phone:', req.body.phone ? req.body.phone : 'НЕ УКАЗАН', typeof req.body.phone);
         console.log('- password:', password ? '[СКРЫТ]' : 'НЕ УКАЗАН');
         console.log('- role:', role, typeof role);
 
@@ -62,7 +63,7 @@ app.post('/api/auth/register', (req, res) => {
         }
 
         // Проверяем роль
-        const allowedRoles = ['user', 'buyer', 'seller', 'agent'];
+        const allowedRoles = ['user', 'agent'];
         if (role && !allowedRoles.includes(role)) {
             console.log(`❌ Ошибка: недопустимая роль "${role}". Разрешены:`, allowedRoles);
             return res.status(400).json({ error: `Недопустимая роль. Разрешены: ${allowedRoles.join(', ')}` });
@@ -74,10 +75,10 @@ app.post('/api/auth/register', (req, res) => {
             return res.status(400).json({ error: 'Пароль должен содержать минимум 6 символов' });
         }
 
-        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/;
+        const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{6,}$/;
         if (!passwordRegex.test(password)) {
             console.log('❌ Ошибка: пароль не соответствует требованиям');
-            return res.status(400).json({ error: 'Пароль должен содержать заглавную букву, строчную букву и цифру' });
+            return res.status(400).json({ error: 'Пароль должен содержать заглавную букву, строчную букву, цифру и спецсимвол' });
         }
 
         console.log('✅ Все проверки пройдены успешно');

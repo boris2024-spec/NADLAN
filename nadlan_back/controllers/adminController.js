@@ -81,11 +81,11 @@ export const updateUser = async (req, res) => {
         // Нельзя деактивировать или разжаловать самих себя
         if (req.user._id.toString() === id) {
             if (isActive === false || (role && role !== 'admin')) {
-                return res.status(400).json({ success: false, message: 'Нельзя изменять собственные критические права' });
+                return res.status(400).json({ success: false, message: 'אין לשנות לעצמך הרשאות קריטיות' });
             }
         }
 
-        const allowedRoles = ['user', 'buyer', 'seller', 'agent', 'admin'];
+        const allowedRoles = ['user', 'agent', 'admin'];
         const update = {};
         if (role) {
             if (!allowedRoles.includes(role)) {

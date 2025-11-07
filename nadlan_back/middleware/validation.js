@@ -1,4 +1,5 @@
 import { body, param, query } from 'express-validator';
+import joi from 'joi';
 
 // Валидация регистрации
 export const validateRegister = [
@@ -25,8 +26,8 @@ export const validateRegister = [
         .if(body('googleId').not().exists())
         .isLength({ min: 6 })
         .withMessage('הסיסמה חייבת להכיל לפחות 6 תווים')
-        .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
-        .withMessage('הסיסמה חייבת להכיל לפחות אות קטנה, אות גדולה ומספר'),
+        .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{6,}$/)
+        .withMessage('הסיסמה חייבת להכיל לפחות אות קטנה, אות גדולה, מספר וסימן מיוחד'),
 
     body('phone')
         .optional()
@@ -35,8 +36,8 @@ export const validateRegister = [
 
     body('role')
         .optional()
-        .isIn(['user', 'buyer', 'seller', 'agent'])
-        .withMessage('התפקיד יכול להיות רק user, buyer, seller או agent')
+        .isIn(['user', 'agent'])
+        .withMessage('התפקיד יכול להיות רק user או agent')
 ];
 
 // Валидация входа
@@ -71,6 +72,7 @@ export const validateProfileUpdate = [
 
     body('phone')
         .optional()
+        
         .matches(/^[\+]?[0-9][\d]{0,15}$/)
         .withMessage('מספר טלפון לא תקין'),
 

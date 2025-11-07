@@ -10,7 +10,7 @@ $userData = @{
     email = "boriaa85+test@gmail.com"  # Используем + для создания тестового адреса
     password = "Test123456"
     phone = "050-1234567"
-    role = "buyer"
+    role = "user"
 } | ConvertTo-Json
 
 Write-Host "🚀 Тестирование регистрации пользователя..." -ForegroundColor Green
