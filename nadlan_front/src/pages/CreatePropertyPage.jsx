@@ -371,8 +371,8 @@ function CreatePropertyPage() {
                         city: data.location?.city?.trim() || undefined,
                         district: data.location?.district?.trim() || undefined,
                         coordinates: {
-                            latitude: data.location?.coordinates?.latitude,
-                            longitude: data.location?.coordinates?.longitude
+                            latitude: toNumber(data.location?.coordinates?.latitude),
+                            longitude: toNumber(data.location?.coordinates?.longitude)
                         }
                     },
                     details: {
@@ -490,8 +490,8 @@ function CreatePropertyPage() {
                     city: formData.location?.city?.trim(),
                     district: formData.location?.district?.trim() || undefined,
                     coordinates: {
-                        latitude: formData.location?.coordinates?.latitude,
-                        longitude: formData.location?.coordinates?.longitude
+                        latitude: toNumber(formData.location?.coordinates?.latitude),
+                        longitude: toNumber(formData.location?.coordinates?.longitude)
                     }
                 },
                 details: {

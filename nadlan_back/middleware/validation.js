@@ -1,399 +1,280 @@
-import { body, param, query } from 'express-validator';
-import joi from 'joi';
+import Joi from 'joi';
 
-// Валидация регистрации
-export const validateRegister = [
-    body('firstName')
-        .trim()
-        .isLength({ min: 2, max: 50 })
-        .withMessage('השם חייב להכיל בין 2 ל-50 תווים')
-        .matches(/^[a-zA-Zа-яёА-ЯЁ\u0590-\u05FF\s]+$/)
-        .withMessage('השם יכול להכיל רק אותיות ורווחים'),
+// Универсальный фабричный метод создания middleware для Joi
+const createValidator = (schema, { source = 'body', stripUnknown = true, allowUnknown = false } = {}) => {
+    return (req, res, next) => {
+        const target = req[source] || {};
+        const { value, error } = schema.validate(target, {
+            abortEarly: false,
+            stripUnknown,
+            allowUnknown,
+            convert: true
+        });
+        if (error) {
+            const errors = error.details.map(d => ({
+                field: d.path.join('.'),
+                param: d.path.join('.'), // совместимость с прежним форматом
+                msg: d.message,
+                message: d.message,
+                type: d.type
+            }));
+            return res.status(400).json({
+                success: false,
+                message: 'Ошибки валидации',
+                errors
+            });
+        }
+        req[source] = value; // нормализованные данные
+        next();
+    };
+};
 
-    body('lastName')
-        .trim()
-        .isLength({ min: 2, max: 50 })
-        .withMessage('שם המשפחה חייב להכיל בין 2 ל-50 תווים')
-        .matches(/^[a-zA-Zа-яёА-ЯЁ\u0590-\u05FF\s]+$/)
-        .withMessage('שם המשפחה יכול להכיל רק אותיות ורווחים'),
+// Общие наборы
+const nameRegex = /^[a-zA-Zа-яёА-ЯЁ\u0590-\u05FF\s]+$/;
+const propertyTypes = ['apartment', 'house', 'penthouse', 'studio', 'duplex', 'villa', 'townhouse', 'loft', 'commercial', 'office', 'warehouse', 'land'];
+const transactionTypes = ['sale', 'rent'];
+const statusValues = ['active', 'pending', 'sold', 'rented', 'inactive', 'draft'];
 
-    body('email')
-        .isEmail()
-        .withMessage('כתובת אימייל לא תקינה')
-        .normalizeEmail(),
+// Схемы
+const registerSchema = Joi.object({
+    firstName: Joi.string().min(2).max(50).pattern(nameRegex).required().messages({
+        'string.min': 'השם חייב להכיל בין 2 ל-50 תווים',
+        'string.max': 'השם חייב להכיל בין 2 ל-50 תווים',
+        'string.pattern.base': 'השם יכול להכיל רק אותיות ורווחים'
+    }),
+    lastName: Joi.string().min(2).max(50).pattern(nameRegex).required().messages({
+        'string.min': 'שם המשפחה חייב להכיל בין 2 ל-50 תווים',
+        'string.max': 'שם המשפחה חייב להכיל בין 2 ל-50 תווים',
+        'string.pattern.base': 'שם המשפחה יכול להכיל רק אותיות ורווחים'
+    }),
+    email: Joi.string().email().required().messages({ 'string.email': 'כתובת אימייל לא תקינה' }),
+    password: Joi.string()
+        .min(6)
+        .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{6,}$/)
+        .messages({
+            'string.min': 'הסיסמה חייבת להכיל לפחות 6 תווים',
+            'string.pattern.base': 'הסיסמה חייבת להכיל לפחות אות קטנה, אות גדולה, מספר וסימן מיוחד'
+        })
+        .when('googleId', { not: Joi.any().exist(), then: Joi.required(), otherwise: Joi.forbidden() }),
+    googleId: Joi.string().optional(),
+    phone: Joi.string().pattern(/^[\+]?[0-9][\d]{0,15}$/).optional().messages({ 'string.pattern.base': 'מספר טלפון לא תקין' }),
+    role: Joi.string().valid('user', 'agent').default('user').messages({ 'any.only': 'התפקיד יכול להיות רק user או agent' })
+});
 
-    body('password')
-        .if(body('googleId').not().exists())
-        .isLength({ min: 6 })
-        .withMessage('הסיסמה חייבת להכיל לפחות 6 תווים')
-        .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{6,}$/)
-        .withMessage('הסיסמה חייבת להכיל לפחות אות קטנה, אות גדולה, מספר וסימן מיוחד'),
+const loginSchema = Joi.object({
+    email: Joi.string().email().required().messages({ 'string.email': 'Некорректный email адрес' }),
+    password: Joi.string().min(1).required().messages({ 'string.empty': 'Пароль обязателен' })
+});
 
-    body('phone')
-        .optional()
-        .matches(/^[\+]?[0-9][\d]{0,15}$/)
-        .withMessage('מספר טלפון לא תקין'),
+const profileSchema = Joi.object({
+    firstName: Joi.string().min(2).max(50).pattern(nameRegex).optional(),
+    lastName: Joi.string().min(2).max(50).pattern(nameRegex).optional(),
+    phone: Joi.string().pattern(/^[\+]?[0-9][\d]{0,15}$/).optional(),
+    preferences: Joi.object({
+        language: Joi.string().valid('he', 'en', 'ru').optional(),
+        currency: Joi.string().valid('ILS', 'USD', 'EUR').optional(),
+        notifications: Joi.object({
+            email: Joi.boolean().optional(),
+            sms: Joi.boolean().optional()
+        }).optional()
+    }).optional(),
+    agentInfo: Joi.object({
+        agency: Joi.string().min(2).max(100).optional(),
+        bio: Joi.string().max(2000).optional(),
+        experience: Joi.number().integer().min(0).max(50).optional(),
+        specializations: Joi.array().items(Joi.string().min(2).max(50)).optional()
+    }).optional()
+});
 
-    body('role')
-        .optional()
-        .isIn(['user', 'agent'])
-        .withMessage('התפקיד יכול להיות רק user או agent')
-];
+const forgotPasswordSchema = Joi.object({
+    email: Joi.string().email().required().messages({ 'string.email': 'Некорректный email адрес' })
+});
 
-// Валидация входа
-export const validateLogin = [
-    body('email')
-        .isEmail()
-        .withMessage('Некорректный email адрес')
-        .normalizeEmail(),
+const resetPasswordSchema = Joi.object({
+    password: Joi.string().min(6).pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
+        .required()
+        .messages({
+            'string.min': 'Пароль должен содержать минимум 6 символов',
+            'string.pattern.base': 'Пароль должен содержать минимум одну заглавную букву, одну строчную букву и одну цифру'
+        })
+});
 
-    body('password')
-        .notEmpty()
-        .withMessage('Пароль обязателен')
-];
+const coordinatesSchema = Joi.object({
+    latitude: Joi.number().min(-90).max(90).optional(),
+    longitude: Joi.number().min(-180).max(180).optional()
+});
 
-// Валидация обновления профиля
-export const validateProfileUpdate = [
-    body('firstName')
-        .optional()
-        .trim()
-        .isLength({ min: 2, max: 50 })
-        .withMessage('השם חייב להכיל בין 2 ל-50 תווים')
-        .matches(/^[a-zA-Zа-яёА-ЯЁ\u0590-\u05FF\s]+$/)
-        .withMessage('השם יכול להכיל רק אותיות ורווחים'),
+const priceSchema = Joi.object({
+    amount: Joi.number().min(0).required().messages({ 'number.min': 'Цена должна быть положительным числом' }),
+    currency: Joi.string().valid('ILS', 'USD', 'EUR').optional(),
+    // Для аренды - период (совпадает с моделью)
+    period: Joi.string().valid('month', 'year', 'day').optional()
+});
 
-    body('lastName')
-        .optional()
-        .trim()
-        .isLength({ min: 2, max: 50 })
-        .withMessage('שם המשפחה חייב להכיל בין 2 ל-50 תווים')
-        .matches(/^[a-zA-Zа-яёА-ЯЁ\u0590-\u05FF\s]+$/)
-        .withMessage('שם המשפחה יכול להכיל רק אותיות ורווחים'),
+const detailsSchemaBase = {
+    area: Joi.number().min(1).required().messages({ 'number.min': 'Площадь должна быть положительным числом' }),
+    rooms: Joi.number().integer().min(0).max(50).optional(),
+    bedrooms: Joi.number().integer().min(0).max(20).optional(),
+    bathrooms: Joi.number().integer().min(0).max(20).optional(),
+    floor: Joi.number().integer().min(0).optional(),
+    totalFloors: Joi.number().integer().min(1).optional(),
+    buildYear: Joi.number().integer().min(1800).max(new Date().getFullYear() + 5).optional(),
+    condition: Joi.string().valid('new', 'excellent', 'good', 'fair', 'needs_renovation').optional()
+};
 
-    body('phone')
-        .optional()
-        
-        .matches(/^[\+]?[0-9][\d]{0,15}$/)
-        .withMessage('מספר טלפון לא תקין'),
+const detailsSchemaDraftOverrides = {
+    area: Joi.number().min(0.1).optional(),
+};
 
-    body('preferences.language')
-        .optional()
-        .isIn(['he', 'en', 'ru'])
-        .withMessage('השפה יכולה להיות רק he, en או ru'),
+const locationSchemaBase = Joi.object({
+    address: Joi.string().min(5).required().messages({ 'string.min': 'Адрес обязателен и должен содержать минимум 5 символов' }),
+    city: Joi.string().min(2).required().messages({ 'string.min': 'Город обязателен и должен содержать минимум 2 символа' }),
+    district: Joi.string().optional(),
+    country: Joi.string().optional(),
+    coordinates: coordinatesSchema.optional()
+});
 
-    body('preferences.currency')
-        .optional()
-        .isIn(['ILS', 'USD', 'EUR'])
-        .withMessage('המטבע יכול להיות רק ILS, USD או EUR'),
+const locationSchemaDraft = Joi.object({
+    address: Joi.string().min(1).optional(),
+    city: Joi.string().min(1).optional(),
+    district: Joi.string().optional(),
+    country: Joi.string().optional(),
+    coordinates: coordinatesSchema.optional()
+});
 
-    body('preferences.notifications.email')
-        .optional()
-        .isBoolean()
-        .withMessage('הגדרת התראות אימייל חייבת להיות true או false'),
+const imageSchema = Joi.object({
+    url: Joi.string().uri().required(),
+    publicId: Joi.string().required(),
+    alt: Joi.string().optional(),
+    isMain: Joi.boolean().optional(),
+    order: Joi.number().integer().min(0).optional()
+});
 
-    body('preferences.notifications.sms')
-        .optional()
-        .isBoolean()
-        .withMessage('הגדרת התראות SMS חייבת להיות true או false'),
+// Дополнительные схемы, отсутствовавшие ранее, но присутствующие в модели
+const featuresSchema = Joi.object({
+    hasParking: Joi.boolean().optional(),
+    hasElevator: Joi.boolean().optional(),
+    hasBalcony: Joi.boolean().optional(),
+    hasTerrace: Joi.boolean().optional(),
+    hasGarden: Joi.boolean().optional(),
+    hasPool: Joi.boolean().optional(),
+    hasAirConditioning: Joi.boolean().optional(),
+    hasSecurity: Joi.boolean().optional(),
+    hasStorage: Joi.boolean().optional(),
+    isAccessible: Joi.boolean().optional(),
+    allowsPets: Joi.boolean().optional(),
+    isFurnished: Joi.boolean().optional()
+}).optional();
 
-    // Agent-specific validations
-    body('agentInfo.agency')
-        .optional()
-        .trim()
-        .isLength({ min: 2, max: 100 })
-        .withMessage('שם הסוכנות חייב להכיל בין 2 ל-100 תווים'),
+const virtualTourSchema = Joi.object({
+    url: Joi.string().uri().optional(),
+    type: Joi.string().valid('video', '360', 'vr').optional()
+}).optional();
 
-    body('agentInfo.bio')
-        .optional()
-        .trim()
-        .isLength({ max: 2000 })
-        .withMessage('התיאור המקצועי לא יכול לעלות על 2000 תווים'),
+const additionalCostsSchema = Joi.object({
+    managementFee: Joi.number().min(0).optional(),
+    propertyTax: Joi.number().min(0).optional(),
+    utilities: Joi.number().min(0).optional(),
+    insurance: Joi.number().min(0).optional()
+}).optional();
 
-    body('agentInfo.experience')
-        .optional()
-        .isInt({ min: 0, max: 50 })
-        .withMessage('ניסיון חייב להיות מספר שלם בין 0 ל-50'),
+const propertyCreateSchema = Joi.object({
+    title: Joi.string().min(5).max(200).required().messages({ 'string.min': 'Заголовок должен содержать от 5 до 200 символов' }),
+    description: Joi.string().min(20).max(5000).required().messages({ 'string.min': 'Описание должно содержать от 20 до 5000 символов' }),
+    propertyType: Joi.string().valid(...propertyTypes).required().messages({ 'any.only': 'Некорректный тип недвижимости' }),
+    transactionType: Joi.string().valid(...transactionTypes).required().messages({ 'any.only': 'Тип сделки может быть только продажа или аренда' }),
+    price: priceSchema.required(),
+    location: locationSchemaBase.required(),
+    details: Joi.object(detailsSchemaBase).required(),
+    images: Joi.array().items(imageSchema).optional(),
+    features: featuresSchema,
+    virtualTour: virtualTourSchema,
+    additionalCosts: additionalCostsSchema,
+    availableFrom: Joi.date().iso().optional(),
+    status: Joi.string().valid(...statusValues).optional()
+});
 
-    body('agentInfo.specializations')
-        .optional()
-        .isArray()
-        .withMessage('התמחויות חייבות להיות מערך'),
+const propertyDraftSchema = Joi.object({
+    title: Joi.string().min(1).max(200).optional(),
+    description: Joi.string().min(1).max(5000).optional(),
+    propertyType: Joi.string().valid(...propertyTypes).optional(),
+    transactionType: Joi.string().valid(...transactionTypes).optional(),
+    price: priceSchema.optional(),
+    location: locationSchemaDraft.optional(),
+    details: Joi.object({ ...detailsSchemaBase, ...detailsSchemaDraftOverrides }).optional(),
+    images: Joi.array().items(imageSchema).optional(),
+    features: featuresSchema,
+    virtualTour: virtualTourSchema,
+    additionalCosts: additionalCostsSchema,
+    availableFrom: Joi.date().iso().optional(),
+    status: Joi.string().valid(...statusValues).optional()
+});
 
-    body('agentInfo.specializations.*')
-        .optional()
-        .isString()
-        .trim()
-        .isLength({ min: 2, max: 50 })
-        .withMessage('כל התמחות חייבת להכיל בין 2 ל-50 תווים')
-];
+const propertyUpdateSchema = Joi.object({
+    title: Joi.string().min(5).max(200).optional(),
+    description: Joi.string().min(20).max(5000).optional(),
+    propertyType: Joi.string().valid(...propertyTypes).optional(),
+    transactionType: Joi.string().valid(...transactionTypes).optional(),
+    price: priceSchema.optional(),
+    location: locationSchemaBase.optional(),
+    details: Joi.object(detailsSchemaBase).optional(),
+    images: Joi.array().items(imageSchema).optional(),
+    features: featuresSchema,
+    virtualTour: virtualTourSchema,
+    additionalCosts: additionalCostsSchema,
+    availableFrom: Joi.date().iso().optional(),
+    status: Joi.string().valid(...statusValues).optional()
+});
 
-// Валидация сброса пароля
-export const validateForgotPassword = [
-    body('email')
-        .isEmail()
-        .withMessage('Некорректный email адрес')
-        .normalizeEmail()
-];
+const propertySearchSchema = Joi.object({
+    page: Joi.number().integer().min(1).optional(),
+    limit: Joi.number().integer().min(1).max(50).optional(),
+    propertyType: Joi.string().valid(...propertyTypes).optional(),
+    transactionType: Joi.string().valid(...transactionTypes).optional(),
+    priceMin: Joi.number().min(0).optional(),
+    priceMax: Joi.number().min(0).optional(),
+    areaMin: Joi.number().min(0).optional(),
+    areaMax: Joi.number().min(0).optional(),
+    rooms: Joi.number().integer().min(0).max(50).optional(),
+    bedrooms: Joi.number().integer().min(0).max(20).optional(),
+    sort: Joi.string().valid('price', '-price', 'area', '-area', 'createdAt', '-createdAt', 'views', '-views').optional(),
+    city: Joi.string().optional(),
+    search: Joi.string().optional(),
+    status: Joi.string().valid(...statusValues).optional()
+});
 
+// Экспортируемые middleware
+export const validateRegister = createValidator(registerSchema);
+export const validateLogin = createValidator(loginSchema);
+export const validateProfileUpdate = createValidator(profileSchema);
+export const validateForgotPassword = createValidator(forgotPasswordSchema);
 export const validateResetPassword = [
-    param('token')
-        .isLength({ min: 1 })
-        .withMessage('Токен обязателен'),
-
-    body('password')
-        .isLength({ min: 6 })
-        .withMessage('Пароль должен содержать минимум 6 символов')
-        .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
-        .withMessage('Пароль должен содержать минимум одну заглавную букву, одну строчную букву и одну цифру')
+    // token в params
+    (req, res, next) => {
+        const token = req.params.token;
+        if (!token || token.length === 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'Ошибки валидации',
+                errors: [{ field: 'token', param: 'token', msg: 'Токен обязателен', message: 'Токен обязателен' }]
+            });
+        }
+        next();
+    },
+    createValidator(resetPasswordSchema)
 ];
-
-// Валидация создания объекта недвижимости
-export const validatePropertyCreate = [
-    body('title')
-        .trim()
-        .isLength({ min: 5, max: 200 })
-        .withMessage('Заголовок должен содержать от 5 до 200 символов'),
-
-    body('description')
-        .trim()
-        .isLength({ min: 20, max: 5000 })
-        .withMessage('Описание должно содержать от 20 до 5000 символов'),
-
-    body('propertyType')
-        .isIn(['apartment', 'house', 'penthouse', 'studio', 'duplex', 'villa', 'townhouse', 'loft', 'commercial', 'office', 'warehouse', 'land'])
-        .withMessage('Некорректный тип недвижимости'),
-
-    body('transactionType')
-        .isIn(['sale', 'rent'])
-        .withMessage('Тип сделки может быть только продажа или аренда'),
-
-    body('price.amount')
-        .isFloat({ min: 0 })
-        .withMessage('Цена должна быть положительным числом'),
-
-    body('price.currency')
-        .optional()
-        .isIn(['ILS', 'USD', 'EUR'])
-        .withMessage('Валюта может быть только ILS, USD или EUR'),
-
-    body('location.address')
-        .trim()
-        .isLength({ min: 5 })
-        .withMessage('Адрес обязателен и должен содержать минимум 5 символов'),
-
-    body('location.city')
-        .trim()
-        .isLength({ min: 2 })
-        .withMessage('Город обязателен и должен содержать минимум 2 символа'),
-
-    body('details.area')
-        .isFloat({ min: 1 })
-        .withMessage('Площадь должна быть положительным числом'),
-
-    body('details.rooms')
-        .optional()
-        .isInt({ min: 0, max: 50 })
-        .withMessage('Количество комнат должно быть от 0 до 50'),
-
-    body('details.bedrooms')
-        .optional()
-        .isInt({ min: 0, max: 20 })
-        .withMessage('Количество спален должно быть от 0 до 20'),
-
-    body('details.bathrooms')
-        .optional()
-        .isInt({ min: 0, max: 20 })
-        .withMessage('Количество ванных должно быть от 0 до 20'),
-
-    body('details.floor')
-        .optional()
-        .isInt({ min: 0 })
-        .withMessage('Этаж не может быть отрицательным'),
-
-    body('details.buildYear')
-        .optional()
-        .isInt({ min: 1800, max: new Date().getFullYear() + 5 })
-        .withMessage('Некорректный год постройки')
-];
-
-// Валидация создания черновика недвижимости (более мягкая)
-export const validatePropertyDraft = [
-    body('title')
-        .optional({ checkFalsy: true })
-        .trim()
-        .isLength({ min: 1, max: 200 })
-        .withMessage('Заголовок не должен превышать 200 символов'),
-
-    body('description')
-        .optional({ checkFalsy: true })
-        .trim()
-        .isLength({ min: 1, max: 5000 })
-        .withMessage('Описание не должно превышать 5000 символов'),
-
-    body('propertyType')
-        .optional({ checkFalsy: true })
-        .isIn(['apartment', 'house', 'penthouse', 'studio', 'duplex', 'villa', 'townhouse', 'loft', 'commercial', 'office', 'warehouse', 'land'])
-        .withMessage('Некорректный тип недвижимости'),
-
-    body('transactionType')
-        .optional({ checkFalsy: true })
-        .isIn(['sale', 'rent'])
-        .withMessage('Тип сделки может быть только продажа или аренда'),
-
-    body('price.amount')
-        .optional({ checkFalsy: true })
-        .isFloat({ min: 0 })
-        .withMessage('Цена должна быть положительным числом'),
-
-    body('price.currency')
-        .optional({ checkFalsy: true })
-        .isIn(['ILS', 'USD', 'EUR'])
-        .withMessage('Валюта может быть только ILS, USD или EUR'),
-
-    body('location.address')
-        .optional({ checkFalsy: true })
-        .trim()
-        .isLength({ min: 1 })
-        .withMessage('Адрес не может быть пустым'),
-
-    body('location.city')
-        .optional({ checkFalsy: true })
-        .trim()
-        .isLength({ min: 1 })
-        .withMessage('Город не может быть пустым'),
-
-    body('details.area')
-        .optional({ checkFalsy: true })
-        .isFloat({ min: 0.1 })
-        .withMessage('Площадь должна быть положительным числом'),
-
-    body('details.rooms')
-        .optional({ checkFalsy: true })
-        .isInt({ min: 0, max: 50 })
-        .withMessage('Количество комнат должно быть от 0 до 50'),
-
-    body('details.bedrooms')
-        .optional({ checkFalsy: true })
-        .isInt({ min: 0, max: 20 })
-        .withMessage('Количество спален должно быть от 0 до 20'),
-
-    body('details.bathrooms')
-        .optional({ checkFalsy: true })
-        .isInt({ min: 0, max: 20 })
-        .withMessage('Количество ванных должно быть от 0 до 20'),
-
-    body('details.floor')
-        .optional({ checkFalsy: true })
-        .isInt({ min: 0 })
-        .withMessage('Этаж не может быть отрицательным'),
-
-    body('details.buildYear')
-        .optional({ checkFalsy: true })
-        .isInt({ min: 1800, max: new Date().getFullYear() + 5 })
-        .withMessage('Некорректный год постройки'),
-
-    body('status')
-        .optional({ checkFalsy: true })
-        .isIn(['active', 'pending', 'sold', 'rented', 'inactive', 'draft'])
-        .withMessage('Некорректный статус объявления')
-];
-
-// Валидация обновления объекта недвижимости
-export const validatePropertyUpdate = [
-    body('title')
-        .optional()
-        .trim()
-        .isLength({ min: 5, max: 200 })
-        .withMessage('Заголовок должен содержать от 5 до 200 символов'),
-
-    body('description')
-        .optional()
-        .trim()
-        .isLength({ min: 20, max: 5000 })
-        .withMessage('Описание должно содержать от 20 до 5000 символов'),
-
-    body('propertyType')
-        .optional()
-        .isIn(['apartment', 'house', 'penthouse', 'studio', 'duplex', 'villa', 'townhouse', 'loft', 'commercial', 'office', 'warehouse', 'land'])
-        .withMessage('Некорректный тип недвижимости'),
-
-    body('transactionType')
-        .optional()
-        .isIn(['sale', 'rent'])
-        .withMessage('Тип сделки может быть только продажа или аренда'),
-
-    body('price.amount')
-        .optional()
-        .isFloat({ min: 0 })
-        .withMessage('Цена должна быть положительным числом'),
-
-    body('status')
-        .optional()
-        .isIn(['active', 'pending', 'sold', 'rented', 'inactive', 'draft'])
-        .withMessage('Некорректный статус объявления')
-];
-
-// Валидация параметров поиска
-export const validatePropertySearch = [
-    query('page')
-        .optional()
-        .isInt({ min: 1 })
-        .withMessage('Страница должна быть положительным числом'),
-
-    query('limit')
-        .optional()
-        .isInt({ min: 1, max: 50 })
-        .withMessage('Лимит должен быть от 1 до 50'),
-
-    query('propertyType')
-        .optional()
-        .isIn(['apartment', 'house', 'penthouse', 'studio', 'duplex', 'villa', 'townhouse', 'loft', 'commercial', 'office', 'warehouse', 'land'])
-        .withMessage('Некорректный тип недвижимости'),
-
-    query('transactionType')
-        .optional()
-        .isIn(['sale', 'rent'])
-        .withMessage('Некорректный тип сделки'),
-
-    query('priceMin')
-        .optional()
-        .isFloat({ min: 0 })
-        .withMessage('Минимальная цена должна быть положительным числом'),
-
-    query('priceMax')
-        .optional()
-        .isFloat({ min: 0 })
-        .withMessage('Максимальная цена должна быть положительным числом'),
-
-    query('areaMin')
-        .optional()
-        .isFloat({ min: 0 })
-        .withMessage('Минимальная площадь должна быть положительным числом'),
-
-    query('areaMax')
-        .optional()
-        .isFloat({ min: 0 })
-        .withMessage('Максимальная площадь должна быть положительным числом'),
-
-    query('rooms')
-        .optional()
-        .isInt({ min: 0, max: 50 })
-        .withMessage('Количество комнат должно быть от 0 до 50'),
-
-    query('bedrooms')
-        .optional()
-        .isInt({ min: 0, max: 20 })
-        .withMessage('Количество спален должно быть от 0 до 20'),
-
-    query('sort')
-        .optional()
-        .isIn(['price', '-price', 'area', '-area', 'createdAt', '-createdAt', 'views', '-views'])
-        .withMessage('Некорректный параметр сортировки')
-];
-
-// Валидация ObjectId параметров
-export const validateObjectId = (paramName = 'id') => [
-    param(paramName)
-        .isMongoId()
-        .withMessage(`Некорректный ${paramName}`)
-];
+export const validatePropertyCreate = createValidator(propertyCreateSchema);
+export const validatePropertyDraft = createValidator(propertyDraftSchema);
+export const validatePropertyUpdate = createValidator(propertyUpdateSchema);
+export const validatePropertySearch = createValidator(propertySearchSchema, { source: 'query', allowUnknown: true });
+export const validateObjectId = (paramName = 'id') => (req, res, next) => {
+    const value = req.params[paramName];
+    if (!value || !/^[0-9a-fA-F]{24}$/.test(value)) {
+        return res.status(400).json({
+            success: false,
+            message: 'Ошибки валидации',
+            errors: [{ field: paramName, param: paramName, msg: `Некорректный ${paramName}`, message: `Некорректный ${paramName}` }]
+        });
+    }
+    next();
+};

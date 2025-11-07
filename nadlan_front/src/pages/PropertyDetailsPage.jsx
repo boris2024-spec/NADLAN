@@ -19,7 +19,10 @@ import {
     ArrowLeft,
     ChevronLeft,
     ChevronRight,
-    AlertCircle
+    AlertCircle,
+    Video,
+    Globe,
+    DollarSign
 } from 'lucide-react';
 
 function PropertyDetailsPage() {
@@ -90,11 +93,15 @@ function PropertyDetailsPage() {
         { key: 'hasParking', label: 'חניה', icon: Car },
         { key: 'hasElevator', label: 'מעלית', icon: Building },
         { key: 'hasBalcony', label: 'מרפסת', icon: Trees },
-        { key: 'hasGarden', label: 'גינה' },
+        { key: 'hasTerrace', label: 'גג/טרסה', icon: Trees },
+        { key: 'hasGarden', label: 'גינה', icon: Trees },
+        { key: 'hasPool', label: 'בריכה', icon: Building },
         { key: 'hasAirConditioning', label: 'מיזוג אוויר' },
-        { key: 'isFurnished', label: 'מרוהט' },
+        { key: 'hasSecurity', label: 'שמירה' },
+        { key: 'hasStorage', label: 'מחסן' },
+        { key: 'isAccessible', label: 'נגיש לנכים' },
         { key: 'allowsPets', label: 'מותר בעלי חיים' },
-        { key: 'isAccessible', label: 'נגיש לנכים' }
+        { key: 'isFurnished', label: 'מרוהט' }
     ];
 
     const formatPrice = (p) => {
@@ -296,6 +303,61 @@ function PropertyDetailsPage() {
                                         ))}
                                     </div>
                                 </div>
+
+                                {/* Additional Costs */}
+                                {(property?.additionalCosts && Object.keys(property.additionalCosts).length > 0) && (
+                                    <div className="mt-8">
+                                        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center">
+                                            <DollarSign className="w-5 h-5 ml-2 text-blue-600" /> הוצאות נוספות
+                                        </h3>
+                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                                            {property.additionalCosts.managementFee && (
+                                                <div className="p-3 bg-gray-50 dark:bg-dark-100 rounded-lg">
+                                                    <div className="text-gray-600 dark:text-gray-300">דמי ניהול</div>
+                                                    <div className="font-medium">{property.additionalCosts.managementFee} ₪</div>
+                                                </div>
+                                            )}
+                                            {property.additionalCosts.propertyTax && (
+                                                <div className="p-3 bg-gray-50 dark:bg-dark-100 rounded-lg">
+                                                    <div className="text-gray-600 dark:text-gray-300">ארנונה</div>
+                                                    <div className="font-medium">{property.additionalCosts.propertyTax} ₪</div>
+                                                </div>
+                                            )}
+                                            {property.additionalCosts.utilities && (
+                                                <div className="p-3 bg-gray-50 dark:bg-dark-100 rounded-lg">
+                                                    <div className="text-gray-600 dark:text-gray-300">שירותים</div>
+                                                    <div className="font-medium">{property.additionalCosts.utilities} ₪</div>
+                                                </div>
+                                            )}
+                                            {property.additionalCosts.insurance && (
+                                                <div className="p-3 bg-gray-50 dark:bg-dark-100 rounded-lg">
+                                                    <div className="text-gray-600 dark:text-gray-300">ביטוח</div>
+                                                    <div className="font-medium">{property.additionalCosts.insurance} ₪</div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Virtual Tour */}
+                                {property?.virtualTour?.url && (
+                                    <div className="mt-8">
+                                        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center">
+                                            <Video className="w-5 h-5 ml-2 text-blue-600" /> סיור וירטואלי
+                                        </h3>
+                                        <div className="p-4 bg-gray-50 dark:bg-dark-100 rounded-lg">
+                                            <a
+                                                href={property.virtualTour.url}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-blue-600 dark:text-blue-400 hover:underline flex items-center"
+                                            >
+                                                <Globe className="w-4 h-4 ml-2" />
+                                                צפייה בסיור ({property.virtualTour.type || 'וידאו'})
+                                            </a>
+                                        </div>
+                                    </div>
+                                )}
                             </Card>
                         </div>
 

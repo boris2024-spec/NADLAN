@@ -2,7 +2,6 @@ import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { User } from '../models/index.js';
 import { generateTokens, verifyRefreshToken } from '../middleware/auth.js';
-import { validationResult } from 'express-validator';
 import emailService from '../utils/emailService.js';
 
 // Регистрация пользователя
@@ -11,16 +10,7 @@ export const register = async (req, res) => {
         console.log('Register request body:', req.body);
         console.log('Register request headers:', req.headers);
 
-        // Проверяем валидацию
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            console.log('Validation errors:', errors.array());
-            return res.status(400).json({
-                success: false,
-                message: 'שגיאות בוולידציה',
-                errors: errors.array()
-            });
-        }
+        // Валидация теперь выполняется Joi middleware до контроллера
 
         const { firstName, lastName, email, password, phone, role = 'user' } = req.body;
 
@@ -103,14 +93,7 @@ export const register = async (req, res) => {
 // Вход пользователя
 export const login = async (req, res) => {
     try {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(400).json({
-                success: false,
-                message: 'Ошибки валидации',
-                errors: errors.array()
-            });
-        }
+        // Валидация производится Joi middleware
 
         const { email, password } = req.body;
 
@@ -498,14 +481,7 @@ export const getProfile = async (req, res) => {
 // Обновление профиля пользователя
 export const updateProfile = async (req, res) => {
     try {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(400).json({
-                success: false,
-                message: 'שגיאות בוולידציה',
-                errors: errors.array()
-            });
-        }
+        // Валидация производится Joi middleware
 
         const { firstName, lastName, phone, preferences, agentInfo } = req.body;
 

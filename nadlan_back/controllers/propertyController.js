@@ -1,5 +1,4 @@
 import { Property } from '../models/index.js';
-import { validationResult } from 'express-validator';
 
 // Получить объекты недвижимости текущего пользователя (агента или владельца)
 export const getMyProperties = async (req, res) => {
@@ -62,14 +61,7 @@ export const getMyProperties = async (req, res) => {
 // Получить все объекты недвижимости с фильтрацией
 export const getProperties = async (req, res) => {
     try {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(400).json({
-                success: false,
-                message: 'Ошибки валидации',
-                errors: errors.array()
-            });
-        }
+        // Валидация осуществляется Joi middleware
 
         const {
             page = 1,
@@ -221,14 +213,7 @@ export const createProperty = async (req, res) => {
             console.log('[createProperty] Incoming body preview:', preview);
         } catch (_) { /* noop */ }
 
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(400).json({
-                success: false,
-                message: 'Ошибки валидации',
-                errors: errors.array()
-            });
-        }
+        // Валидация осуществляется Joi middleware
 
         const propertyData = {
             ...req.body,
@@ -314,16 +299,7 @@ export const saveDraft = async (req, res) => {
             console.log('[saveDraft] Incoming body preview:', preview);
         } catch (_) { /* noop */ }
 
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            // Log validation errors from request validators
-            console.warn('[saveDraft] Request validation errors:', errors.array());
-            return res.status(400).json({
-                success: false,
-                message: 'Ошибки валидации',
-                errors: errors.array()
-            });
-        }
+        // Валидация осуществляется Joi middleware
 
         const propertyData = {
             ...req.body,
@@ -445,14 +421,7 @@ export const saveDraft = async (req, res) => {
 // Обновить объект недвижимости
 export const updateProperty = async (req, res) => {
     try {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(400).json({
-                success: false,
-                message: 'Ошибки валидации',
-                errors: errors.array()
-            });
-        }
+        // Валидация осуществляется Joi middleware
 
         const { id } = req.params;
 

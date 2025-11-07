@@ -8,6 +8,7 @@ import passport from './config/passport.js';
 import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+import { requestIdMiddleware, errorLogger, errorHandler, notFoundHandler, CorsError } from './middleware/error.js';
 
 // Загружаем переменные окружения
 dotenv.config();
@@ -42,28 +43,27 @@ const limiter = rateLimit({
 });
 app.use(limiter);
 
-// CORS настройки
-const allowedOrigins = (
-    process.env.CLIENT_ORIGIN || process.env.FRONTEND_URL || ''
-)
+// CORS настройки с кастомной ошибкой
+const allowedOrigins = (process.env.CLIENT_ORIGIN || process.env.FRONTEND_URL || '')
     .split(',')
-    .map((s) => s.trim())
+    .map(s => s.trim())
     .filter(Boolean);
 
 const corsOptions = {
     origin(origin, callback) {
-        // Разрешаем запросы без Origin (например, health-checkи, Postman)
-        if (!origin) return callback(null, true);
+        if (!origin) return callback(null, true); // запросы без Origin разрешаем
         if (allowedOrigins.includes(origin)) return callback(null, true);
-        return callback(new Error(`Not allowed by CORS: ${origin}`));
+        return callback(new CorsError(origin));
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS', 'HEAD'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: ['Content-Type', 'Authorization']
 };
-// Ставим CORS как можно раньше и явно обрабатываем preflight
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
+
+// request id & timing
+app.use(requestIdMiddleware);
 
 // Middleware для парсинга JSON
 app.use(express.json({ limit: '10mb' }));
@@ -121,12 +121,20 @@ app.get('/', (req, res) => {
 });
 
 // Health check
-app.get('/api/health', (req, res) => {
+app.get('/api/health', async (req, res) => {
+    const start = process.hrtime.bigint();
+    let mongoStatus = 'disconnected';
+    try {
+        mongoStatus = mongoose.connection.readyState === 1 ? 'connected' : 'connecting';
+    } catch (_) { /* noop */ }
+    const latencyMs = Number((process.hrtime.bigint() - start) / 1000000n);
     res.json({
         status: 'OK',
         timestamp: new Date().toISOString(),
         uptime: process.uptime(),
-        environment: process.env.NODE_ENV || 'development'
+        environment: process.env.NODE_ENV || 'development',
+        mongo: mongoStatus,
+        latencyMs
     });
 });
 
@@ -146,60 +154,38 @@ app.use('/api/admin', adminRoutes);
 app.use('/api/cloudinary', cloudinaryRoutes);
 // app.use('/api/users', userRoutes);
 
-// Обработка 404
-app.use('*', (req, res) => {
-    res.status(404).json({
-        success: false,
-        message: 'Endpoint не найден',
-        path: req.originalUrl
-    });
-});
-
-// Глобальная обработка ошибок
-app.use((error, req, res, next) => {
-    console.error('❌ Ошибка сервера:', error);
-
-    if (error.name === 'ValidationError') {
-        const errors = Object.values(error.errors).map(err => err.message);
-        return res.status(400).json({
-            success: false,
-            message: 'Ошибка валидации',
-            errors
-        });
-    }
-
-    if (error.name === 'CastError') {
-        return res.status(400).json({
-            success: false,
-            message: 'Неверный ID ресурса'
-        });
-    }
-
-    if (error.code === 11000) {
-        const field = Object.keys(error.keyValue)[0];
-        return res.status(400).json({
-            success: false,
-            message: `${field} уже существует`
-        });
-    }
-
-    res.status(error.status || 500).json({
-        success: false,
-        message: process.env.NODE_ENV === 'production'
-            ? 'Внутренняя ошибка сервера'
-            : error.message,
-        ...(process.env.NODE_ENV === 'development' && { stack: error.stack })
-    });
-});
+// 404 и ошибки (порядок важен)
+app.use('*', notFoundHandler);
+app.use(errorLogger);
+app.use(errorHandler);
 
 // Запуск сервера
+const findAvailablePort = async (startPort, maxTries = 10) => {
+    let port = startPort;
+    for (let i = 0; i < maxTries; i++) {
+        const available = await new Promise(resolve => {
+            const testServer = app.listen(port, () => {
+                testServer.close(() => resolve(true));
+            }).on('error', err => {
+                if (err.code === 'EADDRINUSE') return resolve(false);
+                console.error('Ошибка проверки порта', port, err);
+                resolve(false);
+            });
+        });
+        if (available) return port;
+        port++; // пробуем следующий
+    }
+    throw new Error(`Не найден свободный порт начиная с ${startPort}`);
+};
+
 const startServer = async () => {
     try {
         await connectDB();
-        app.listen(PORT, () => {
-            console.log(`🚀 Сервер запущен на порту ${PORT}`);
+        const selectedPort = await findAvailablePort(parseInt(PORT));
+        app.listen(selectedPort, () => {
+            console.log(`🚀 Сервер запущен на порту ${selectedPort}`);
             console.log(`🌍 Среда: ${process.env.NODE_ENV || 'development'}`);
-            console.log(`📡 API доступен по адресу: http://localhost:${PORT}/api`);
+            console.log(`📡 API доступен по адресу: http://localhost:${selectedPort}/api`);
         });
     } catch (error) {
         console.error('❌ Не удалось запустить сервер:', error);

@@ -1,5 +1,4 @@
 import { User, Property } from '../models/index.js';
-import { validationResult } from 'express-validator';
 
 // GET /api/admin/users
 export const listUsers = async (req, res) => {
@@ -56,15 +55,7 @@ export const listUsers = async (req, res) => {
 // PATCH /api/admin/users/:id
 export const updateUser = async (req, res) => {
     try {
-        // Handle validation errors from middleware
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(400).json({
-                success: false,
-                message: 'שגיאות בוולידציה',
-                errors: errors.array()
-            });
-        }
+        // Валидация выполнена Joi middleware
 
         const { id } = req.params;
         const {
@@ -253,15 +244,7 @@ export const updatePropertyAdmin = async (req, res) => {
     try {
         const { id } = req.params;
 
-        // Валидация из middleware
-        const result = validationResult(req);
-        if (!result.isEmpty()) {
-            return res.status(400).json({
-                success: false,
-                message: 'Ошибки валидации',
-                errors: result.array()
-            });
-        }
+        // Валидация выполнена Joi middleware
 
         const property = await Property.findById(id);
         if (!property) {
