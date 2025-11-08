@@ -178,6 +178,13 @@ const additionalCostsSchema = Joi.object({
     insurance: Joi.number().min(0).optional()
 }).optional();
 
+const publicContactSchema = Joi.object({
+    type: Joi.string().valid('phone', 'email', 'whatsapp', 'link').required(),
+    value: Joi.string().trim().min(3).max(200).required(),
+    name: Joi.string().trim().max(100).optional().allow(''),
+    label: Joi.string().trim().max(50).optional().allow('')
+});
+
 const propertyCreateSchema = Joi.object({
     title: Joi.string().min(5).max(200).required().messages({ 'string.min': 'Заголовок должен содержать от 5 до 200 символов' }),
     description: Joi.string().min(20).max(5000).required().messages({ 'string.min': 'Описание должно содержать от 20 до 5000 символов' }),
@@ -191,7 +198,8 @@ const propertyCreateSchema = Joi.object({
     virtualTour: virtualTourSchema,
     additionalCosts: additionalCostsSchema,
     availableFrom: Joi.date().iso().optional(),
-    status: Joi.string().valid(...statusValues).optional()
+    status: Joi.string().valid(...statusValues).optional(),
+    publicContacts: Joi.array().items(publicContactSchema).max(2).optional()
 });
 
 const propertyDraftSchema = Joi.object({
@@ -207,7 +215,8 @@ const propertyDraftSchema = Joi.object({
     virtualTour: virtualTourSchema,
     additionalCosts: additionalCostsSchema,
     availableFrom: Joi.date().iso().optional(),
-    status: Joi.string().valid(...statusValues).optional()
+    status: Joi.string().valid(...statusValues).optional(),
+    publicContacts: Joi.array().items(publicContactSchema).max(2).optional()
 });
 
 const propertyUpdateSchema = Joi.object({
@@ -223,7 +232,8 @@ const propertyUpdateSchema = Joi.object({
     virtualTour: virtualTourSchema,
     additionalCosts: additionalCostsSchema,
     availableFrom: Joi.date().iso().optional(),
-    status: Joi.string().valid(...statusValues).optional()
+    status: Joi.string().valid(...statusValues).optional(),
+    publicContacts: Joi.array().items(publicContactSchema).max(2).optional()
 });
 
 const propertySearchSchema = Joi.object({

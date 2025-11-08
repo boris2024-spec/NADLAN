@@ -232,6 +232,38 @@ const propertySchema = new mongoose.Schema({
             default: 'pending'
         }
     }],
+    // Публичные контакты, которые владелец выбирает показывать в объявлении (до 2)
+    publicContacts: {
+        type: [{
+            type: {
+                type: String,
+                enum: ['phone', 'email', 'whatsapp', 'link'],
+                required: true
+            },
+            value: {
+                type: String,
+                trim: true,
+                required: true,
+                maxlength: [200, 'Значение контакта слишком длинное']
+            },
+            name: {
+                type: String,
+                trim: true,
+                maxlength: [100, 'Имя контакта слишком длинное']
+            },
+            label: {
+                type: String,
+                trim: true,
+                maxlength: [50, 'Метка контакта слишком длинная']
+            }
+        }],
+        validate: {
+            validator: function (arr) {
+                return !arr || arr.length <= 2;
+            },
+            message: 'Можно добавить не более 2 контактов'
+        }
+    },
     // Отзывы и рейтинг
     reviews: [{
         user: {

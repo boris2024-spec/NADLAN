@@ -1,5 +1,30 @@
 import { Property } from '../models/index.js';
 
+// Helper: sanitize public contacts array (keep up to 2, allowed types, trim values)
+const ALLOWED_PUBLIC_CONTACT_TYPES = ['phone', 'email', 'whatsapp', 'link'];
+function sanitizePublicContacts(input) {
+    if (!Array.isArray(input)) return undefined;
+    const cleaned = input
+        .filter(c => c && typeof c === 'object')
+        .map(c => {
+            const contact = {
+                type: typeof c.type === 'string' ? c.type.trim() : undefined,
+                value: typeof c.value === 'string' ? c.value.trim() : undefined
+            };
+            // Add optional fields only if they exist
+            if (typeof c.name === 'string' && c.name.trim()) {
+                contact.name = c.name.trim();
+            }
+            if (typeof c.label === 'string' && c.label.trim()) {
+                contact.label = c.label.trim();
+            }
+            return contact;
+        })
+        .filter(c => c.type && c.value && ALLOWED_PUBLIC_CONTACT_TYPES.includes(c.type));
+    if (cleaned.length === 0) return undefined;
+    return cleaned.slice(0, 2);
+}
+
 // Получить объекты недвижимости текущего пользователя (агента или владельца)
 export const getMyProperties = async (req, res) => {
     try {
@@ -220,6 +245,16 @@ export const createProperty = async (req, res) => {
             agent: req.user._id
         };
 
+        // Санитизация публичных контактов (до 2)
+        if (req.body?.publicContacts) {
+            const sanitized = sanitizePublicContacts(req.body.publicContacts);
+            if (sanitized) {
+                propertyData.publicContacts = sanitized;
+            } else {
+                delete propertyData.publicContacts;
+            }
+        }
+
         // Если пользователь не агент и не администратор, устанавливаем его как владельца
         if (req.user.role === 'user') {
             propertyData.owner = req.user._id;
@@ -306,6 +341,16 @@ export const saveDraft = async (req, res) => {
             agent: req.user._id,
             status: 'draft'
         };
+
+        // Санитизация публичных контактов (до 2)
+        if (req.body?.publicContacts) {
+            const sanitized = sanitizePublicContacts(req.body.publicContacts);
+            if (sanitized) {
+                propertyData.publicContacts = sanitized;
+            } else {
+                delete propertyData.publicContacts;
+            }
+        }
 
         // Если пользователь не агент и не администратор, устанавливаем его как владельца
         if (req.user.role === 'user') {
@@ -445,9 +490,17 @@ export const updateProperty = async (req, res) => {
             });
         }
 
+        // Санитизация публичных контактов при обновлении
+        const updatePayload = { ...req.body };
+        if (req.body?.publicContacts !== undefined) {
+            const sanitized = sanitizePublicContacts(req.body.publicContacts);
+            if (sanitized) updatePayload.publicContacts = sanitized;
+            else updatePayload.publicContacts = [];
+        }
+
         const updatedProperty = await Property.findByIdAndUpdate(
             id,
-            { ...req.body },
+            updatePayload,
             { new: true, runValidators: true }
         ).populate('agent', 'firstName lastName email phone avatar agentInfo');
 

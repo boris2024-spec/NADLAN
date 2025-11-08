@@ -195,6 +195,33 @@ export const propertyCreateSchema = Joi.object({
         ...commonStringMessages,
         'any.only': 'סטטוס לא תקין'
     }))
+    ,
+    publicContacts: Joi.array().items(
+        Joi.object({
+            type: Joi.string().valid('phone', 'email', 'whatsapp', 'link').required().messages({
+                ...commonStringMessages,
+                'any.only': 'סוג איש קשר לא תקין',
+                'any.required': 'סוג איש קשר הוא שדה חובה'
+            }),
+            value: Joi.string().trim().min(3).max(200).required().messages({
+                ...commonStringMessages,
+                'string.min': 'ערך איש הקשר קצר מדי',
+                'string.max': 'ערך איש הקשר ארוך מדי',
+                'any.required': 'ערך איש קשר הוא שדה חובה'
+            }),
+            name: emptyable(Joi.string().trim().max(100).messages({
+                ...commonStringMessages,
+                'string.max': 'שם איש קשר ארוך מדי'
+            })),
+            label: emptyable(Joi.string().trim().max(50).messages({
+                ...commonStringMessages,
+                'string.max': 'תוית איש קשר ארוכה מדי'
+            }))
+        })
+    ).max(2).optional().messages({
+        'array.max': 'ניתן להוסיף עד שני פרטי קשר ציבוריים',
+        'array.base': 'פרטי קשר ציבוריים חייבים להיות מערך'
+    })
 }).custom((value, helpers) => {
     // בדיקות לוגיות מותאמות
     const d = value.details || {};

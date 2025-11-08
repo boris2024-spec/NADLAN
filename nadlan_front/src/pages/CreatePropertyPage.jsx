@@ -116,7 +116,8 @@ function CreatePropertyPage() {
             insurance: ''
         },
         availableFrom: '',
-        status: 'draft'
+        status: 'draft',
+        publicContacts: []
     });
 
     // השתמש בהוק הולידציה
@@ -203,7 +204,13 @@ function CreatePropertyPage() {
                         insurance: toStr(p.additionalCosts?.insurance || '')
                     },
                     availableFrom: p.availableFrom ? new Date(p.availableFrom).toISOString().slice(0, 10) : '',
-                    status: p.status || 'draft'
+                    status: p.status || 'draft',
+                    publicContacts: Array.isArray(p.publicContacts) ? p.publicContacts.slice(0, 2).map(c => ({
+                        type: c.type || '',
+                        value: c.value || '',
+                        name: c.name || '',
+                        label: c.label || ''
+                    })) : []
                 });
 
                 // אם עורכים טיוטה קיימת – נקשר את ה-id שלה, אך לא נמחוק במקרה של עדכון (אותו דוקומנט)
@@ -479,6 +486,22 @@ function CreatePropertyPage() {
 
             const draftData = buildDraftPayload(formData);
 
+            // Add public contacts to draft
+            if (Array.isArray(formData.publicContacts)) {
+                const validPub = formData.publicContacts
+                    .filter(c => c && c.type && c.value)
+                    .map(c => ({
+                        type: c.type,
+                        value: c.value.trim(),
+                        name: c.name?.trim() || undefined,
+                        label: c.label?.trim() || undefined
+                    }))
+                    .slice(0, 2);
+                if (validPub.length) {
+                    draftData.publicContacts = validPub;
+                }
+            }
+
             console.log('Saving draft with data:', draftData);
             let response;
             // אם יש לנו draftId – נעדכן את אותו דוקומנט במקום ליצור חדש
@@ -572,6 +595,22 @@ function CreatePropertyPage() {
                 status: user?.role === 'admin' || user?.role === 'agent' ? 'active' : 'draft'
             };
 
+            // Public contacts (up to 2 valid)
+            if (Array.isArray(formData.publicContacts)) {
+                const validPub = formData.publicContacts
+                    .filter(c => c && c.type && c.value)
+                    .map(c => ({
+                        type: c.type,
+                        value: c.value.trim(),
+                        name: c.name?.trim() || undefined,
+                        label: c.label?.trim() || undefined
+                    }))
+                    .slice(0, 2);
+                if (validPub.length) {
+                    propertyData.publicContacts = validPub;
+                }
+            }
+
             // סיור וירטואלי ליצירה/עדכון
             if (formData.virtualTour?.type === 'NO') {
                 propertyData.virtualTour = { type: 'NO' };
@@ -651,7 +690,7 @@ function CreatePropertyPage() {
             return;
         }
         setCurrentStep(prev => {
-            const newStep = Math.min(prev + 1, 4);
+            const newStep = Math.min(prev + 1, 5);
             // גלילה לראש העמוד
             window.scrollTo({ top: 0, behavior: 'smooth' });
             return newStep;
@@ -717,11 +756,11 @@ function CreatePropertyPage() {
                                     התקדמות:
                                 </span>
                                 <span className="text-sm text-blue-600 dark:text-blue-400">
-                                    שלב {currentStep} מתוך 4
+                                    שלב {currentStep} מתוך 5
                                 </span>
                             </div>
                             <div className="text-sm text-gray-600 dark:text-gray-400">
-                                {Math.round((currentStep / 4) * 100)}%
+                                {Math.round((currentStep / 5) * 100)}%
                             </div>
                         </div>
 
@@ -729,7 +768,7 @@ function CreatePropertyPage() {
                         <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 mb-6">
                             <div
                                 className="bg-blue-600 h-2 rounded-full transition-all duration-300 ease-in-out"
-                                style={{ width: `${(currentStep / 4) * 100}%` }}
+                                style={{ width: `${(currentStep / 5) * 100}%` }}
                             ></div>
                         </div>
 
@@ -772,11 +811,18 @@ function CreatePropertyPage() {
                                     )}
                                 </div>
                                 <div className={`w-16 h-1 transition-colors ${currentStep > 3 ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'}`}></div>
-                                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-medium transition-colors ${currentStep >= 4
+                                <div className={`relative w-10 h-10 rounded-full flex items-center justify-center font-medium transition-colors ${currentStep >= 4
                                     ? 'bg-blue-600 text-white shadow-md'
                                     : 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-300'
                                     }`}>
-                                    {isValid ? <Check className="w-5 h-5" /> : '4'}
+                                    {currentStep > 4 ? <Check className="w-5 h-5" /> : '4'}
+                                </div>
+                                <div className={`w-16 h-1 transition-colors ${currentStep > 4 ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'}`}></div>
+                                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-medium transition-colors ${currentStep >= 5
+                                    ? 'bg-blue-600 text-white shadow-md'
+                                    : 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-300'
+                                    }`}>
+                                    {isValid ? <Check className="w-5 h-5" /> : '5'}
                                 </div>
                             </div>
                         </div>
@@ -794,6 +840,9 @@ function CreatePropertyPage() {
                                     תמונות
                                 </span>
                                 <span className={`transition-colors ${currentStep >= 4 ? 'text-blue-600 font-medium' : ''}`}>
+                                    פרטי קשר
+                                </span>
+                                <span className={`transition-colors ${currentStep >= 5 ? 'text-blue-600 font-medium' : ''}`}>
                                     סיכום ופרסום
                                 </span>
                             </div>
@@ -1454,8 +1503,117 @@ function CreatePropertyPage() {
                             </Card>
                         )}
 
-                        {/* Step 4: Summary & Additional Info */}
+                        {/* Step 4: Public Contacts */}
                         {currentStep === 4 && (
+                            <Card className="p-8">
+                                <div className="flex items-center mb-6">
+                                    <Check className="w-6 h-6 text-blue-600 ml-3" />
+                                    <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                                        פרטי קשר
+                                    </h2>
+                                </div>
+                                <div className="space-y-6">
+                                    <p className="text-sm text-gray-600 dark:text-gray-300">
+                                        הוסף עד שני פרטי קשר שיוצגו במודעה. מידע אישי לא יוצג אוטומטית.
+                                    </p>
+                                    <div className="space-y-4">
+                                        {formData.publicContacts.map((c, idx) => (
+                                            <div key={idx} className="grid grid-cols-1 md:grid-cols-6 gap-4 items-end p-4 bg-gray-50 dark:bg-dark-100 rounded-lg">
+                                                <div className="md:col-span-2">
+                                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">סוג</label>
+                                                    <select
+                                                        value={c.type}
+                                                        onChange={e => {
+                                                            const val = e.target.value;
+                                                            setFormData(prev => ({
+                                                                ...prev,
+                                                                publicContacts: prev.publicContacts.map((pc, i) => i === idx ? { ...pc, type: val } : pc)
+                                                            }));
+                                                        }}
+                                                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-dark-100 text-gray-900 dark:text-gray-100"
+                                                    >
+                                                        <option value="">בחר סוג</option>
+                                                        <option value="phone">טלפון</option>
+                                                        <option value="email">אימייל</option>
+                                                        <option value="whatsapp">ווטסאפ</option>
+                                                        <option value="link">קישור</option>
+                                                    </select>
+                                                </div>
+                                                <div className="md:col-span-3">
+                                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">ערך</label>
+                                                    <Input
+                                                        value={c.value}
+                                                        onChange={e => {
+                                                            const val = e.target.value;
+                                                            setFormData(prev => ({
+                                                                ...prev,
+                                                                publicContacts: prev.publicContacts.map((pc, i) => i === idx ? { ...pc, value: val } : pc)
+                                                            }));
+                                                        }}
+                                                        placeholder={c.type === 'phone' ? '050-1234567' : c.type === 'email' ? 'user@example.com' : c.type === 'whatsapp' ? '+972501234567' : 'https://...'}
+                                                    />
+                                                </div>
+                                                <div className="md:col-span-1 flex space-x-2 rtl:space-x-reverse">
+                                                    <Button
+                                                        type="button"
+                                                        variant="outline"
+                                                        onClick={() => setFormData(prev => ({
+                                                            ...prev,
+                                                            publicContacts: prev.publicContacts.filter((_, i) => i !== idx)
+                                                        }))}
+                                                    >
+                                                        מחק
+                                                    </Button>
+                                                </div>
+                                                <div className="md:col-span-6">
+                                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">שם איש קשר (אופציונלי)</label>
+                                                    <Input
+                                                        value={c.name || ''}
+                                                        onChange={e => {
+                                                            const val = e.target.value;
+                                                            setFormData(prev => ({
+                                                                ...prev,
+                                                                publicContacts: prev.publicContacts.map((pc, i) => i === idx ? { ...pc, name: val } : pc)
+                                                            }));
+                                                        }}
+                                                        placeholder="למשל: יוסי כהן"
+                                                    />
+                                                </div>
+                                                <div className="md:col-span-6">
+                                                    <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">תווית (אופציונלי)</label>
+                                                    <Input
+                                                        value={c.label || ''}
+                                                        onChange={e => {
+                                                            const val = e.target.value;
+                                                            setFormData(prev => ({
+                                                                ...prev,
+                                                                publicContacts: prev.publicContacts.map((pc, i) => i === idx ? { ...pc, label: val } : pc)
+                                                            }));
+                                                        }}
+                                                        placeholder="למשל: התקשרו עכשיו"
+                                                    />
+                                                </div>
+                                            </div>
+                                        ))}
+                                        {formData.publicContacts.length < 2 && (
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                onClick={() => setFormData(prev => ({
+                                                    ...prev,
+                                                    publicContacts: [...prev.publicContacts, { type: '', value: '', name: '', label: '' }]
+                                                }))}
+                                            >
+                                                הוסף איש קשר
+                                            </Button>
+                                        )}
+                                    </div>
+                                </div>
+                            </Card>
+                        )}
+
+                        {/* Step 5: Summary & Additional Info */}
+                        {currentStep === 5 && (
                             <Card className="p-8">
                                 <div className="flex items-center mb-6">
                                     <Check className="w-6 h-6 text-blue-600 ml-3" />
@@ -1593,7 +1751,7 @@ function CreatePropertyPage() {
                                     </Button>
                                 )}
 
-                                {isDraft && currentStep < 4 && (
+                                {isDraft && currentStep < 5 && (
                                     <Button
                                         type="button"
                                         variant="outline"
@@ -1607,7 +1765,7 @@ function CreatePropertyPage() {
                             </div>
 
                             <div className="flex space-x-3 rtl:space-x-reverse">
-                                {currentStep < 4 ? (
+                                {currentStep < 5 ? (
                                     <Button type="button" onClick={nextStep}>
                                         שלב הבא
                                     </Button>

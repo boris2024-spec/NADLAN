@@ -371,24 +371,49 @@ function PropertyDetailsPage() {
 
                                 <div className="text-center mb-4">
                                     <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                                        <span className="text-blue-600 font-semibold text-xl">
-                                            {(property?.agent?.firstName || property?.agent?.lastName || 'מ').charAt(0)}
-                                        </span>
+                                        <span className="text-blue-600 font-semibold text-xl">ק</span>
                                     </div>
-                                    <h4 className="font-semibold text-gray-900 dark:text-gray-100">{[property?.agent?.firstName, property?.agent?.lastName].filter(Boolean).join(' ') || '—'}</h4>
-                                    <p className="text-sm text-gray-600 dark:text-gray-300">{property?.agent?.agentInfo?.company || ''}</p>
+                                    <h4 className="font-semibold text-gray-900 dark:text-gray-100">יצירת קשר</h4>
+                                    <p className="text-sm text-gray-600 dark:text-gray-300">הפרטים האישיים של המפרסם אינם מוצגים</p>
                                 </div>
 
                                 <div className="space-y-3">
-                                    <Button className="w-full flex items-center justify-center">
-                                        <Phone className="w-4 h-4 ml-2" />
-                                        {property?.agent?.phone || '—'}
-                                    </Button>
+                                    {(property?.publicContacts?.length ? property.publicContacts : []).map((c, idx) => {
+                                        const type = c.type;
+                                        const contactName = c.name || '';
+                                        const label = c.label || (type === 'phone' ? 'התקשר' : type === 'email' ? 'שלח אימייל' : type === 'whatsapp' ? 'ווטסאפ' : 'קישור');
+                                        let href = '#';
+                                        if (type === 'phone') href = `tel:${c.value}`;
+                                        else if (type === 'email') href = `mailto:${c.value}`;
+                                        else if (type === 'whatsapp') {
+                                            const num = c.value.replace(/\s|-/g, '');
+                                            href = `https://wa.me/${num}`;
+                                        } else if (type === 'link') href = c.value;
 
-                                    <Button variant="outline" className="w-full flex items-center justify-center">
-                                        <Mail className="w-4 h-4 ml-2" />
-                                        {property?.agent?.email || 'שלח אימייל'}
-                                    </Button>
+                                        const Icon = type === 'phone' ? Phone : type === 'email' ? Mail : type === 'whatsapp' ? Phone : Globe;
+                                        return (
+                                            <div key={idx}>
+                                                {contactName && (
+                                                    <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                                        {contactName}
+                                                    </div>
+                                                )}
+                                                <a href={href} target={type === 'link' || type === 'whatsapp' ? '_blank' : undefined} rel="noopener noreferrer" className="block">
+                                                    <Button className="w-full flex items-center justify-center" variant={idx === 0 ? 'default' : 'outline'}>
+                                                        <Icon className="w-4 h-4 ml-2" />
+                                                        {label}
+                                                    </Button>
+                                                </a>
+                                            </div>
+                                        );
+                                    })}
+
+                                    {/* Fallback if no public contacts configured */}
+                                    {(!property?.publicContacts || property.publicContacts.length === 0) && (
+                                        <div className="text-sm text-gray-600 dark:text-gray-300 text-center">
+                                            לא נמסרו פרטי קשר. ניתן לשלוח הודעה דרך הטופס באתר.
+                                        </div>
+                                    )}
                                 </div>
                             </Card>
 
