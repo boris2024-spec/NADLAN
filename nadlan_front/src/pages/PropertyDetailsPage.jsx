@@ -6,6 +6,7 @@ import { formatPrice as formatPriceUtil } from '../utils/helpers';
 import DeckIcon from '@mui/icons-material/Deck';
 import PoolIcon from '@mui/icons-material/Pool';
 import BalconyIcon from '@mui/icons-material/Balcony';
+import PersonIcon from '@mui/icons-material/Person';
 
 import {
     MapPin,
@@ -383,10 +384,10 @@ function PropertyDetailsPage() {
 
                                 <div className="text-center mb-4">
                                     <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                                        <span className="text-blue-600 font-semibold text-xl">ק</span>
+                                        <PersonIcon className="text-blue-600" fontSize="large" />
                                     </div>
                                     <h4 className="font-semibold text-gray-900 dark:text-gray-100">יצירת קשר</h4>
-                                    <p className="text-sm text-gray-600 dark:text-gray-300">הפרטים האישיים של המפרסם אינם מוצגים</p>
+
                                 </div>
 
                                 <div className="space-y-3">
