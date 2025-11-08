@@ -378,7 +378,7 @@ function PropertyDetailsPage() {
                         <div className="lg:col-span-1 space-y-6">
                             {/* Contact Agent */}
                             <Card className="p-6">
-                                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
+                                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 text-center">
                                     פרטי קשר
                                 </h3>
 
@@ -408,7 +408,7 @@ function PropertyDetailsPage() {
                                         return (
                                             <div key={idx}>
                                                 {contactName && (
-                                                    <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                                    <div className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 text-center">
                                                         {contactName}
                                                     </div>
                                                 )}
