@@ -238,6 +238,30 @@ function CreatePropertyPage() {
         const { name, value, type, checked } = e.target;
         const fieldValue = type === 'checkbox' ? checked : value;
 
+        // טיפול מיוחד: אם נבחר סוג סיור 'NO' ננקה את הקישור
+        if (name === 'virtualTour.type') {
+            updateNestedField(name, fieldValue);
+            if (fieldValue === 'NO') {
+                updateNestedField('virtualTour.url', '');
+            }
+
+            // ולידציה בזמן אמת עבור שני השדות
+            const vtErrors = {
+                ...validateField(name, fieldValue),
+                ...(fieldValue === 'NO' ? validateField('virtualTour.url', '') : {})
+            };
+            setValidationErrors(prev => ({
+                ...prev,
+                ...vtErrors,
+                ...(Object.keys(vtErrors).length === 0 ? { [name]: undefined } : {})
+            }));
+
+            if (!isDraft && (formData.title?.trim() || formData.description?.trim())) {
+                setIsDraft(true);
+            }
+            return;
+        }
+
         if (name.includes('.')) {
             updateNestedField(name, fieldValue);
         } else {
@@ -389,6 +413,16 @@ function CreatePropertyPage() {
                     status: 'draft'
                 };
 
+                // סיור וירטואלי
+                if (data.virtualTour?.type === 'NO') {
+                    payload.virtualTour = { type: 'NO' };
+                } else if (data.virtualTour?.type || (data.virtualTour?.url && data.virtualTour.url.trim())) {
+                    payload.virtualTour = {
+                        type: data.virtualTour?.type || undefined,
+                        url: data.virtualTour?.url?.trim() || undefined
+                    };
+                }
+
                 // הסרת קואורדינטות ריקות כדי למנוע ולידציית מינ/מקס במונגוס
                 if (
                     payload.location?.coordinates &&
@@ -507,6 +541,16 @@ function CreatePropertyPage() {
                 features: { ...formData.features },
                 status: user?.role === 'admin' || user?.role === 'agent' ? 'active' : 'draft'
             };
+
+            // סיור וירטואלי ליצירה/עדכון
+            if (formData.virtualTour?.type === 'NO') {
+                propertyData.virtualTour = { type: 'NO' };
+            } else if (formData.virtualTour?.type || (formData.virtualTour?.url && formData.virtualTour.url.trim())) {
+                propertyData.virtualTour = {
+                    type: formData.virtualTour.type,
+                    url: formData.virtualTour.url.trim()
+                };
+            }
 
             // הסרת קואורדינטות ריקות
             if (
@@ -1327,18 +1371,20 @@ function CreatePropertyPage() {
                                             סיור וירטואלי (אופציונלי)
                                         </h3>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <div>
-                                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                                    קישור לסיור וירטואלי
-                                                </label>
-                                                <Input
-                                                    name="virtualTour.url"
-                                                    type="url"
-                                                    value={formData.virtualTour.url}
-                                                    onChange={handleInputChange}
-                                                    placeholder="https://..."
-                                                />
-                                            </div>
+                                            {formData.virtualTour.type !== 'NO' && (
+                                                <div>
+                                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                        קישור לסיור וירטואלי
+                                                    </label>
+                                                    <Input
+                                                        name="virtualTour.url"
+                                                        type="url"
+                                                        value={formData.virtualTour.url}
+                                                        onChange={handleInputChange}
+                                                        placeholder="https://..."
+                                                    />
+                                                </div>
+                                            )}
                                             <div>
                                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                                     סוג סיור
@@ -1352,8 +1398,14 @@ function CreatePropertyPage() {
                                                     <option value="video">וידאו</option>
                                                     <option value="360">תמונות 360°</option>
                                                     <option value="vr">VR</option>
+                                                    <option value="NO">אין סיור</option>
                                                 </select>
                                             </div>
+                                            {formData.virtualTour.type === 'NO' && (
+                                                <div className="md:col-span-2 text-xs text-gray-500 dark:text-gray-400">
+                                                    נבחר 'אין סיור'. ניתן לבחור סוג אחר כדי להוסיף קישור.
+                                                </div>
+                                            )}
                                         </div>
                                     </div>
                                 </div>

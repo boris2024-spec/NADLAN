@@ -113,7 +113,7 @@ const priceSchema = Joi.object({
 
 const detailsSchemaBase = {
     area: Joi.number().min(1).required().messages({ 'number.min': 'Площадь должна быть положительным числом' }),
-    rooms: Joi.number().integer().min(0).max(50).optional(),
+    rooms: Joi.number().integer().min(0).max(50).required(),
     bedrooms: Joi.number().integer().min(0).max(20).optional(),
     bathrooms: Joi.number().integer().min(0).max(20).optional(),
     floor: Joi.number().integer().min(0).optional(),
@@ -168,7 +168,7 @@ const featuresSchema = Joi.object({
 
 const virtualTourSchema = Joi.object({
     url: Joi.string().uri().optional(),
-    type: Joi.string().valid('video', '360', 'vr').optional()
+    type: Joi.string().valid('video', '360', 'vr', 'NO').optional()
 }).optional();
 
 const additionalCostsSchema = Joi.object({
