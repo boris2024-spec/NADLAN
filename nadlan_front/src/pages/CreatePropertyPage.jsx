@@ -107,7 +107,7 @@ function CreatePropertyPage() {
         images: [],
         virtualTour: {
             url: '',
-            type: 'video'
+            type: 'NO'
         },
         additionalCosts: {
             managementFee: '',
@@ -436,13 +436,14 @@ function CreatePropertyPage() {
                 };
 
                 // סיור וירטואלי
-                if (data.virtualTour?.type === 'NO') {
-                    payload.virtualTour = { type: 'NO' };
-                } else if (data.virtualTour?.type || (data.virtualTour?.url && data.virtualTour.url.trim())) {
+                if (data.virtualTour?.type && data.virtualTour.type !== 'NO' && data.virtualTour.url?.trim()) {
                     payload.virtualTour = {
-                        type: data.virtualTour?.type || undefined,
-                        url: data.virtualTour?.url?.trim() || undefined
+                        type: data.virtualTour.type,
+                        url: data.virtualTour.url.trim()
                     };
+                } else {
+                    // Для черновиков: если выбрано 'NO' или нет данных
+                    payload.virtualTour = { type: 'NO' };
                 }
 
                 // הסרת קואורדינטות ריקות כדי למנוע ולידציית מינ/מקס במונגוס
@@ -612,13 +613,14 @@ function CreatePropertyPage() {
             }
 
             // סיור וירטואלי ליצירה/עדכון
-            if (formData.virtualTour?.type === 'NO') {
-                propertyData.virtualTour = { type: 'NO' };
-            } else if (formData.virtualTour?.type || (formData.virtualTour?.url && formData.virtualTour.url.trim())) {
+            if (formData.virtualTour?.type && formData.virtualTour.type !== 'NO' && formData.virtualTour.url?.trim()) {
                 propertyData.virtualTour = {
                     type: formData.virtualTour.type,
                     url: formData.virtualTour.url.trim()
                 };
+            } else {
+                // Если выбрано 'NO' или нет данных - отправляем type: 'NO' без URL
+                propertyData.virtualTour = { type: 'NO' };
             }
 
             // הסרת קואורדינטות ריקות

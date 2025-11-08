@@ -4,12 +4,16 @@ import { Search, Filter, MapPin, Bed, Bath, Square, Heart } from 'lucide-react';
 import { Card, Button, Input, LikeButton } from '../components/ui';
 import { propertiesAPI, handleApiError } from '../services/api';
 import { formatPrice } from '../utils/helpers';
+import Box from '@mui/material/Box';
+import Slider from '@mui/material/Slider';
 
 function PropertiesPage() {
     const navigate = useNavigate();
     const [properties, setProperties] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    const [priceRange, setPriceRange] = useState([0, 5000000]);
+    const [committedPriceRange, setCommittedPriceRange] = useState([0, 5000000]);
     const [filters, setFilters] = useState({
         transactionType: 'all',
         propertyType: 'all',
@@ -66,8 +70,8 @@ function PropertiesPage() {
                     propertyType: filters.propertyType !== 'all' ? filters.propertyType : undefined,
                     city: filters.city !== 'all' ? filters.city : undefined,
                     rooms: filters.rooms !== 'all' ? filters.rooms : undefined,
-                    priceMin: filters.minPrice || undefined,
-                    priceMax: filters.maxPrice || undefined,
+                    priceMin: committedPriceRange[0] > 0 ? committedPriceRange[0] : undefined,
+                    priceMax: committedPriceRange[1] < 5000000 ? committedPriceRange[1] : undefined,
                     search: searchTerm || undefined,
                 };
 
@@ -84,7 +88,7 @@ function PropertiesPage() {
 
         loadProperties();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [searchTerm, filters]);
+    }, [searchTerm, filters, committedPriceRange]);
 
     // Сервер уже применяет фильтры; оставляем список как есть
     const filteredProperties = properties;
@@ -94,6 +98,23 @@ function PropertiesPage() {
             ...prev,
             [key]: value
         }));
+    };
+
+    const handlePriceChange = (event, newValue) => {
+        setPriceRange(newValue);
+    };
+
+    const handlePriceChangeCommitted = (event, newValue) => {
+        setCommittedPriceRange(newValue);
+    };
+
+    const formatPriceLabel = (value) => {
+        if (value >= 1000000) {
+            return `${(value / 1000000).toFixed(1)}M ₪`;
+        } else if (value >= 1000) {
+            return `${(value / 1000).toFixed(0)}K ₪`;
+        }
+        return `${value} ₪`;
     };
 
     return (
@@ -196,31 +217,50 @@ function PropertiesPage() {
                                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                         טווח מחירים
                                     </label>
-                                    <div className="grid grid-cols-2 gap-2">
-                                        <Input
-                                            type="number"
-                                            placeholder="מחיר מינימום"
-                                            value={filters.minPrice}
-                                            onChange={(e) => handleFilterChange('minPrice', e.target.value)}
+                                    <Box sx={{ px: 1, py: 2 }}>
+                                        <Slider
+                                            value={priceRange}
+                                            onChange={handlePriceChange}
+                                            onChangeCommitted={handlePriceChangeCommitted}
+                                            valueLabelDisplay="auto"
+                                            valueLabelFormat={formatPriceLabel}
+                                            min={0}
+                                            max={5000000}
+                                            step={10000}
+                                            sx={{
+                                                color: '#2563eb',
+                                                '& .MuiSlider-thumb': {
+                                                    backgroundColor: '#2563eb',
+                                                },
+                                                '& .MuiSlider-track': {
+                                                    backgroundColor: '#2563eb',
+                                                },
+                                                '& .MuiSlider-rail': {
+                                                    backgroundColor: '#e5e7eb',
+                                                },
+                                            }}
                                         />
-                                        <Input
-                                            type="number"
-                                            placeholder="מחיר מקסימום"
-                                            value={filters.maxPrice}
-                                            onChange={(e) => handleFilterChange('maxPrice', e.target.value)}
-                                        />
-                                    </div>
+                                        <div className="flex justify-between text-xs text-gray-600 dark:text-gray-400 mt-1">
+                                            <span>{formatPriceLabel(priceRange[1])}</span>
+                                            <span>{formatPriceLabel(priceRange[0])}</span>
+                                        </div>
+                                    </Box>
                                 </div>
 
                                 <Button
-                                    onClick={() => setFilters({
-                                        transactionType: 'all',
-                                        propertyType: 'all',
-                                        minPrice: '',
-                                        maxPrice: '',
-                                        rooms: 'all',
-                                        city: 'all'
-                                    })}
+                                    onClick={() => {
+                                        setFilters({
+                                            transactionType: 'all',
+                                            propertyType: 'all',
+                                            minPrice: '',
+                                            maxPrice: '',
+                                            rooms: 'all',
+                                            city: 'all'
+                                        });
+                                        setPriceRange([0, 5000000]);
+                                        setCommittedPriceRange([0, 5000000]);
+                                        setSearchTerm('');
+                                    }}
                                     variant="outline"
                                     className="w-full"
                                 >

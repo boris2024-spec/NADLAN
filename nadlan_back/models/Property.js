@@ -164,12 +164,17 @@ const propertySchema = new mongoose.Schema({
         }
     }],
     virtualTour: {
-        url: String,
+        url: {
+            type: String,
+            required: function () {
+                // URL обязателен только если тип не 'NO' и указан
+                return this.virtualTour && this.virtualTour.type && this.virtualTour.type !== 'NO';
+            }
+        },
         type: {
             type: String,
-            // добавили 'NO' чтобы позволить מצב "אין סיור" ללא יצירת שגיאת ולידציה
             enum: ['video', '360', 'vr', 'NO'],
-            default: 'video'
+            default: 'NO'
         }
     },
     agent: {
