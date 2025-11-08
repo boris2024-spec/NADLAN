@@ -3,6 +3,10 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Card, Button, Spinner, LikeButton } from '../components/ui';
 import { propertiesAPI, handleApiError } from '../services/api';
 import { formatPrice as formatPriceUtil } from '../utils/helpers';
+import DeckIcon from '@mui/icons-material/Deck';
+import PoolIcon from '@mui/icons-material/Pool';
+import BalconyIcon from '@mui/icons-material/Balcony';
+
 import {
     MapPin,
     Bed,
@@ -22,7 +26,15 @@ import {
     AlertCircle,
     Video,
     Globe,
-    DollarSign
+    DollarSign,
+    MessageCircle,
+    Link,
+    Snowflake,
+    Shield,
+    Package,
+    Accessibility,
+    PawPrint,
+    Sofa
 } from 'lucide-react';
 
 function PropertyDetailsPage() {
@@ -92,16 +104,16 @@ function PropertyDetailsPage() {
     const featuresList = [
         { key: 'hasParking', label: 'חניה', icon: Car },
         { key: 'hasElevator', label: 'מעלית', icon: Building },
-        { key: 'hasBalcony', label: 'מרפסת', icon: Trees },
-        { key: 'hasTerrace', label: 'גג/טרסה', icon: Trees },
+        { key: 'hasBalcony', label: 'מרפסת', icon: BalconyIcon },
+        { key: 'hasTerrace', label: 'גג/טרסה', icon: DeckIcon },
         { key: 'hasGarden', label: 'גינה', icon: Trees },
-        { key: 'hasPool', label: 'בריכה', icon: Building },
-        { key: 'hasAirConditioning', label: 'מיזוג אוויר' },
-        { key: 'hasSecurity', label: 'שמירה' },
-        { key: 'hasStorage', label: 'מחסן' },
-        { key: 'isAccessible', label: 'נגיש לנכים' },
-        { key: 'allowsPets', label: 'מותר בעלי חיים' },
-        { key: 'isFurnished', label: 'מרוהט' }
+        { key: 'hasPool', label: 'בריכה', icon: PoolIcon },
+        { key: 'hasAirConditioning', label: 'מיזוג אוויר', icon: Snowflake },
+        { key: 'hasSecurity', label: 'שמירה', icon: Shield },
+        { key: 'hasStorage', label: 'מחסן', icon: Package },
+        { key: 'isAccessible', label: 'נגיש לנכים', icon: Accessibility },
+        { key: 'allowsPets', label: 'מותר בעלי חיים', icon: PawPrint },
+        { key: 'isFurnished', label: 'מרוהט', icon: Sofa }
     ];
 
     const formatPrice = (p) => {
@@ -381,6 +393,7 @@ function PropertyDetailsPage() {
                                     {(property?.publicContacts?.length ? property.publicContacts : []).map((c, idx) => {
                                         const type = c.type;
                                         const contactName = c.name || '';
+                                        const displayValue = c.value || '';
                                         const label = c.label || (type === 'phone' ? 'התקשר' : type === 'email' ? 'שלח אימייל' : type === 'whatsapp' ? 'ווטסאפ' : 'קישור');
                                         let href = '#';
                                         if (type === 'phone') href = `tel:${c.value}`;
@@ -390,7 +403,7 @@ function PropertyDetailsPage() {
                                             href = `https://wa.me/${num}`;
                                         } else if (type === 'link') href = c.value;
 
-                                        const Icon = type === 'phone' ? Phone : type === 'email' ? Mail : type === 'whatsapp' ? Phone : Globe;
+                                        const Icon = type === 'phone' ? Phone : type === 'email' ? Mail : type === 'whatsapp' ? MessageCircle : type === 'link' ? Link : Globe;
                                         return (
                                             <div key={idx}>
                                                 {contactName && (
@@ -399,9 +412,9 @@ function PropertyDetailsPage() {
                                                     </div>
                                                 )}
                                                 <a href={href} target={type === 'link' || type === 'whatsapp' ? '_blank' : undefined} rel="noopener noreferrer" className="block">
-                                                    <Button className="w-full flex items-center justify-center" variant={idx === 0 ? 'default' : 'outline'}>
-                                                        <Icon className="w-4 h-4 ml-2" />
-                                                        {label}
+                                                    <Button className="w-full flex items-center justify-center gap-2" variant={idx === 0 ? 'default' : 'outline'}>
+                                                        <Icon className="w-4 h-4 flex-shrink-0" />
+                                                        <span className="truncate">{displayValue}</span>
                                                     </Button>
                                                 </a>
                                             </div>

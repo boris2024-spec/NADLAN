@@ -43,7 +43,8 @@ function Header() {
                 <div className="flex items-center justify-between h-16">
                     {/* Logo */}
                     <Link to="/" className="flex items-center space-x-2 rtl:space-x-reverse">
-                        <Building2 className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+                        <img src="/nadlanLogo3.png" alt="Logo" className="h-14 w-14" />
+
                         <span className="text-xl font-bold text-gradient">
                             נדלן
                         </span>
