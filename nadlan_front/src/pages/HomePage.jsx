@@ -38,7 +38,19 @@ function HomePage() {
         <div className="min-h-screen">
             {/* Hero Section */}
             <section className="relative bg-gradient-to-r from-blue-600 to-blue-800 dark:from-blue-800 dark:to-blue-900 text-white">
-                <div className="container-responsive">
+                {/* Background Pattern */}
+                <div className="absolute inset-0 opacity-10 pointer-events-none">
+                    <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+                        <defs>
+                            <pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">
+                                <path d="M 10 0 L 0 0 0 10" fill="none" stroke="currentColor" strokeWidth="0.5" />
+                            </pattern>
+                        </defs>
+                        <rect width="100" height="100" fill="url(#grid)" />
+                    </svg>
+                </div>
+
+                <div className="container-responsive relative z-10">
                     <div className="py-20 md:py-32 text-center">
                         <h1 className="text-4xl md:text-6xl font-bold mb-6">
                             מוצאים בית,
@@ -52,22 +64,24 @@ function HomePage() {
                         </p>
 
                         <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                            <Link to="/properties">
+                            <Link to="/properties" className="w-full sm:w-auto">
                                 <Button
                                     size="lg"
                                     variant="secondary"
-                                    className="w-full sm:w-auto"
+                                    className="w-full sm:w-auto pointer-events-auto"
+                                    type="button"
                                 >
                                     <Search className="w-5 h-5 ml-2 rtl:ml-0 rtl:mr-2" />
                                     התחל לחפש
                                 </Button>
                             </Link>
 
-                            <Link to="/register">
+                            <Link to="/register" className="w-full sm:w-auto">
                                 <Button
                                     size="lg"
                                     variant="outline"
-                                    className="w-full sm:w-auto bg-transparent border-white text-white hover:bg-white dark:bg-dark-100 hover:text-blue-600"
+                                    className="w-full sm:w-auto bg-transparent border-white text-white hover:bg-white dark:bg-dark-100 hover:text-blue-600 pointer-events-auto"
+                                    type="button"
                                 >
                                     <Home className="w-5 h-5 ml-2 rtl:ml-0 rtl:mr-2" />
                                     פרסם נכס
@@ -75,18 +89,6 @@ function HomePage() {
                             </Link>
                         </div>
                     </div>
-                </div>
-
-                {/* Background Pattern */}
-                <div className="absolute inset-0 opacity-10">
-                    <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-                        <defs>
-                            <pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">
-                                <path d="M 10 0 L 0 0 0 10" fill="none" stroke="currentColor" strokeWidth="0.5" />
-                            </pattern>
-                        </defs>
-                        <rect width="100" height="100" fill="url(#grid)" />
-                    </svg>
                 </div>
             </section>
 
@@ -156,21 +158,23 @@ function HomePage() {
                         </p>
 
                         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                            <Link to="/properties">
+                            <Link to="/properties" className="w-full sm:w-auto">
                                 <Button
                                     size="lg"
                                     variant="secondary"
-                                    className="w-full sm:w-auto"
+                                    className="w-full sm:w-auto pointer-events-auto"
+                                    type="button"
                                 >
                                     דפדף נכסים
                                 </Button>
                             </Link>
 
-                            <Link to="/register">
+                            <Link to="/register" className="w-full sm:w-auto">
                                 <Button
                                     size="lg"
                                     variant="outline"
-                                    className="w-full sm:w-auto bg-transparent border-white text-white hover:bg-white dark:bg-dark-100 hover:text-blue-600"
+                                    className="w-full sm:w-auto bg-transparent border-white text-white hover:bg-white dark:bg-dark-100 hover:text-blue-600 pointer-events-auto"
+                                    type="button"
                                 >
                                     הרשם עכשיו
                                 </Button>

@@ -7,6 +7,7 @@ const Button = React.forwardRef(({
     size = 'md',
     loading = false,
     disabled = false,
+    as: Component = 'button',
     children,
     ...props
 }, ref) => {
@@ -28,7 +29,7 @@ const Button = React.forwardRef(({
     };
 
     return (
-        <button
+        <Component
             ref={ref}
             className={cn(
                 'inline-flex items-center justify-center rounded-md font-medium transition-colors focus:outline-none',
@@ -64,7 +65,7 @@ const Button = React.forwardRef(({
                 </svg>
             )}
             {children}
-        </button>
+        </Component>
     );
 });
 
