@@ -159,16 +159,31 @@ export const propertyCreateSchema = Joi.object({
         'array.base': 'תמונות חייבות להיות מערך'
     }),
     virtualTour: Joi.object({
-        url: emptyable(Joi.string().uri().messages({
-            ...commonStringMessages,
-            'string.uri': 'קישור סיור וירטואלי לא תקין'
-        })),
         // הוספת ערך 'NO' לציון שאין סיור וירטואלי זמין
         type: emptyable(Joi.string().valid('video', '360', 'vr', 'NO').messages({
             ...commonStringMessages,
             'any.only': 'סוג סיור וירטואלי לא תקין'
+        })),
+        url: emptyable(Joi.string().uri().messages({
+            ...commonStringMessages,
+            'string.uri': 'קישור סיור וירטואלי לא תקין'
         }))
-    }).optional(),
+    })
+        .custom((v, helpers) => {
+            if (!v) return v;
+            // אם נבחר NO – מתעלמים מהשדה url (גם אם הוזן בטעות)
+            if (v.type === 'NO') {
+                if (v.url) delete v.url; // מסירים כדי שלא יישלח/ישמר
+                return v;
+            }
+            // אם נבחר אחד מסוגי הסיור אך אין כתובת -> שגיאה מותאמת
+            const requiresUrl = ['video', '360', 'vr'];
+            if (requiresUrl.includes(v.type) && (!v.url || v.url === '')) {
+                return helpers.error('any.custom', { message: 'חובה לספק קישור לסיור וירטואלי עבור סוג זה' });
+            }
+            return v;
+        })
+        .optional(),
     additionalCosts: Joi.object({
         managementFee: emptyable(Joi.number().messages(commonNumberMessages)),
         propertyTax: emptyable(Joi.number().messages(commonNumberMessages)),

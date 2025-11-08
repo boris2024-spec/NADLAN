@@ -167,7 +167,8 @@ const propertySchema = new mongoose.Schema({
         url: String,
         type: {
             type: String,
-            enum: ['video', '360', 'vr'],
+            // добавили 'NO' чтобы позволить מצב "אין סיור" ללא יצירת שגיאת ולידציה
+            enum: ['video', '360', 'vr', 'NO'],
             default: 'video'
         }
     },

@@ -51,6 +51,15 @@ function CreatePropertyPage() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isDraft, setIsDraft] = useState(false);
     const [isAutoSaving, setIsAutoSaving] = useState(false);
+    // מזהה הטיוטה האחרונה שנשמרה (למחיקה לאחר פרסום)
+    const [draftId, setDraftId] = useState(() => {
+        try {
+            const fromStorage = localStorage.getItem('nadlan_draft_id');
+            return fromStorage || null;
+        } catch (_) {
+            return null;
+        }
+    });
 
     const [formData, setFormData] = useState({
         title: '',
@@ -196,6 +205,12 @@ function CreatePropertyPage() {
                     availableFrom: p.availableFrom ? new Date(p.availableFrom).toISOString().slice(0, 10) : '',
                     status: p.status || 'draft'
                 });
+
+                // אם עורכים טיוטה קיימת – נקשר את ה-id שלה, אך לא נמחוק במקרה של עדכון (אותו דוקומנט)
+                if (p.status === 'draft') {
+                    setDraftId(p._id || editId);
+                    try { localStorage.setItem('nadlan_draft_id', p._id || editId); } catch (_) { }
+                }
             } catch (e) {
                 const info = handleApiError(e);
                 toast.error(info.message || 'נכשלה טעינת נכס לעריכה');
@@ -465,11 +480,26 @@ function CreatePropertyPage() {
             const draftData = buildDraftPayload(formData);
 
             console.log('Saving draft with data:', draftData);
-            const response = await propertiesAPI.saveDraft(draftData);
+            let response;
+            // אם יש לנו draftId – נעדכן את אותו דוקומנט במקום ליצור חדש
+            if (draftId) {
+                response = await propertiesAPI.updateProperty(draftId, { ...draftData, status: 'draft' });
+            } else {
+                response = await propertiesAPI.saveDraft(draftData);
+            }
 
             if (response.data.success) {
                 toast.success('הטיוטה נשמרה בהצלחה');
                 setIsDraft(false);
+
+                // שמירת מזהה הטיוטה כדי שנוכל למחוק לאחר פרסום
+                // כאשר מדובר ב-update (PUT) נקבל בחזרה את ה-property המעודכן
+                const returned = response?.data?.data?.property || response?.data?.data;
+                const newDraftId = returned?._id || response?.data?.id || draftId || null;
+                if (newDraftId && newDraftId !== draftId) {
+                    setDraftId(newDraftId);
+                    try { localStorage.setItem('nadlan_draft_id', newDraftId); } catch (_) { }
+                }
             }
         } catch (error) {
             console.error('Draft save error:', error);
@@ -570,16 +600,27 @@ function CreatePropertyPage() {
             }
 
             let response;
+            // פרסום/עדכון: אם עורכים – תמיד update; אם יש draftId – נפרסם על גבי אותו דוקומנט; אחרת יצירה חדשה
             if (editId) {
                 response = await propertiesAPI.updateProperty(editId, propertyData);
+            } else if (draftId) {
+                response = await propertiesAPI.updateProperty(draftId, propertyData);
             } else {
                 response = await propertiesAPI.createProperty(propertyData);
             }
 
             if (response.data.success) {
                 toast.success(editId ? 'הנכס עודכן בהצלחה!' : 'הנכס נוצר בהצלחה!');
-                const id = response.data.data?.property?._id || editId;
-                navigate(`/properties/${id}`);
+                const created = response.data.data?.property || response.data.data;
+                const newId = created?._id || editId || draftId;
+
+                // במקרה הרגיל: פרסום על אותו דוקומנט – אין צורך למחוק, רק לנקות מזהה טיוטה מקומי אם הפך ל-active
+                const finalStatus = created?.status || propertyData.status;
+                if (finalStatus === 'active') {
+                    try { localStorage.removeItem('nadlan_draft_id'); } catch (_) { }
+                }
+
+                navigate(`/properties/${newId}`);
             }
         } catch (error) {
             console.error('Error creating property:', error);
@@ -1395,10 +1436,11 @@ function CreatePropertyPage() {
                                                     onChange={handleInputChange}
                                                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white dark:bg-dark-100 text-gray-900 dark:text-gray-100"
                                                 >
+                                                    <option value="NO">אין סיור</option>
                                                     <option value="video">וידאו</option>
                                                     <option value="360">תמונות 360°</option>
                                                     <option value="vr">VR</option>
-                                                    <option value="NO">אין סיור</option>
+
                                                 </select>
                                             </div>
                                             {formData.virtualTour.type === 'NO' && (
