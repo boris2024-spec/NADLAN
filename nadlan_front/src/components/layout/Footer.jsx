@@ -2,6 +2,8 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Building2, Mail, Phone, MapPin } from 'lucide-react';
 
+
+
 function Footer() {
     const currentYear = new Date().getFullYear();
 
@@ -9,8 +11,8 @@ function Footer() {
         company: [
             { name: 'אודות', href: '/about' },
             { name: 'צור קשר', href: '/contact' },
-            { name: 'מדיניות פרטיות', href: '/privacy' },
-            { name: 'תנאי שימוש', href: '/terms' },
+            { name: 'מדיניות פרטיות', href: '/privacy-policy' },
+            { name: 'תנאי שימוש', href: '/terms-of-service' },
         ],
         services: [
             { name: 'מכירת נכסים', href: '/properties?transactionType=sale' },

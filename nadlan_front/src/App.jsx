@@ -22,6 +22,9 @@ import ResetPasswordPage from './pages/ResetPasswordPage';
 import MyListingsPage from './pages/MyListingsPage';
 import FavoritesPage from './pages/FavoritesPage';
 import AdminPage from './pages/AdminPage';
+import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
+import TermsOfServicePage from './pages/TermsOfServicePage';
+import CookiePolicyPage from './pages/CookiePolicyPage';
 
 // Layout
 import Layout from './components/layout/Layout';
@@ -74,6 +77,11 @@ function App() {
                   <Route path="/create-property" element={<CreatePropertyPage />} />
                   <Route path="/favorites" element={<FavoritesPage />} />
                   <Route path="/admin" element={<AdminPage />} />
+
+                  {/* Legal Pages */}
+                  <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
+                  <Route path="/terms-of-service" element={<TermsOfServicePage />} />
+                  <Route path="/cookie-policy" element={<CookiePolicyPage />} />
 
                   {/* 404 */}
                   <Route path="*" element={<NotFoundPage />} />
