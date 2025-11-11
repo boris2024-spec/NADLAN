@@ -130,7 +130,7 @@ function Footer() {
 
                         <div className="flex items-center space-x-6 rtl:space-x-reverse">
                             <Link
-                                to="/privacy"
+                                to="/privacy-policy"
                                 className="text-secondary-400 hover:text-white text-sm transition-colors"
                             >
                                 מדיניות פרטיות
