@@ -162,17 +162,18 @@ class EmailService {
         }
     }
 
-    async sendContactEmail({ name, email, phone, message }) {
+    async sendContactEmail({ name, email, phone, message }, ticketId) {
         try {
             const supportEmail = process.env.SUPPORT_EMAIL || this.getFromAddress();
             const mailOptions = {
                 from: `"Nadlan Contact" <${this.getFromAddress()}>`,
                 to: supportEmail,
                 replyTo: email,
-                subject: `הודעת צור קשר חדשה מאת ${name}`,
+                subject: `הודעת צור קשר חדשה ${ticketId ? `(#${String(ticketId).slice(0, 8)}) ` : ''}מאת ${name}`,
                 html: `
                     <div dir="rtl" style="font-family:Arial,sans-serif;line-height:1.6">
                         <h2>הודעה חדשה מטופס צור קשר</h2>
+                        ${ticketId ? `<p><strong>מספר פנייה:</strong> ${ticketId}</p>` : ''}
                         <p><strong>שם:</strong> ${name}</p>
                         <p><strong>אימייל:</strong> ${email}</p>
                         ${phone ? `<p><strong>טלפון:</strong> ${phone}</p>` : ''}
@@ -182,7 +183,7 @@ class EmailService {
                         <p style="font-size:12px;color:#666">נשלח אוטומטית ממערכת Nadlan</p>
                     </div>
                 `,
-                text: `שם: ${name}\nאימייל: ${email}\n${phone ? `טלפון: ${phone}\n` : ''}הודעה:\n${message}`
+                text: `${ticketId ? `מספר פנייה: ${ticketId}\n` : ''}שם: ${name}\nאימייל: ${email}\n${phone ? `טלפון: ${phone}\n` : ''}הודעה:\n${message}`
             };
             const result = await this.transporter.sendMail(mailOptions);
             return result;

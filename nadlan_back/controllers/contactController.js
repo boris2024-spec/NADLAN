@@ -18,15 +18,15 @@ export async function sendContact(req, res) {
                 errors: error.details.map(d => ({ field: d.path.join('.'), message: d.message }))
             });
         }
-
+        const ticketId = req.requestId; // используем корреляционный ID запроса как номер тикета
         if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
             console.warn('SMTP credentials are not configured. Logging contact message instead of sending email.');
-            console.log('CONTACT_MESSAGE', JSON.stringify(value));
+            console.log('CONTACT_MESSAGE', JSON.stringify({ ...value, ticketId }));
         } else {
-            await emailService.sendContactEmail(value);
+            await emailService.sendContactEmail(value, ticketId);
         }
 
-        return res.status(200).json({ success: true, message: 'ההודעה נשלחה בהצלחה' });
+        return res.status(200).json({ success: true, message: 'ההודעה נשלחה בהצלחה', ticketId });
     } catch (err) {
         console.error('sendContact error:', err);
         return res.status(500).json({ success: false, message: 'שגיאת שרת בשליחת ההודעה' });

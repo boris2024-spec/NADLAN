@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Button, Input, Card } from '../components/ui';
-import { Mail, User, Phone, MessageSquare } from 'lucide-react';
+import { Mail, User, Phone, MessageSquare, CheckCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { validate } from '../validation/validate';
 import Joi from 'joi';
@@ -31,6 +31,8 @@ function ContactPage() {
     const [formData, setFormData] = useState({ name: '', email: '', phone: '', message: '' });
     const [errors, setErrors] = useState({});
     const [loading, setLoading] = useState(false);
+    const [submitted, setSubmitted] = useState(false);
+    const [ticketId, setTicketId] = useState('');
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -48,9 +50,12 @@ function ContactPage() {
         setErrors({});
         setLoading(true);
         try {
-            await contactAPI.send(formData);
+            const res = await contactAPI.send(formData);
+            const tid = res?.data?.ticketId;
             toast.success('ההודעה נשלחה בהצלחה!');
             setFormData({ name: '', email: '', phone: '', message: '' });
+            setTicketId(tid || '');
+            setSubmitted(true);
         } catch (err) {
             console.error(err);
             toast.error(err?.response?.data?.message || 'שגיאה בשליחת ההודעה');
@@ -69,63 +74,83 @@ function ContactPage() {
                     </p>
                 </div>
 
-                <Card className="p-8 space-y-6">
-                    <form onSubmit={handleSubmit} className="space-y-6" noValidate>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <Input
-                                name="name"
-                                label="שם מלא"
-                                value={formData.name}
-                                onChange={handleChange}
-                                error={errors.name}
-                                required
-                                icon={User}
-                                placeholder="הקלד את שמך"
-                            />
-                            <Input
-                                type="email"
-                                name="email"
-                                label="אימייל"
-                                value={formData.email}
-                                onChange={handleChange}
-                                error={errors.email}
-                                required
-                                icon={Mail}
-                                placeholder="example@mail.com"
-                            />
-                        </div>
-                        <Input
-                            name="phone"
-                            label="טלפון"
-                            value={formData.phone}
-                            onChange={handleChange}
-                            error={errors.phone}
-                            icon={Phone}
-                            placeholder="מספר טלפון (לא חובה)"
-                        />
-                        <div>
-                            <label className="form-label after:content-['*'] after:ml-0.5 after:text-error-500">הודעה</label>
-                            <div className="relative">
-                                <textarea
-                                    name="message"
-                                    value={formData.message}
-                                    onChange={handleChange}
-                                    rows={6}
-                                    className={`input resize-y ${errors.message ? 'input-error' : ''}`}
-                                    placeholder="איך אפשר לעזור לך?"
-                                />
-                                <MessageSquare className="h-4 w-4 absolute left-3 top-3 text-secondary-400" />
+                {submitted ? (
+                    <Card className="p-8 space-y-4 text-center">
+                        <CheckCircle className="h-10 w-10 text-green-500 mx-auto" />
+                        <h2 className="text-2xl font-semibold">תודה! פנייתך התקבלה</h2>
+                        <p className="text-gray-600 dark:text-gray-300">
+                            נציג שלנו יעבור על הפרטים ויחזור אליך בהקדם.
+                        </p>
+                        {ticketId && (
+                            <div className="mt-2 text-sm">
+                                <span className="font-medium">מספר פנייה:</span> {ticketId}
                             </div>
-                            {errors.message && <p className="form-error">{errors.message}</p>}
-                        </div>
-
-                        <div className="flex justify-end">
-                            <Button type="submit" disabled={loading} className="min-w-[140px]">
-                                {loading ? 'שולח...' : 'שלח הודעה'}
+                        )}
+                        <div className="mt-6">
+                            <Button onClick={() => { setSubmitted(false); setTicketId(''); }} variant="ghost">
+                                שלח פנייה נוספת
                             </Button>
                         </div>
-                    </form>
-                </Card>
+                    </Card>
+                ) : (
+                    <Card className="p-8 space-y-6">
+                        <form onSubmit={handleSubmit} className="space-y-6" noValidate>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <Input
+                                    name="name"
+                                    label="שם מלא"
+                                    value={formData.name}
+                                    onChange={handleChange}
+                                    error={errors.name}
+                                    required
+                                    icon={User}
+                                    placeholder="הקלד את שמך"
+                                />
+                                <Input
+                                    type="email"
+                                    name="email"
+                                    label="אימייל"
+                                    value={formData.email}
+                                    onChange={handleChange}
+                                    error={errors.email}
+                                    required
+                                    icon={Mail}
+                                    placeholder="example@mail.com"
+                                />
+                            </div>
+                            <Input
+                                name="phone"
+                                label="טלפון"
+                                value={formData.phone}
+                                onChange={handleChange}
+                                error={errors.phone}
+                                icon={Phone}
+                                placeholder="מספר טלפון (לא חובה)"
+                            />
+                            <div>
+                                <label className="form-label after:content-['*'] after:ml-0.5 after:text-error-500">הודעה</label>
+                                <div className="relative">
+                                    <textarea
+                                        name="message"
+                                        value={formData.message}
+                                        onChange={handleChange}
+                                        rows={6}
+                                        className={`input resize-y ${errors.message ? 'input-error' : ''}`}
+                                        placeholder="איך אפשר לעזור לך?"
+                                    />
+                                    <MessageSquare className="h-4 w-4 absolute left-3 top-3 text-secondary-400" />
+                                </div>
+                                {errors.message && <p className="form-error">{errors.message}</p>}
+                            </div>
+
+                            <div className="flex justify-end">
+                                <Button type="submit" disabled={loading} className="min-w-[140px]">
+                                    {loading ? 'שולח...' : 'שלח הודעה'}
+                                </Button>
+                            </div>
+                        </form>
+                    </Card>
+                )}
 
                 <div className="grid md:grid-cols-3 gap-6 text-center">
                     <div className="p-6 bg-white dark:bg-dark-50 rounded-lg shadow border border-gray-200 dark:border-dark-300">
