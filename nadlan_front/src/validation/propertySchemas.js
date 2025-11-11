@@ -138,10 +138,10 @@ export const propertyCreateSchema = Joi.object({
             'number.min': 'מספר הקומות הכולל חייב להיות חיובי',
             'number.integer': 'מספר הקומות הכולל חייב להיות מספר שלם'
         })),
-        buildYear: emptyable(Joi.number().integer().min(1800).max(currentYearPlus5).messages({
+        buildYear: emptyable(Joi.number().integer().min(1900).max(currentYearPlus5).messages({
             ...commonNumberMessages,
-            'number.min': `שנת הבנייה חייבת להיות בין 1800 ל-${currentYearPlus5}`,
-            'number.max': `שנת הבנייה חייבת להיות בין 1800 ל-${currentYearPlus5}`,
+            'number.min': `שנת הבנייה חייבת להיות בין 1900 ל-${currentYearPlus5}`,
+            'number.max': `שנת הבנייה חייבת להיות בין 1900 ל-${currentYearPlus5}`,
             'number.integer': 'שנת הבנייה חייבת להיות מספר שלם'
         })),
         condition: emptyable(Joi.string().valid('new', 'excellent', 'good', 'fair', 'needs_renovation').messages({
