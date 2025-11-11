@@ -2,8 +2,10 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Search, Home, TrendingUp, Shield, Users, Star } from 'lucide-react';
 import { Button, Card } from '../components/ui';
+import { useAuth } from '../context/AuthContext';
 
 function HomePage() {
+    const { isAuthenticated } = useAuth();
     const features = [
         {
             icon: Search,
@@ -76,7 +78,7 @@ function HomePage() {
                                 </Button>
                             </Link>
 
-                            <Link to="/register" className="w-full sm:w-auto">
+                            <Link to={isAuthenticated ? "/create-property" : "/register"} className="w-full sm:w-auto">
                                 <Button
                                     size="lg"
                                     variant="outline"
@@ -169,14 +171,14 @@ function HomePage() {
                                 </Button>
                             </Link>
 
-                            <Link to="/register" className="w-full sm:w-auto">
+                            <Link to={isAuthenticated ? "/create-property" : "/register"} className="w-full sm:w-auto">
                                 <Button
                                     size="lg"
                                     variant="outline"
                                     className="w-full sm:w-auto bg-transparent border-white text-white hover:bg-white dark:bg-dark-100 hover:text-blue-600 pointer-events-auto"
                                     type="button"
                                 >
-                                    הרשם עכשיו
+                                    {isAuthenticated ? 'פרסם נכס' : 'הרשם עכשיו'}
                                 </Button>
                             </Link>
                         </div>

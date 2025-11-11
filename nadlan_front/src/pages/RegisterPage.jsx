@@ -71,7 +71,7 @@ function RegisterPage() {
                         הרשמה חדשה
                     </h1>
                     <p className="text-gray-600 dark:text-gray-300">
-                        צרו חשבון חדש כדי להתחיל לחפש נכסים
+                        צרו חשבון חדש כדי להתחיל לפרסם נכסים
                     </p>
                 </div>
 
