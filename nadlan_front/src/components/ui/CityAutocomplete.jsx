@@ -3,14 +3,14 @@ import { searchCities } from '../../services/citiesApi';
 import { MapPin, ChevronDown } from 'lucide-react';
 
 /**
- * Компонент автодополнения для выбора города
+ * קומפוננטה של השלמה אוטומטית לבחירת עיר
  * @param {Object} props
- * @param {string} props.value - Текущее значение
- * @param {Function} props.onChange - Callback при изменении значения
+ * @param {string} props.value - הערך הנוכחי
+ * @param {Function} props.onChange - Callback כאשר הערך משתנה
  * @param {string} props.placeholder - Placeholder
- * @param {string} props.className - Дополнительные классы
- * @param {boolean} props.required - Обязательное поле
- * @param {boolean} props.error - Есть ли ошибка валидации
+ * @param {string} props.className - מחלקות CSS נוספות
+ * @param {boolean} props.required - שדה חובה
+ * @param {boolean} props.error - האם יש שגיאת ולידציה
  */
 const CityAutocomplete = ({
     value,
@@ -27,7 +27,7 @@ const CityAutocomplete = ({
     const wrapperRef = useRef(null);
     const inputRef = useRef(null);
 
-    // Закрытие при клике вне компонента
+    // סגירה בלחיצה מחוץ לרכיב
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
@@ -39,12 +39,12 @@ const CityAutocomplete = ({
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    // Обновление локального значения при изменении prop
+    // עדכון הערך המקומי כאשר הפרופ משתנה
     useEffect(() => {
         setInputValue(value || '');
     }, [value]);
 
-    // Поиск городов при вводе
+    // חיפוש ערים בזמן הקלדה
     useEffect(() => {
         const searchTimer = setTimeout(async () => {
             if (inputValue && inputValue.length >= 2) {
@@ -54,7 +54,7 @@ const CityAutocomplete = ({
                     setSuggestions(results);
                     setIsOpen(results.length > 0);
                 } catch (error) {
-                    console.error('Ошибка поиска городов:', error);
+                    console.error('שגיאה בחיפוש ערים:', error);
                     setSuggestions([]);
                 } finally {
                     setIsLoading(false);
@@ -117,7 +117,7 @@ const CityAutocomplete = ({
                 />
             </div>
 
-            {/* Список подсказок */}
+            {/* רשימת הצעות */}
             {isOpen && (
                 <div className="absolute z-50 w-full mt-1 bg-white dark:bg-dark-100 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-auto">
                     {isLoading ? (

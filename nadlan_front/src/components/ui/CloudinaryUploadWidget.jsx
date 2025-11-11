@@ -3,9 +3,9 @@ import Button from './Button';
 import { Camera } from 'lucide-react';
 
 /**
- * Cloudinary Upload Widget Button
- * - Открывает камеру/галерею и загружает изображения прямо в Cloudinary
- * - Требуются env переменные:
+ * כפתור העלאה ל-Cloudinary
+ * - פותח מצלמה/גלריה ומעלה תמונות ישירות ל-Cloudinary
+ * - דורש משתני סביבה:
  *   - VITE_CLOUDINARY_CLOUD_NAME
  *   - VITE_CLOUDINARY_UPLOAD_PRESET (unsigned)
  */
@@ -44,14 +44,14 @@ const CloudinaryUploadWidget = ({
         const targetFolder = folder || defaultFolder;
 
         if (!cloudName || !uploadPreset) {
-            // Сообщаем пользователю, если переменные не заданы
-            alert('Cloudinary не настроен. Укажите VITE_CLOUDINARY_CLOUD_NAME и VITE_CLOUDINARY_UPLOAD_PRESET в файле .env');
+            // מודיעים למשתמש אם המשתנים לא מוגדרים
+            alert('Cloudinary לא מוגדר. יש להגדיר VITE_CLOUDINARY_CLOUD_NAME ו-VITE_CLOUDINARY_UPLOAD_PRESET בקובץ .env');
             return;
         }
 
         if (!widgetRef.current) {
             if (import.meta.env.DEV) {
-                // Диагностика в dev-режиме
+                // דיאגנוסטיקה במצב פיתוח
                 // eslint-disable-next-line no-console
                 console.log('[CloudinaryWidget] cloud:', cloudName, 'preset:', uploadPreset, 'folder:', targetFolder);
             }
@@ -85,7 +85,7 @@ const CloudinaryUploadWidget = ({
                 }
             };
 
-            // Если используем подписанные загрузки (например, пресет ml_default), добавим колбэк подписи
+            // אם משתמשים בהעלאה חתומה (למשל preset ml_default), נוסיף callback לחתימה
             const wantSigned = uploadPreset === 'ml_default' || (import.meta.env.VITE_CLOUDINARY_SIGNED === 'true');
             if (wantSigned) {
                 widgetOptions.apiKey = import.meta.env.VITE_CLOUDINARY_API_KEY;
@@ -101,8 +101,8 @@ const CloudinaryUploadWidget = ({
                         if (!data?.signature) throw new Error('Signature missing');
                         callback(data.signature);
                     } catch (e) {
-                        console.error('Cloudinary sign error:', e);
-                        alert('Ошибка подписи загрузки. Проверьте /api/cloudinary/sign');
+                        console.error('שגיאה בחתימת העלאה ל-Cloudinary:', e);
+                        alert('שגיאה בחתימת העלאה. בדוק את /api/cloudinary/sign');
                     }
                 };
             }
@@ -111,14 +111,14 @@ const CloudinaryUploadWidget = ({
                 widgetOptions,
                 (error, result) => {
                     if (error) {
-                        // Больше контекста по частой проблеме: неверный upload preset
+                        // הסבר נוסף לבעיה נפוצה: upload preset לא נכון
                         const preset = import.meta.env.VITE_CLOUDINARY_UPLOAD_PRESET;
                         const msg = (error?.statusText === 'Upload preset not found' || error?.status === 'Upload preset not found')
-                            ? `Cloudinary: Upload preset не найден. Проверьте имя пресета (точное совпадение), что он UNSIGNED и принадлежит облаку. Текущее имя: ${preset}`
-                            : 'Cloudinary: ошибка запуска виджета. Подробности в консоли';
-                        // Используем alert, чтобы наверняка увидеть на мобильном
+                            ? `Cloudinary: Upload preset לא נמצא. בדוק את שם ה-preset (חייב להיות מדויק), שהוא UNSIGNED ושייך לענן שלך. שם נוכחי: ${preset}`
+                            : 'Cloudinary: שגיאה בהפעלת הווידג׳ט. פרטים נוספים בקונסול';
+                        // משתמשים ב-alert כדי לוודא שיופיע גם במובייל
                         alert(msg);
-                        console.error('Cloudinary widget error:', error);
+                        console.error('שגיאת ווידג׳ט Cloudinary:', error);
                         return;
                     }
                     if (result && result.event === 'success') {
