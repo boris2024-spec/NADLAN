@@ -27,7 +27,7 @@ function PropertiesPage() {
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [totalProperties, setTotalProperties] = useState(0);
-    const itemsPerPage = 12;
+    const itemsPerPage = 50;
 
     // Mock data fallback (используется только если API недоступен)
     const mockProperties = [
