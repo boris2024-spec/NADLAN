@@ -142,7 +142,7 @@ function Footer() {
                                 תנאי שימוש
                             </Link>
                             <Link
-                                to="/cookies"
+                                to="/cookie-policy"
                                 className="text-secondary-400 hover:text-white text-sm transition-colors"
                             >
                                 מדיניות עוגיות

@@ -25,6 +25,7 @@ import AdminPage from './pages/AdminPage';
 import PrivacyPolicyPage from './pages/PrivacyPolicyPage';
 import TermsOfServicePage from './pages/TermsOfServicePage';
 import CookiePolicyPage from './pages/CookiePolicyPage';
+import AboutPage from './pages/AboutPage';
 
 // Layout
 import Layout from './components/layout/Layout';
@@ -82,6 +83,7 @@ function App() {
                   <Route path="/privacy-policy" element={<PrivacyPolicyPage />} />
                   <Route path="/terms-of-service" element={<TermsOfServicePage />} />
                   <Route path="/cookie-policy" element={<CookiePolicyPage />} />
+                  <Route path="/about" element={<AboutPage />} />
 
                   {/* 404 */}
                   <Route path="*" element={<NotFoundPage />} />
