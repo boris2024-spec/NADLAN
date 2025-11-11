@@ -8,3 +8,5 @@ export { default as EmailVerificationNotice } from './EmailVerificationNotice';
 export { default as ValidationSummary } from './ValidationSummary';
 export { default as LikeButton } from './LikeButton';
 export { default as CloudinaryUploadWidget } from './CloudinaryUploadWidget';
+export { default as CityAutocomplete } from './CityAutocomplete';
+export { default as StreetAutocomplete } from './StreetAutocomplete';

@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>בדיקת API ערים ורחובות</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1000px;
+            margin: 50px auto;
+            padding: 20px;
+            direction: rtl;
+        }
+
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            background: #f9f9f9;
+        }
+
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        input {
+            padding: 8px;
+            width: 300px;
+            margin: 10px 5px;
+            font-size: 16px;
+        }
+
+        .results {
+            margin-top: 20px;
+            padding: 10px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .item {
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .loading {
+            color: #007bff;
+            font-weight: bold;
+        }
+
+        .error {
+            color: red;
+        }
+
+        .success {
+            color: green;
+            font-weight: bold;
+        }
+
+        .info {
+            color: #666;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>בדיקת API ערים ורחובות של data.gov.il</h1>
+
+    <div class="test-section">
+        <h2>בדיקה 1: קבלת כל הערים</h2>
+        <button onclick="testGetAllCities()">הצג את כל הערים</button>
+        <div id="allCitiesResults" class="results"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>בדיקה 2: חיפוש עיר</h2>
+        <input type="text" id="searchInput" placeholder="הקלד שם עיר (למשל: תל אביב)"
+            onkeyup="if(event.key === 'Enter') testSearchCities()" />
+        <button onclick="testSearchCities()">חפש</button>
+        <div id="searchResults" class="results"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>בדיקה 3: קבלת רחובות לפי עיר</h2>
+        <input type="text" id="cityForStreetsInput" placeholder="הקלד שם עיר" value="תל אביב - יפו" />
+        <button onclick="testGetStreetsByCity()">הצג רחובות</button>
+        <div id="streetsResults" class="results"></div>
+    </div>
+
+    <div class="test-section">
+        <h2>בדיקה 4: חיפוש רחוב בעיר</h2>
+        <div>
+            <input type="text" id="cityForStreetSearchInput" placeholder="שם עיר" value="תל אביב - יפו" />
+            <input type="text" id="streetSearchInput" placeholder="שם רחוב (למשל: דיזנגוף)"
+                onkeyup="if(event.key === 'Enter') testSearchStreet()" />
+            <button onclick="testSearchStreet()">חפש רחוב</button>
+        </div>
+        <div id="streetSearchResults" class="results"></div>
+    </div>
+
+    <script>
+        const API_BASE_URL = 'https://data.gov.il/api/3/action/datastore_search';
+        const CITIES_RESOURCE_ID = '5c78e9fa-c2e2-4771-93ff-7f400a12f7ba';
+        const STREETS_RESOURCE_ID = '9ad3862c-8391-4b2f-84a4-2d4c68625f4b';
+
+        async function testGetAllCities() {
+            const resultsDiv = document.getElementById('allCitiesResults');
+            resultsDiv.innerHTML = '<div class="loading">טוען...</div>';
+
+            try {
+                const response = await fetch(
+                    `${API_BASE_URL}?resource_id=${CITIES_RESOURCE_ID}&limit=1500`
+                );
+
+                const data = await response.json();
+
+                if (data.success && data.result && data.result.records) {
+                    const cities = data.result.records
+                        .map(record => record['שם_ישוב'])
+                        .filter((city, index, self) => city && self.indexOf(city) === index)
+                        .sort((a, b) => a.localeCompare(b, 'he'));
+
+                    resultsDiv.innerHTML = `
+                        <div class="success">נמצאו ${cities.length} ערים</div>
+                        ${cities.slice(0, 50).map(city => `<div class="item">${city}</div>`).join('')}
+                        ${cities.length > 50 ? `<div class="info">מוצגות רק 50 ערים ראשונות מתוך ${cities.length}</div>` : ''}
+                    `;
+                } else {
+                    resultsDiv.innerHTML = '<div class="error">לא נמצאו תוצאות</div>';
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="error">שגיאה: ${error.message}</div>`;
+            }
+        }
+
+        async function testSearchCities() {
+            const query = document.getElementById('searchInput').value;
+            const resultsDiv = document.getElementById('searchResults');
+
+            if (!query) {
+                resultsDiv.innerHTML = '<div class="error">אנא הזן ערך לחיפוש</div>';
+                return;
+            }
+
+            resultsDiv.innerHTML = '<div class="loading">מחפש...</div>';
+
+            try {
+                const response = await fetch(
+                    `${API_BASE_URL}?resource_id=${CITIES_RESOURCE_ID}&limit=1500`
+                );
+
+                const data = await response.json();
+
+                if (data.success && data.result && data.result.records) {
+                    const normalizedQuery = query.toLowerCase();
+                    const cities = data.result.records
+                        .map(record => record['שם_ישוב'])
+                        .filter(city => city && city.toLowerCase().includes(normalizedQuery))
+                        .filter((city, index, self) => self.indexOf(city) === index)
+                        .slice(0, 10);
+
+                    if (cities.length > 0) {
+                        resultsDiv.innerHTML = `
+                            <div class="success">נמצאו ${cities.length} תוצאות</div>
+                            ${cities.map(city => `<div class="item">${city}</div>`).join('')}
+                        `;
+                    } else {
+                        resultsDiv.innerHTML = '<div class="error">לא נמצאו תוצאות</div>';
+                    }
+                } else {
+                    resultsDiv.innerHTML = '<div class="error">לא נמצאו תוצאות</div>';
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="error">שגיאה: ${error.message}</div>`;
+            }
+        }
+
+        async function testGetStreetsByCity() {
+            const cityName = document.getElementById('cityForStreetsInput').value;
+            const resultsDiv = document.getElementById('streetsResults');
+
+            if (!cityName) {
+                resultsDiv.innerHTML = '<div class="error">אנא הזן שם עיר</div>';
+                return;
+            }
+
+            resultsDiv.innerHTML = '<div class="loading">טוען רחובות...</div>';
+
+            try {
+                const response = await fetch(
+                    `${API_BASE_URL}?resource_id=${STREETS_RESOURCE_ID}&filters={"שם_ישוב":"${encodeURIComponent(cityName)}"}&limit=5000`
+                );
+
+                const data = await response.json();
+
+                if (data.success && data.result && data.result.records) {
+                    const streets = data.result.records
+                        .map(record => record['שם_רחוב'])
+                        .filter((street, index, self) => street && self.indexOf(street) === index)
+                        .sort((a, b) => a.localeCompare(b, 'he'));
+
+                    if (streets.length > 0) {
+                        resultsDiv.innerHTML = `
+                            <div class="success">נמצאו ${streets.length} רחובות ב${cityName}</div>
+                            ${streets.slice(0, 100).map(street => `<div class="item">${street}</div>`).join('')}
+                            ${streets.length > 100 ? `<div class="info">מוצגים רק 100 רחובות ראשונים מתוך ${streets.length}</div>` : ''}
+                        `;
+                    } else {
+                        resultsDiv.innerHTML = `<div class="error">לא נמצאו רחובות ב${cityName}</div>`;
+                    }
+                } else {
+                    resultsDiv.innerHTML = `<div class="error">לא נמצאו רחובות ב${cityName}</div>`;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="error">שגיאה: ${error.message}</div>`;
+            }
+        }
+
+        async function testSearchStreet() {
+            const cityName = document.getElementById('cityForStreetSearchInput').value;
+            const streetQuery = document.getElementById('streetSearchInput').value;
+            const resultsDiv = document.getElementById('streetSearchResults');
+
+            if (!cityName || !streetQuery) {
+                resultsDiv.innerHTML = '<div class="error">אנא הזן גם עיר וגם רחוב</div>';
+                return;
+            }
+
+            resultsDiv.innerHTML = '<div class="loading">מחפש...</div>';
+
+            try {
+                const response = await fetch(
+                    `${API_BASE_URL}?resource_id=${STREETS_RESOURCE_ID}&filters={"שם_ישוב":"${encodeURIComponent(cityName)}"}&limit=5000`
+                );
+
+                const data = await response.json();
+
+                if (data.success && data.result && data.result.records) {
+                    const normalizedQuery = streetQuery.toLowerCase();
+                    const streets = data.result.records
+                        .map(record => record['שם_רחוב'])
+                        .filter(street => street && street.toLowerCase().includes(normalizedQuery))
+                        .filter((street, index, self) => self.indexOf(street) === index)
+                        .slice(0, 15);
+
+                    if (streets.length > 0) {
+                        resultsDiv.innerHTML = `
+                            <div class="success">נמצאו ${streets.length} רחובות התואמים "${streetQuery}" ב${cityName}</div>
+                            ${streets.map(street => `<div class="item">${street} (${cityName})</div>`).join('')}
+                        `;
+                    } else {
+                        resultsDiv.innerHTML = `<div class="error">לא נמצאו רחובות התואמים "${streetQuery}" ב${cityName}</div>`;
+                    }
+                } else {
+                    resultsDiv.innerHTML = '<div class="error">לא נמצאו תוצאות</div>';
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `<div class="error">שגיאה: ${error.message}</div>`;
+            }
+        }
+    </script>
+</body>
+
+</html>

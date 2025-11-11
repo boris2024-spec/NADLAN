@@ -65,7 +65,15 @@ const propertySchema = new mongoose.Schema({
     location: {
         address: {
             type: String,
-            required: [true, 'Адрес обязателен'],
+            required: [true, 'Адрес (улица) обязателен'],
+            trim: true
+        },
+        street: {
+            type: String,
+            trim: true
+        },
+        houseNumber: {
+            type: String,
             trim: true
         },
         city: {
@@ -375,8 +383,40 @@ propertySchema.index({
     title: 'text',
     description: 'text',
     'location.address': 'text',
+    'location.street': 'text',
     'location.city': 'text',
     'location.district': 'text'
+});
+
+// Middleware для синхронизации полей адреса
+propertySchema.pre('save', function (next) {
+    // Если есть street и/или houseNumber, синхронизируем с address
+    if (this.isModified('location.street') || this.isModified('location.houseNumber')) {
+        const parts = [];
+        if (this.location.street) parts.push(this.location.street);
+        if (this.location.houseNumber) parts.push(this.location.houseNumber);
+        if (parts.length > 0) {
+            this.location.address = parts.join(' ');
+        }
+    }
+    // Если изменился только address и при этом street пустой, пытаемся разделить его
+    else if (this.isModified('location.address') && this.location.address && !this.location.street) {
+        // Простая логика: последнее слово - номер дома (если это число)
+        const parts = this.location.address.trim().split(/\s+/);
+        if (parts.length > 1) {
+            const lastPart = parts[parts.length - 1];
+            // Проверяем, является ли последняя часть номером
+            if (/^\d+[א-ת]?$/.test(lastPart)) {
+                this.location.houseNumber = lastPart;
+                this.location.street = parts.slice(0, -1).join(' ');
+            } else {
+                this.location.street = this.location.address;
+            }
+        } else {
+            this.location.street = this.location.address;
+        }
+    }
+    next();
 });
 
 // Middleware для генерации slug

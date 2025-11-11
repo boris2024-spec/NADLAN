@@ -127,7 +127,9 @@ const detailsSchemaDraftOverrides = {
 };
 
 const locationSchemaBase = Joi.object({
-    address: Joi.string().min(5).required().messages({ 'string.min': 'Адрес обязателен и должен содержать минимум 5 символов' }),
+    address: Joi.string().min(2).required().messages({ 'string.min': 'Адрес обязателен и должен содержать минимум 2 символа' }),
+    street: Joi.string().optional(),
+    houseNumber: Joi.string().optional(),
     city: Joi.string().min(2).required().messages({ 'string.min': 'Город обязателен и должен содержать минимум 2 символа' }),
     district: Joi.string().optional(),
     country: Joi.string().optional(),
@@ -136,6 +138,8 @@ const locationSchemaBase = Joi.object({
 
 const locationSchemaDraft = Joi.object({
     address: Joi.string().min(1).optional(),
+    street: Joi.string().optional(),
+    houseNumber: Joi.string().optional(),
     city: Joi.string().min(1).optional(),
     district: Joi.string().optional(),
     country: Joi.string().optional(),

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
-import { Card, Button, Input, Spinner, ValidationSummary, CloudinaryUploadWidget } from '../components/ui';
+import { Card, Button, Input, Spinner, ValidationSummary, CloudinaryUploadWidget, CityAutocomplete, StreetAutocomplete } from '../components/ui';
 import { Upload, MapPin, Camera, Trash2, Check, AlertCircle, Save, Home } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { propertiesAPI, uploadAPI, handleApiError } from '../services/api';
@@ -73,6 +73,8 @@ function CreatePropertyPage() {
         },
         location: {
             address: '',
+            street: '',
+            houseNumber: '',
             city: '',
             district: '',
             coordinates: {
@@ -161,6 +163,8 @@ function CreatePropertyPage() {
                     },
                     location: {
                         address: p.location?.address || '',
+                        street: p.location?.street || '',
+                        houseNumber: p.location?.houseNumber || '',
                         city: p.location?.city || '',
                         district: p.location?.district || '',
                         coordinates: {
@@ -414,6 +418,8 @@ function CreatePropertyPage() {
                     },
                     location: {
                         address: data.location?.address?.trim() || undefined,
+                        street: data.location?.street?.trim() || undefined,
+                        houseNumber: data.location?.houseNumber?.trim() || undefined,
                         city: data.location?.city?.trim() || undefined,
                         district: data.location?.district?.trim() || undefined,
                         coordinates: {
@@ -575,6 +581,8 @@ function CreatePropertyPage() {
                 },
                 location: {
                     address: formData.location?.address?.trim(),
+                    street: formData.location?.street?.trim() || undefined,
+                    houseNumber: formData.location?.houseNumber?.trim() || undefined,
                     city: formData.location?.city?.trim(),
                     district: formData.location?.district?.trim() || undefined,
                     coordinates: {
@@ -775,7 +783,7 @@ function CreatePropertyPage() {
                         </div>
 
                         {/* Progress Steps */}
-                        <div className="flex items-center justify-center">
+                        <div className="hidden md:flex items-center justify-center">
                             <div className="flex items-center space-x-4 rtl:space-x-reverse">
                                 <div className={`relative w-10 h-10 rounded-full flex items-center justify-center font-medium transition-colors ${currentStep >= 1
                                     ? 'bg-blue-600 text-white shadow-md'
@@ -830,7 +838,7 @@ function CreatePropertyPage() {
                         </div>
 
                         {/* Step Labels */}
-                        <div className="flex justify-center mt-4">
+                        <div className="hidden md:flex justify-center mt-4">
                             <div className="flex items-center space-x-8 rtl:space-x-reverse text-sm text-gray-600 dark:text-gray-400">
                                 <span className={`transition-colors ${currentStep >= 1 ? 'text-blue-600 font-medium' : ''}`}>
                                     מידע בסיסי
@@ -1078,6 +1086,7 @@ function CreatePropertyPage() {
                                             <div>
                                                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                                                     חדרים
+                                                    <span className="text-red-600"> *</span>
                                                 </label>
                                                 <Input
                                                     name="details.rooms"
@@ -1222,12 +1231,16 @@ function CreatePropertyPage() {
                                                     עיר
                                                     <span className="text-red-600"> *</span>
                                                 </label>
-                                                <Input
-                                                    name="location.city"
+                                                <CityAutocomplete
                                                     value={formData.location.city}
-                                                    onChange={handleInputChange}
+                                                    onChange={(city) => handleInputChange({
+                                                        target: {
+                                                            name: 'location.city',
+                                                            value: city
+                                                        }
+                                                    })}
                                                     placeholder="תל אביב"
-                                                    className={validationErrors['location.city'] ? 'border-red-500' : ''}
+                                                    error={!!validationErrors['location.city']}
                                                     required
                                                 />
                                                 {validationErrors['location.city'] && (
@@ -1251,25 +1264,49 @@ function CreatePropertyPage() {
                                             </div>
                                         </div>
 
-                                        <div>
-                                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                                כתובת מלאה
-                                                <span className="text-red-600"> *</span>
-                                            </label>
-                                            <Input
-                                                name="location.address"
-                                                value={formData.location.address}
-                                                onChange={handleInputChange}
-                                                placeholder="רחוב דיזנגוף 123, תל אביב"
-                                                className={validationErrors['location.address'] ? 'border-red-500' : ''}
-                                                required
-                                            />
-                                            {validationErrors['location.address'] && (
-                                                <div className="flex items-center mt-1 text-red-600 text-sm">
-                                                    <AlertCircle className="w-4 h-4 ml-1" />
-                                                    {validationErrors['location.address']}
-                                                </div>
-                                            )}
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                            <div className="md:col-span-2">
+                                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                    רחוב
+                                                    <span className="text-red-600"> *</span>
+                                                </label>
+                                                <StreetAutocomplete
+                                                    value={formData.location.street || formData.location.address}
+                                                    onChange={(street) => {
+                                                        // Обновляем и street, и address одновременно
+                                                        setFormData(prev => ({
+                                                            ...prev,
+                                                            location: {
+                                                                ...prev.location,
+                                                                street: street,
+                                                                address: street
+                                                            }
+                                                        }));
+                                                    }}
+                                                    cityName={formData.location.city}
+                                                    placeholder="דיזנגוף"
+                                                    error={!!validationErrors['location.address']}
+                                                    required
+                                                />
+                                                {validationErrors['location.address'] && (
+                                                    <div className="flex items-center mt-1 text-red-600 text-sm">
+                                                        <AlertCircle className="w-4 h-4 ml-1" />
+                                                        {validationErrors['location.address']}
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div>
+                                                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                                    מספר בית
+                                                </label>
+                                                <Input
+                                                    name="location.houseNumber"
+                                                    value={formData.location.houseNumber || ''}
+                                                    onChange={handleInputChange}
+                                                    placeholder="123"
+                                                    type="text"
+                                                />
+                                            </div>
                                         </div>
                                     </div>
 

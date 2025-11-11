@@ -74,8 +74,16 @@ export const propertyCreateSchema = Joi.object({
         }))
     }).required().messages({ 'any.required': 'מחיר הוא שדה חובה', 'object.base': 'מבנה המחיר לא תקין' }),
     location: Joi.object({
-        address: trimString(5, 200, 'הכתובת חייבת להכיל לפחות 5 תווים', 'הכתובת ארוכה מדי').required()
+        address: trimString(2, 200, 'הכתובת חייבת להכיל לפחות 2 תווים', 'הכתובת ארוכה מדי').required()
             .messages({ 'any.required': 'הכתובת היא שדה חובה' }),
+        street: emptyable(Joi.string().max(200).messages({
+            ...commonStringMessages,
+            'string.max': 'שם הרחוב ארוך מדי'
+        })),
+        houseNumber: emptyable(Joi.string().max(20).messages({
+            ...commonStringMessages,
+            'string.max': 'מספר הבית ארוך מדי'
+        })),
         city: trimString(2, 100, 'שם העיר חייב להכיל לפחות 2 תווים', 'שם העיר ארוך מדי').required()
             .messages({ 'any.required': 'העיר היא שדה חובה' }),
         district: emptyable(Joi.string().max(100).messages({

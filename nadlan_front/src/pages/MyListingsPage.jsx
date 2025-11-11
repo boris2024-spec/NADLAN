@@ -34,7 +34,7 @@ export default function MyListingsPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [page, setPage] = useState(1);
-    const [limit] = useState(12);
+    const [limit] = useState(100);
     const [pagination, setPagination] = useState(null);
     const [status, setStatus] = useState('');
     const [transactionType, setTransactionType] = useState('');
