@@ -66,15 +66,15 @@ function authReducer(state, action) {
     }
 }
 
-// Создание контекста
+// יצירת הקונטקסט
 const AuthContext = createContext(null);
 
-// Provider компонент
+// קומפוננטת Provider
 export function AuthProvider({ children }) {
     const [state, dispatch] = useReducer(authReducer, initialState);
     const [showEmailVerification, setShowEmailVerification] = useState(false);
 
-    // Проверка аутентификации при загрузке приложения
+    // בדיקת אימות בעת טעינת האפליקציה
     useEffect(() => {
         const initAuth = async () => {
             const token = tokenManager.getAccessToken();
@@ -88,7 +88,7 @@ export function AuthProvider({ children }) {
                 const response = await authAPI.getProfile();
                 dispatch({ type: AUTH_ACTIONS.SET_USER, payload: response.data.data.user });
             } catch (error) {
-                console.error('Ошибка проверки аутентификации:', error);
+                console.error('שגיאה בבדיקת אימות:', error);
                 tokenManager.clearTokens();
                 dispatch({ type: AUTH_ACTIONS.LOGOUT });
             }
@@ -97,7 +97,7 @@ export function AuthProvider({ children }) {
         initAuth();
     }, []);
 
-    // Функция входа
+    // פונקציית התחברות
     const login = async (credentials) => {
         try {
             dispatch({ type: AUTH_ACTIONS.SET_LOADING, payload: true });
@@ -105,13 +105,13 @@ export function AuthProvider({ children }) {
             const response = await authAPI.login(credentials);
             const { user, tokens } = response.data.data;
 
-            // Сохраняем токены
+            // שמירת הטוקנים
             tokenManager.setAccessToken(tokens.accessToken);
             tokenManager.setRefreshToken(tokens.refreshToken);
 
             dispatch({ type: AUTH_ACTIONS.SET_USER, payload: user });
 
-            toast.success('Добро пожаловать!');
+            toast.success('ברוך הבא!');
             return { success: true, user };
 
         } catch (error) {
@@ -123,7 +123,7 @@ export function AuthProvider({ children }) {
         }
     };
 
-    // Функция регистрации
+    // פונקציית הרשמה
     const register = async (userData) => {
         try {
             dispatch({ type: AUTH_ACTIONS.SET_LOADING, payload: true });
@@ -131,18 +131,18 @@ export function AuthProvider({ children }) {
             const response = await authAPI.register(userData);
             const { user, tokens } = response.data.data;
 
-            // Сохраняем токены
+            // שמירת הטוקנים
             tokenManager.setAccessToken(tokens.accessToken);
             tokenManager.setRefreshToken(tokens.refreshToken);
 
             dispatch({ type: AUTH_ACTIONS.SET_USER, payload: user });
 
-            // Показываем уведомление о верификации, если email не подтвержден
+            // הצגת הודעת אימות אם האימייל לא מאומת
             if (!user.isVerified) {
                 setShowEmailVerification(true);
-                toast.success('Регистрация успешна! Пожалуйста, подтвердите ваш email.');
+                toast.success('ההרשמה הצליחה! נא לאמת את כתובת האימייל שלך.');
             } else {
-                toast.success('Регистрация успешна! Добро пожаловать!');
+                toast.success('ההרשמה הצליחה! ברוך הבא!');
             }
 
             return { success: true, user };
@@ -156,7 +156,7 @@ export function AuthProvider({ children }) {
         }
     };
 
-    // Функция выхода
+    // פונקציית יציאה
     const logout = async () => {
         try {
             const refreshToken = tokenManager.getRefreshToken();
@@ -168,10 +168,10 @@ export function AuthProvider({ children }) {
             tokenManager.clearTokens();
             dispatch({ type: AUTH_ACTIONS.LOGOUT });
 
-            toast.success('Вы успешно вышли из системы');
+            toast.success('יצאת מהמערכת בהצלחה');
 
         } catch (error) {
-            console.error('Ошибка выхода:', error);
+            console.error('שגיאה ביציאה:', error);
             // Все равно очищаем токены и состояние
             tokenManager.clearTokens();
             dispatch({ type: AUTH_ACTIONS.LOGOUT });
@@ -186,7 +186,7 @@ export function AuthProvider({ children }) {
 
             dispatch({ type: AUTH_ACTIONS.UPDATE_USER, payload: updatedUser });
 
-            toast.success('Профиль успешно обновлен');
+            toast.success('הפרופיל עודכן בהצלחה');
             return { success: true, user: updatedUser };
 
         } catch (error) {
@@ -209,7 +209,7 @@ export function AuthProvider({ children }) {
             dispatch({ type: AUTH_ACTIONS.SET_USER, payload: response.data.data.user });
             return { success: true, user: response.data.data.user };
         } catch (error) {
-            console.error('Ошибка обновления профиля:', error);
+            console.error('שגיאה בעדכון פרופיל:', error);
             return { success: false, error: handleApiError(error) };
         }
     };
@@ -276,7 +276,7 @@ export function useAuth() {
     const context = useContext(AuthContext);
 
     if (!context) {
-        throw new Error('useAuth должен использоваться внутри AuthProvider');
+        throw new Error('useAuth חייב להיות בשימוש בתוך AuthProvider');
     }
 
     return context;
@@ -302,7 +302,7 @@ export function useRequireRole(requiredRole) {
 
     useEffect(() => {
         if (!auth.isLoading && auth.isAuthenticated && !auth.hasRole(requiredRole)) {
-            toast.error('У вас нет доступа к этой странице');
+            toast.error('אין לך הרשאה לגשת לעמוד זה');
             window.location.href = '/';
         }
     }, [auth.user, auth.isLoading, requiredRole]);
