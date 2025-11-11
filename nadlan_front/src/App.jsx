@@ -27,6 +27,10 @@ import TermsOfServicePage from './pages/TermsOfServicePage';
 import CookiePolicyPage from './pages/CookiePolicyPage';
 import AboutPage from './pages/AboutPage';
 import ContactPage from './pages/ContactPage';
+import HelpCenterPage from './pages/HelpCenterPage';
+import FAQPage from './pages/FAQPage';
+import ReportProblemPage from './pages/ReportProblemPage';
+import SupportChatPage from './pages/SupportChatPage';
 
 // Layout
 import Layout from './components/layout/Layout';
@@ -86,6 +90,10 @@ function App() {
                   <Route path="/cookie-policy" element={<CookiePolicyPage />} />
                   <Route path="/about" element={<AboutPage />} />
                   <Route path="/contact" element={<ContactPage />} />
+                  <Route path="/help" element={<HelpCenterPage />} />
+                  <Route path="/faq" element={<FAQPage />} />
+                  <Route path="/report" element={<ReportProblemPage />} />
+                  <Route path="/support-chat" element={<SupportChatPage />} />
 
                   {/* 404 */}
                   <Route path="*" element={<NotFoundPage />} />

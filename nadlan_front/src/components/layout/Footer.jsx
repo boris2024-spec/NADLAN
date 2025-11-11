@@ -24,7 +24,7 @@ function Footer() {
             { name: 'מרכז עזרה', href: '/help' },
             { name: 'שאלות נפוצות', href: '/faq' },
             { name: 'דיווח על בעיה', href: '/report' },
-            { name: 'צ\'אט תמיכה', href: '/support' },
+            { name: 'צ\'אט תמיכה', href: '/support-chat' }
         ],
     };
 
