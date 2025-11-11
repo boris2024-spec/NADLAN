@@ -162,6 +162,36 @@ class EmailService {
         }
     }
 
+    async sendContactEmail({ name, email, phone, message }) {
+        try {
+            const supportEmail = process.env.SUPPORT_EMAIL || this.getFromAddress();
+            const mailOptions = {
+                from: `"Nadlan Contact" <${this.getFromAddress()}>`,
+                to: supportEmail,
+                replyTo: email,
+                subject: `הודעת צור קשר חדשה מאת ${name}`,
+                html: `
+                    <div dir="rtl" style="font-family:Arial,sans-serif;line-height:1.6">
+                        <h2>הודעה חדשה מטופס צור קשר</h2>
+                        <p><strong>שם:</strong> ${name}</p>
+                        <p><strong>אימייל:</strong> ${email}</p>
+                        ${phone ? `<p><strong>טלפון:</strong> ${phone}</p>` : ''}
+                        <p><strong>תוכן ההודעה:</strong></p>
+                        <div style="white-space:pre-wrap;background:#f9f9f9;padding:12px;border:1px solid #ddd;border-radius:6px">${message}</div>
+                        <hr />
+                        <p style="font-size:12px;color:#666">נשלח אוטומטית ממערכת Nadlan</p>
+                    </div>
+                `,
+                text: `שם: ${name}\nאימייל: ${email}\n${phone ? `טלפון: ${phone}\n` : ''}הודעה:\n${message}`
+            };
+            const result = await this.transporter.sendMail(mailOptions);
+            return result;
+        } catch (error) {
+            console.error('Error sending contact email:', error.message);
+            throw error;
+        }
+    }
+
     getVerificationEmailTemplate(userName, verificationUrl) {
         return `
         <!DOCTYPE html>

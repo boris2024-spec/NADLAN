@@ -343,3 +343,8 @@ export const isRequestCanceled = (error) => {
 };
 
 export default api;
+
+// Contact API (public)
+export const contactAPI = {
+    send: (payload) => api.post('/contact', payload)
+};

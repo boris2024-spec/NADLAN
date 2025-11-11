@@ -144,6 +144,7 @@ import propertyRoutes from './routes/properties.js';
 import uploadRoutes from './routes/upload.js';
 import adminRoutes from './routes/admin.js';
 import cloudinaryRoutes from './routes/cloudinary.js';
+import contactRoutes from './routes/contact.js';
 // import userRoutes from './routes/users.js';
 
 // Использование роутов
@@ -152,6 +153,7 @@ app.use('/api/properties', propertyRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/cloudinary', cloudinaryRoutes);
+app.use('/api/contact', contactRoutes);
 // app.use('/api/users', userRoutes);
 
 // 404 и ошибки (порядок важен)

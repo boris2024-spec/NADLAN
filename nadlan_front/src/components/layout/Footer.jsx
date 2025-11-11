@@ -136,7 +136,7 @@ function Footer() {
                                 מדיניות פרטיות
                             </Link>
                             <Link
-                                to="/terms"
+                                to="/terms-of-service"
                                 className="text-secondary-400 hover:text-white text-sm transition-colors"
                             >
                                 תנאי שימוש

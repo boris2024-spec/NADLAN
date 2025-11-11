@@ -6,6 +6,7 @@ import ThemeToggle from '../ui/ThemeToggle';
 import {
     Home,
     Building2,
+    Mail,
     Search,
     User,
     LogOut,
@@ -29,6 +30,7 @@ function Header() {
     const navigation = [
         { name: 'בית', href: '/', icon: Home },
         { name: 'נכסים', href: '/properties', icon: Building2 },
+        { name: 'צור קשר', href: '/contact', icon: Mail },
     ];
 
     const userNavigation = isAuthenticated ? [
