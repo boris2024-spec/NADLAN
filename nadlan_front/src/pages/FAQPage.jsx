@@ -36,7 +36,7 @@ function FAQPage() {
                                 <span className="font-medium">{item.q}</span>
                                 <span className="text-secondary-500 group-open:rotate-180 transition-transform">▾</span>
                             </summary>
-                            <div className="px-5 pb-5 text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
+                            <div className="px-5 pb-5 pt-4 text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
                                 {item.a}
                             </div>
                         </details>

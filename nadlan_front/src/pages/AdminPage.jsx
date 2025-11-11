@@ -44,7 +44,7 @@ export default function AdminPage() {
     // -------------------------
     const [propPage, setPropPage] = useState(1);
     const [propLimit] = useState(10);
-    const [propStatus, setPropStatus] = useState('pending');
+    const [propStatus, setPropStatus] = useState('');
     const [propSearch, setPropSearch] = useState('');
 
     const { data: adminPropsData, isLoading: propsLoading } = useQuery({
@@ -411,9 +411,11 @@ export default function AdminPage() {
                                                 </td>
                                                 <td className="py-2 pr-3">
                                                     <div className="flex gap-2">
-                                                        <Button variant="outline" size="sm" onClick={() => openEditProp(p)}>
-                                                            ערוך
-                                                        </Button>
+                                                        <Link to={`/create-property?edit=${p._id}`}>
+                                                            <Button variant="outline" size="sm">
+                                                                ערוך
+                                                            </Button>
+                                                        </Link>
                                                         <Button variant="ghost" size="sm" onClick={() => updatePropStatusMut.mutate({ id: p._id, status: 'active' })}>
                                                             <CheckCircle2 className="w-4 h-4" />
                                                         </Button>
