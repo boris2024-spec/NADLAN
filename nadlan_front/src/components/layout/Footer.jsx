@@ -36,7 +36,7 @@ function Footer() {
                     {/* Company Info */}
                     <div className="space-y-4">
                         <div className="flex items-center space-x-2 rtl:space-x-reverse">
-                          <img src="/nadlanLogo3.png" alt="Logo" className="h-14 w-14" />
+                            <img src="/nadlanLogo3.png" alt="Logo" className="h-14 w-14" />
                             <span className="text-xl font-bold text-white">
                                 נדלן
                             </span>
@@ -48,17 +48,38 @@ function Footer() {
                         </p>
 
                         <div className="space-y-2">
+
                             <div className="flex items-center space-x-2 rtl:space-x-reverse">
                                 <Phone className="h-4 w-4 text-secondary-400" />
-                                <span className="text-sm">03-1234567</span>
+                                <a
+                                    href="tel:0542663030"
+                                    className="text-sm hover:underline"
+                                    aria-label="התקשר ל-054-2663030"
+                                >
+                                    054-2663030
+                                </a>
                             </div>
                             <div className="flex items-center space-x-2 rtl:space-x-reverse">
                                 <Mail className="h-4 w-4 text-secondary-400" />
-                                <span className="text-sm">info@nadlan.co.il</span>
+                                <a
+                                    href="mailto:info@nadlan.co.il"
+                                    className="text-sm hover:underline"
+                                    aria-label="שלח אימייל לכתובת info@nadlan.co.il"
+                                >
+                                    info@nadlan.co.il
+                                </a>
                             </div>
                             <div className="flex items-center space-x-2 rtl:space-x-reverse">
                                 <MapPin className="h-4 w-4 text-secondary-400" />
-                                <span className="text-sm">תל אביב, ישראל</span>
+                                <a
+                                    href="https://www.google.com/maps/search/?api=1&query=%D7%AA%D7%9C%20%D7%90%D7%91%D7%99%D7%91%2C%20%D7%99%D7%A9%D7%A8%D7%90%D7%9C"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="text-sm hover:underline"
+                                    aria-label="פתח מפה של תל אביב, ישראל"
+                                >
+                                    תל אביב, ישראל
+                                </a>
                             </div>
                         </div>
                     </div>
