@@ -23,6 +23,12 @@ function PropertiesPage() {
         city: 'all'
     });
 
+    // Pagination state
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [totalProperties, setTotalProperties] = useState(0);
+    const itemsPerPage = 12;
+
     // Mock data fallback (используется только если API недоступен)
     const mockProperties = [
         {
@@ -61,6 +67,14 @@ function PropertiesPage() {
     ];
 
     useEffect(() => {
+        const delayDebounceFn = setTimeout(() => {
+            setCurrentPage(1); // Reset to first page when search term changes
+        }, 300);
+
+        return () => clearTimeout(delayDebounceFn);
+    }, [searchTerm]);
+
+    useEffect(() => {
         const loadProperties = async () => {
             setLoading(true);
             try {
@@ -75,12 +89,23 @@ function PropertiesPage() {
                     search: searchTerm || undefined,
                 };
 
-                const { data } = await propertiesAPI.getProperties(apiFilters, { page: 1, limit: 12, sort: '-createdAt' });
+                const { data } = await propertiesAPI.getProperties(apiFilters, {
+                    page: currentPage,
+                    limit: itemsPerPage,
+                    sort: '-createdAt'
+                });
+
                 const list = data?.data?.properties || [];
+                const pagination = data?.data?.pagination || {};
+
                 setProperties(list);
+                setTotalPages(pagination.totalPages || 1);
+                setTotalProperties(pagination.total || list.length);
             } catch (err) {
                 console.warn('API getProperties failed, using mock data instead:', handleApiError(err));
                 setProperties(mockProperties);
+                setTotalPages(1);
+                setTotalProperties(mockProperties.length);
             } finally {
                 setLoading(false);
             }
@@ -88,7 +113,7 @@ function PropertiesPage() {
 
         loadProperties();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [searchTerm, filters, committedPriceRange]);
+    }, [searchTerm, filters, committedPriceRange, currentPage]);
 
     // Сервер уже применяет фильтры; оставляем список как есть
     const filteredProperties = properties;
@@ -98,6 +123,7 @@ function PropertiesPage() {
             ...prev,
             [key]: value
         }));
+        setCurrentPage(1); // Reset to first page when filters change
     };
 
     const handlePriceChange = (event, newValue) => {
@@ -106,6 +132,7 @@ function PropertiesPage() {
 
     const handlePriceChangeCommitted = (event, newValue) => {
         setCommittedPriceRange(newValue);
+        setCurrentPage(1); // Reset to first page when price range changes
     };
 
     const formatPriceLabel = (value) => {
@@ -126,7 +153,7 @@ function PropertiesPage() {
                         חיפוש נכסים
                     </h1>
                     <p className="text-lg text-gray-600 dark:text-gray-300">
-                        מצאו את הנכס המושלם עבורכם מתוך {filteredProperties.length} נכסים זמינים
+                        מצאו את הנכס המושלם עבורכם מתוך {totalProperties} נכסים זמינים
                     </p>
                 </div>
             </div>
@@ -260,6 +287,7 @@ function PropertiesPage() {
                                         setPriceRange([0, 5000000]);
                                         setCommittedPriceRange([0, 5000000]);
                                         setSearchTerm('');
+                                        setCurrentPage(1);
                                     }}
                                     variant="outline"
                                     className="w-full"
@@ -290,7 +318,11 @@ function PropertiesPage() {
                                 {/* Results Count */}
                                 <div className="flex justify-between items-center">
                                     <p className="text-gray-600 dark:text-gray-300">
-                                        נמצאו {filteredProperties.length} נכסים
+                                        {totalProperties > 0 ? (
+                                            <>נמצאו {totalProperties} נכסים (מציג {((currentPage - 1) * itemsPerPage) + 1}-{Math.min(currentPage * itemsPerPage, totalProperties)})</>
+                                        ) : (
+                                            <>לא נמצאו נכסים</>
+                                        )}
                                     </p>
                                     <select className="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-md text-sm">
                                         <option>מיין לפי: רלוונטיות</option>
@@ -385,6 +417,78 @@ function PropertiesPage() {
                                         </h3>
                                         <p className="text-gray-600 dark:text-gray-300">
                                             נסו לשנות את קריטריוני החיפוש או לנקות את הסינון
+                                        </p>
+                                    </div>
+                                )}
+
+                                {/* Pagination */}
+                                {totalPages > 1 && (
+                                    <div className="mt-8 flex flex-col items-center gap-4">
+                                        <div className="flex items-center gap-2">
+                                            <Button
+                                                onClick={() => setCurrentPage(1)}
+                                                disabled={currentPage === 1}
+                                                variant="outline"
+                                                size="sm"
+                                            >
+                                                ראשון
+                                            </Button>
+                                            <Button
+                                                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                                                disabled={currentPage === 1}
+                                                variant="outline"
+                                                size="sm"
+                                            >
+                                                הקודם
+                                            </Button>
+
+                                            <div className="flex items-center gap-1">
+                                                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                                                    let pageNumber;
+                                                    if (totalPages <= 5) {
+                                                        pageNumber = i + 1;
+                                                    } else if (currentPage <= 3) {
+                                                        pageNumber = i + 1;
+                                                    } else if (currentPage >= totalPages - 2) {
+                                                        pageNumber = totalPages - 4 + i;
+                                                    } else {
+                                                        pageNumber = currentPage - 2 + i;
+                                                    }
+
+                                                    return (
+                                                        <Button
+                                                            key={pageNumber}
+                                                            onClick={() => setCurrentPage(pageNumber)}
+                                                            variant={currentPage === pageNumber ? 'primary' : 'outline'}
+                                                            size="sm"
+                                                            className="min-w-[40px]"
+                                                        >
+                                                            {pageNumber}
+                                                        </Button>
+                                                    );
+                                                })}
+                                            </div>
+
+                                            <Button
+                                                onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                                                disabled={currentPage === totalPages}
+                                                variant="outline"
+                                                size="sm"
+                                            >
+                                                הבא
+                                            </Button>
+                                            <Button
+                                                onClick={() => setCurrentPage(totalPages)}
+                                                disabled={currentPage === totalPages}
+                                                variant="outline"
+                                                size="sm"
+                                            >
+                                                אחרון
+                                            </Button>
+                                        </div>
+
+                                        <p className="text-sm text-gray-600 dark:text-gray-300">
+                                            עמוד {currentPage} מתוך {totalPages} ({totalProperties} נכסים)
                                         </p>
                                     </div>
                                 )}
