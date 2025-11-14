@@ -31,6 +31,7 @@ import HelpCenterPage from './pages/HelpCenterPage';
 import FAQPage from './pages/FAQPage';
 import ReportProblemPage from './pages/ReportProblemPage';
 import SupportChatPage from './pages/SupportChatPage';
+import ConsultingPage from './pages/ConsultingPage';
 
 // Layout
 import Layout from './components/layout/Layout';
@@ -90,6 +91,7 @@ function App() {
                   <Route path="/cookie-policy" element={<CookiePolicyPage />} />
                   <Route path="/about" element={<AboutPage />} />
                   <Route path="/contact" element={<ContactPage />} />
+                  <Route path="/consulting" element={<ConsultingPage />} />
                   <Route path="/help" element={<HelpCenterPage />} />
                   <Route path="/faq" element={<FAQPage />} />
                   <Route path="/report" element={<ReportProblemPage />} />
