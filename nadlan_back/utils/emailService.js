@@ -193,6 +193,52 @@ class EmailService {
         }
     }
 
+    async sendConsultingEmail({ name, email, phone, consultingType, propertyType, message }) {
+        try {
+            const supportEmail = process.env.SUPPORT_EMAIL || this.getFromAddress();
+
+            const consultingTypeLabels = {
+                'buying': 'רכישת נכס',
+                'selling': 'מכירת נכס',
+                'investment': 'השקעות נדל"ן',
+                'legal': 'ייעוץ משפטי',
+                'taxation': 'ייעוץ מיסוי',
+                'other': 'אחר'
+            };
+
+            const consultingLabel = consultingTypeLabels[consultingType] || consultingType;
+
+            const mailOptions = {
+                from: `"Nadlan Consulting" <${this.getFromAddress()}>`,
+                to: supportEmail,
+                replyTo: email,
+                subject: `בקשה לייעוץ: ${consultingLabel} מאת ${name}`,
+                html: `
+                    <div dir="rtl" style="font-family:Arial,sans-serif;line-height:1.6">
+                        <h2>בקשה חדשה לייעוץ נדל"ן</h2>
+                        <p><strong>שם:</strong> ${name}</p>
+                        <p><strong>אימייל:</strong> ${email}</p>
+                        <p><strong>טלפון:</strong> ${phone}</p>
+                        <p><strong>סוג הייעוץ:</strong> ${consultingLabel}</p>
+                        ${propertyType ? `<p><strong>סוג הנכס:</strong> ${propertyType}</p>` : ''}
+                        <p><strong>פרטי הבקשה:</strong></p>
+                        <div style="white-space:pre-wrap;background:#f9f9f9;padding:12px;border:1px solid #ddd;border-radius:6px">${message}</div>
+                        <hr />
+                        <p style="font-size:12px;color:#666">נשלח אוטומטית ממערכת Nadlan - טופס ייעוץ</p>
+                    </div>
+                `,
+                text: `בקשה לייעוץ נדל"ן\n\nשם: ${name}\nאימייל: ${email}\nטלפון: ${phone}\nסוג הייעוץ: ${consultingLabel}\n${propertyType ? `סוג הנכס: ${propertyType}\n` : ''}פרטי הבקשה:\n${message}`
+            };
+
+            const result = await this.transporter.sendMail(mailOptions);
+            console.log('Consulting email sent successfully:', result.messageId);
+            return result;
+        } catch (error) {
+            console.error('Error sending consulting email:', error.message);
+            throw error;
+        }
+    }
+
     getVerificationEmailTemplate(userName, verificationUrl) {
         return `
         <!DOCTYPE html>

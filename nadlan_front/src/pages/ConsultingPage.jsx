@@ -105,9 +105,15 @@ function ConsultingPage() {
         setLoading(true);
 
         try {
-            // TODO: Replace with actual API call
-            await new Promise(resolve => setTimeout(resolve, 1500));
-
+            // Реальный запрос к backend для отправки email
+            const response = await fetch('/api/send-consulting-email', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(formData)
+            });
+            if (!response.ok) {
+                throw new Error('שגיאה בשליחת הבקשה');
+            }
             toast.success('הבקשה לייעוץ נשלחה בהצלחה!');
             setSubmitted(true);
             setFormData({
