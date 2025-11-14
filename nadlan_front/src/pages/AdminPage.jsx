@@ -357,7 +357,7 @@ export default function AdminPage() {
                         <div className="space-y-4">
                             {/* Filters */}
                             <div className="flex flex-col md:flex-row gap-3 md:items-center md:justify-between">
-                                <div className="flex gap-2">
+                                <div className="flex flex-col gap-2 md:flex-row">
                                     <select value={propStatus} onChange={(e) => { setPropPage(1); setPropStatus(e.target.value); }} className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-dark-100">
                                         {propStatusOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
                                     </select>
@@ -514,7 +514,7 @@ export default function AdminPage() {
                         <div className="space-y-4">
                             {/* Filters */}
                             <div className="flex flex-col md:flex-row gap-3 md:items-center md:justify-between">
-                                <div className="flex gap-2">
+                                <div className="flex flex-col gap-2 md:flex-row">
                                     <select value={userRole} onChange={(e) => { setUserPage(1); setUserRole(e.target.value); }} className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg dark:bg-dark-100">
                                         <option value="">כל התפקידים</option>
                                         <option value="user">משתמש</option>
