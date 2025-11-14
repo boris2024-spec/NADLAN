@@ -119,7 +119,9 @@ function PropertyDetailsPage() {
 
     const formatPrice = (p) => {
         if (!p?.amount) return '—';
-        return formatPriceUtil(p.amount, p.currency || 'ILS', { period: p.period });
+        // אם זה מכירה, לא מציגים תקופה. אם זה השכרה, לוקחים מ-periodMap
+        const period = property?.transactionType === 'sale' ? undefined : p.period;
+        return formatPriceUtil(p.amount, p.currency || 'ILS', { period });
     };
 
     return (
