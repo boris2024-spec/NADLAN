@@ -12,6 +12,7 @@ function PropertiesPage() {
     const [properties, setProperties] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    const [sort, setSort] = useState('relevance'); // relevance | price_asc | price_desc | date_new
     const [priceRange, setPriceRange] = useState([0, 5000000]);
     const [committedPriceRange, setCommittedPriceRange] = useState([0, 5000000]);
     const [filters, setFilters] = useState({
@@ -83,16 +84,28 @@ function PropertiesPage() {
                     transactionType: filters.transactionType !== 'all' ? filters.transactionType : undefined,
                     propertyType: filters.propertyType !== 'all' ? filters.propertyType : undefined,
                     city: filters.city !== 'all' ? filters.city : undefined,
-                    rooms: filters.rooms !== 'all' ? filters.rooms : undefined,
+                    // rooms: exact number OR 5+ (handled as roomsMin)
+                    rooms: filters.rooms !== 'all' && filters.rooms !== '5plus' ? filters.rooms : undefined,
+                    roomsMin: filters.rooms === '5plus' ? 5 : undefined,
                     priceMin: committedPriceRange[0] > 0 ? committedPriceRange[0] : undefined,
                     priceMax: committedPriceRange[1] < 5000000 ? committedPriceRange[1] : undefined,
                     search: searchTerm || undefined,
                 };
 
+                // Map UI sort to API sort string
+                const sortMapping = {
+                    relevance: '-createdAt', // backend doesn't calculate text score, default to newest
+                    price_asc: 'price',
+                    price_desc: '-price',
+                    date_new: '-createdAt',
+                };
+
+                const apiSort = sortMapping[sort] || '-createdAt';
+
                 const { data } = await propertiesAPI.getProperties(apiFilters, {
                     page: currentPage,
                     limit: itemsPerPage,
-                    sort: '-createdAt'
+                    sort: apiSort
                 });
 
                 const list = data?.data?.properties || [];
@@ -103,7 +116,20 @@ function PropertiesPage() {
                 setTotalProperties(pagination.total || list.length);
             } catch (err) {
                 console.warn('API getProperties failed, using mock data instead:', handleApiError(err));
-                setProperties(mockProperties);
+                // Client-side sort for mock data
+                const sortedMock = [...mockProperties];
+                if (sort === 'price_asc' || sort === 'price_desc') {
+                    sortedMock.sort((a, b) => {
+                        const pa = a.price?.amount ?? 0;
+                        const pb = b.price?.amount ?? 0;
+                        return sort === 'price_asc' ? pa - pb : pb - pa;
+                    });
+                } else if (sort === 'date_new') {
+                    // Keep as-is to simulate newest first
+                } else {
+                    // relevance: keep original order
+                }
+                setProperties(sortedMock);
                 setTotalPages(1);
                 setTotalProperties(mockProperties.length);
             } finally {
@@ -113,7 +139,7 @@ function PropertiesPage() {
 
         loadProperties();
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [searchTerm, filters, committedPriceRange, currentPage]);
+    }, [searchTerm, filters, committedPriceRange, currentPage, sort]);
 
     // Сервер уже применяет фильтры; оставляем список как есть
     const filteredProperties = properties;
@@ -235,7 +261,7 @@ function PropertiesPage() {
                                         <option value="2">2 חדרים</option>
                                         <option value="3">3 חדרים</option>
                                         <option value="4">4 חדרים</option>
-                                        <option value="5">5+ חדרים</option>
+                                        <option value="5plus">5+ חדרים</option>
                                     </select>
                                 </div>
 
@@ -324,11 +350,18 @@ function PropertiesPage() {
                                             <>לא נמצאו נכסים</>
                                         )}
                                     </p>
-                                    <select className="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-md text-sm">
-                                        <option>מיין לפי: רלוונטיות</option>
-                                        <option>מחיר: מנמוך לגבוה</option>
-                                        <option>מחיר: מגבוה לנמוך</option>
-                                        <option>תאריך: חדש ביותר</option>
+                                    <select
+                                        value={sort}
+                                        onChange={(e) => {
+                                            setSort(e.target.value);
+                                            setCurrentPage(1);
+                                        }}
+                                        className="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-md text-sm"
+                                    >
+                                        <option value="relevance">מיין לפי: רלוונטיות</option>
+                                        <option value="price_asc">מחיר: מנמוך לגבוה</option>
+                                        <option value="price_desc">מחיר: מגבוה לנמוך</option>
+                                        <option value="date_new">תאריך: חדש ביותר</option>
                                     </select>
                                 </div>
 

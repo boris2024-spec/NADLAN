@@ -250,8 +250,15 @@ const propertySearchSchema = Joi.object({
     areaMin: Joi.number().min(0).optional(),
     areaMax: Joi.number().min(0).optional(),
     rooms: Joi.number().integer().min(0).max(50).optional(),
+    roomsMin: Joi.number().integer().min(0).max(50).optional(),
     bedrooms: Joi.number().integer().min(0).max(20).optional(),
-    sort: Joi.string().valid('price', '-price', 'area', '-area', 'createdAt', '-createdAt', 'views', '-views').optional(),
+    // Accept both human-friendly and nested sort fields
+    sort: Joi.string().valid(
+        'price', '-price', 'price.amount', '-price.amount',
+        'area', '-area', 'details.area', '-details.area',
+        'createdAt', '-createdAt',
+        'views', '-views', 'views.total', '-views.total'
+    ).optional(),
     city: Joi.string().optional(),
     search: Joi.string().optional(),
     status: Joi.string().valid(...statusValues).optional()

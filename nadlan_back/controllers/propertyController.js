@@ -100,6 +100,7 @@ export const getProperties = async (req, res) => {
             areaMin,
             areaMax,
             rooms,
+            roomsMin,
             bedrooms,
             search,
             status = 'active'
@@ -128,6 +129,13 @@ export const getProperties = async (req, res) => {
 
         // Фильтр по комнатам
         if (rooms) filter['details.rooms'] = parseInt(rooms);
+        if (roomsMin) {
+            const min = parseInt(roomsMin);
+            if (!isNaN(min)) {
+                if (!filter['details.rooms']) filter['details.rooms'] = {};
+                filter['details.rooms'].$gte = min;
+            }
+        }
         if (bedrooms) filter['details.bedrooms'] = parseInt(bedrooms);
 
         // Текстовый поиск
@@ -140,10 +148,25 @@ export const getProperties = async (req, res) => {
         const totalPages = Math.ceil(total / limit);
 
         // Получение объектов недвижимости
+        // Normalize sort to nested fields where needed
+        const normalizeSort = (s) => {
+            if (!s || typeof s !== 'string') return '-createdAt';
+            const desc = s.startsWith('-');
+            const field = desc ? s.slice(1) : s;
+            const map = {
+                price: 'price.amount',
+                area: 'details.area',
+                views: 'views.total',
+                createdAt: 'createdAt'
+            };
+            const mapped = map[field] || field;
+            return desc ? `-${mapped}` : mapped;
+        };
+
         const properties = await Property.findWithFilters(filter, {
             page: parseInt(page),
             limit: parseInt(limit),
-            sort,
+            sort: normalizeSort(sort),
             select: 'title description propertyType transactionType price location details features images status averageRating views agent'
         });
 
