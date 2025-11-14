@@ -162,8 +162,11 @@ export const propertyCreateSchema = Joi.object({
             ...commonNumberMessages,
             'number.min': 'סדר התמונה חייב להיות מספר חיובי או אפס',
             'number.integer': 'סדר התמונה חייב להיות מספר שלם'
-        })
-    })).optional().messages({
+        }),
+        // Разрешаем служебные поля MongoDB
+        _id: Joi.any().optional(),
+        id: Joi.any().optional()
+    }).unknown(true)).optional().messages({
         'array.base': 'תמונות חייבות להיות מערך'
     }),
     virtualTour: Joi.object({

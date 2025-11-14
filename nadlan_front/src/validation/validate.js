@@ -1,8 +1,32 @@
 import Joi from 'joi';
 
+// Предобработка данных: преобразование пустых строк в undefined для числовых полей
+function preprocessData(data) {
+    if (!data || typeof data !== 'object') return data;
+
+    const clone = structuredClone(data);
+
+    const convertEmptyStrings = (obj) => {
+        if (!obj || typeof obj !== 'object') return obj;
+
+        for (const key in obj) {
+            const val = obj[key];
+            if (val === '' || (typeof val === 'string' && val.trim() === '')) {
+                obj[key] = undefined;
+            } else if (typeof val === 'object' && val !== null && !Array.isArray(val)) {
+                convertEmptyStrings(val);
+            }
+        }
+        return obj;
+    };
+
+    return convertEmptyStrings(clone);
+}
+
 export function validate(schema, data, options = {}) {
     const defaultOptions = { abortEarly: false, stripUnknown: false, convert: true }; // preserve unknown for now
-    const { error, value } = schema.validate(data, { ...defaultOptions, ...options });
+    const preprocessed = preprocessData(data);
+    const { error, value } = schema.validate(preprocessed, { ...defaultOptions, ...options });
     if (!error) return { value, errors: {}, isValid: true };
     const errors = {};
     for (const detail of error.details) {

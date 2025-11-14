@@ -157,7 +157,7 @@ function CreatePropertyPage() {
                     propertyType: p.propertyType || 'apartment',
                     transactionType: p.transactionType || 'sale',
                     price: {
-                        amount: toStr(p.price?.amount || ''),
+                        amount: p.price?.amount !== undefined && p.price?.amount !== null ? toStr(p.price.amount) : '',
                         currency: p.price?.currency || 'ILS',
                         period: p.transactionType === 'rent' ? (p.price?.period || 'month') : 'month'
                     },
@@ -173,13 +173,13 @@ function CreatePropertyPage() {
                         }
                     },
                     details: {
-                        area: toStr(p.details?.area || ''),
-                        rooms: toStr(p.details?.rooms || ''),
-                        bedrooms: toStr(p.details?.bedrooms || ''),
-                        bathrooms: toStr(p.details?.bathrooms || ''),
-                        floor: toStr(p.details?.floor || ''),
-                        totalFloors: toStr(p.details?.totalFloors || ''),
-                        buildYear: toStr(p.details?.buildYear || ''),
+                        area: p.details?.area !== undefined && p.details?.area !== null ? toStr(p.details.area) : '',
+                        rooms: p.details?.rooms !== undefined && p.details?.rooms !== null ? toStr(p.details.rooms) : '',
+                        bedrooms: p.details?.bedrooms !== undefined && p.details?.bedrooms !== null ? toStr(p.details.bedrooms) : '',
+                        bathrooms: p.details?.bathrooms !== undefined && p.details?.bathrooms !== null ? toStr(p.details.bathrooms) : '',
+                        floor: p.details?.floor !== undefined && p.details?.floor !== null ? toStr(p.details.floor) : '',
+                        totalFloors: p.details?.totalFloors !== undefined && p.details?.totalFloors !== null ? toStr(p.details.totalFloors) : '',
+                        buildYear: p.details?.buildYear !== undefined && p.details?.buildYear !== null ? toStr(p.details.buildYear) : '',
                         condition: p.details?.condition || 'good'
                     },
                     features: {
@@ -199,13 +199,13 @@ function CreatePropertyPage() {
                     images: Array.isArray(p.images) ? p.images : [],
                     virtualTour: {
                         url: p.virtualTour?.url || '',
-                        type: p.virtualTour?.type || 'video'
+                        type: p.virtualTour?.type || 'NO'
                     },
                     additionalCosts: {
-                        managementFee: toStr(p.additionalCosts?.managementFee || ''),
-                        propertyTax: toStr(p.additionalCosts?.propertyTax || ''),
-                        utilities: toStr(p.additionalCosts?.utilities || ''),
-                        insurance: toStr(p.additionalCosts?.insurance || '')
+                        managementFee: p.additionalCosts?.managementFee !== undefined && p.additionalCosts?.managementFee !== null ? toStr(p.additionalCosts.managementFee) : '',
+                        propertyTax: p.additionalCosts?.propertyTax !== undefined && p.additionalCosts?.propertyTax !== null ? toStr(p.additionalCosts.propertyTax) : '',
+                        utilities: p.additionalCosts?.utilities !== undefined && p.additionalCosts?.utilities !== null ? toStr(p.additionalCosts.utilities) : '',
+                        insurance: p.additionalCosts?.insurance !== undefined && p.additionalCosts?.insurance !== null ? toStr(p.additionalCosts.insurance) : ''
                     },
                     availableFrom: p.availableFrom ? new Date(p.availableFrom).toISOString().slice(0, 10) : '',
                     status: p.status || 'draft',
@@ -217,10 +217,15 @@ function CreatePropertyPage() {
                     })) : []
                 });
 
-                // אם עורכים טיוטה קיימת – נקשר את ה-id שלה, אך לא נמחוק במקרה של עדכון (אותו דוקומנט)
-                if (p.status === 'draft') {
-                    setDraftId(p._id || editId);
-                    try { localStorage.setItem('nadlan_draft_id', p._id || editId); } catch (_) { }
+                // Всегда сохраняем ID редактируемого объекта, независимо от статуса
+                // Это гарантирует, что мы обновим существующий объект, а не создадим новый
+                const propertyId = p._id || editId;
+                if (propertyId) {
+                    setDraftId(propertyId);
+                    // Сохраняем в localStorage только если это действительно draft
+                    if (p.status === 'draft') {
+                        try { localStorage.setItem('nadlan_draft_id', propertyId); } catch (_) { }
+                    }
                 }
             } catch (e) {
                 const info = handleApiError(e);
@@ -877,6 +882,61 @@ function CreatePropertyPage() {
                                 >
                                     {isAutoSaving ? <Spinner className="w-3 h-3" /> : 'שמור עכשיו'}
                                 </Button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* DEBUG: Validation Status - Remove after testing */}
+                    {editId && (
+                        <div className="mb-6 p-4 bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-600">
+                            <div className="text-sm space-y-2">
+                                <div className="flex items-center justify-between">
+                                    <span className="font-medium">מצב ולידציה:</span>
+                                    <span className={`px-2 py-1 rounded ${isValid ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-300' : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300'}`}>
+                                        {isValid ? '✓ תקין' : '✗ לא תקין'}
+                                    </span>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                    <span className="font-medium">מספר שגיאות:</span>
+                                    <span className="px-2 py-1 rounded bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300">
+                                        {Object.keys(validationErrors).filter(k => validationErrors[k]).length}
+                                    </span>
+                                </div>
+                                <div className="text-xs space-y-1 mt-2 p-2 bg-white dark:bg-gray-900 rounded">
+                                    <div><strong>virtualTour.type:</strong> {formData.virtualTour?.type || 'undefined'}</div>
+                                    <div><strong>virtualTour.url:</strong> {formData.virtualTour?.url || 'empty'}</div>
+                                    <div><strong>price.amount:</strong> {formData.price?.amount} (type: {typeof formData.price?.amount})</div>
+                                    <div><strong>details.rooms:</strong> {formData.details?.rooms} (type: {typeof formData.details?.rooms})</div>
+                                    <div><strong>details.area:</strong> {formData.details?.area} (type: {typeof formData.details?.area})</div>
+                                    <button
+                                        type="button"
+                                        onClick={() => {
+                                            const testErrors = validateForm(formData);
+                                            console.log('Validation test:', testErrors);
+                                            alert(`Errors found: ${JSON.stringify(testErrors, null, 2)}`);
+                                        }}
+                                        className="mt-2 px-2 py-1 bg-blue-500 text-white rounded text-xs"
+                                    >
+                                        Test Validation
+                                    </button>
+                                </div>
+                                {Object.keys(validationErrors).filter(k => validationErrors[k]).length > 0 && (
+                                    <details className="mt-2">
+                                        <summary className="cursor-pointer font-medium text-gray-700 dark:text-gray-300 hover:text-blue-600">
+                                            הצג שגיאות ({Object.keys(validationErrors).filter(k => validationErrors[k]).length})
+                                        </summary>
+                                        <ul className="mt-2 space-y-1 text-xs">
+                                            {Object.entries(validationErrors).map(([k, v]) => v && (
+                                                <li key={k} className="flex items-start p-2 bg-red-50 dark:bg-red-900/20 rounded">
+                                                    <AlertCircle className="w-3 h-3 ml-1 mt-0.5 flex-shrink-0 text-red-600" />
+                                                    <span className="text-red-700 dark:text-red-300">
+                                                        <strong>{k}:</strong> {v}
+                                                    </span>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </details>
+                                )}
                             </div>
                         </div>
                     )}
