@@ -152,7 +152,7 @@ export const login = async (req, res) => {
         console.error('Ошибка входа:', error);
         res.status(500).json({
             success: false,
-            message: 'Внутренняя ошибка сервера'
+            message: 'שגיאת שרת פנימית'
         });
     }
 };
@@ -165,7 +165,7 @@ export const refreshToken = async (req, res) => {
         if (!refreshToken) {
             return res.status(401).json({
                 success: false,
-                message: 'Refresh token не предоставлен'
+                message: 'לא סופק רענון טוקן'
             });
         }
 
@@ -177,7 +177,7 @@ export const refreshToken = async (req, res) => {
         if (!user || user.refreshToken !== refreshToken) {
             return res.status(401).json({
                 success: false,
-                message: 'Недействительный refresh token'
+                message: 'רענון טוקן לא חוקי'
             });
         }
 
@@ -196,18 +196,18 @@ export const refreshToken = async (req, res) => {
         });
 
     } catch (error) {
-        console.error('Ошибка обновления токена:', error);
+        console.error('שגיאה בעדכון הטוקן:', error);
 
         if (error.name === 'TokenExpiredError') {
             return res.status(401).json({
                 success: false,
-                message: 'Refresh token истек'
+                message: 'פג תוקף רענון הטוקן'
             });
         }
 
         res.status(500).json({
             success: false,
-            message: 'Внутренняя ошибка сервера'
+            message: 'שגיאת שרת פנימית'
         });
     }
 };
@@ -226,14 +226,14 @@ export const logout = async (req, res) => {
 
         res.json({
             success: true,
-            message: 'Успешный выход'
+            message: 'יציאה בוצעה בהצלחה'
         });
 
     } catch (error) {
-        console.error('Ошибка выхода:', error);
+        console.error('שגיאה ביציאה:', error);
         res.status(500).json({
             success: false,
-            message: 'Внутренняя ошибка сервера'
+            message: 'שגיאת שרת פנימית'
         });
     }
 };
@@ -329,7 +329,7 @@ export const verifyEmail = async (req, res) => {
         if (!user) {
             return res.status(400).json({
                 success: false,
-                message: 'Недействительный или истекший токен'
+                message: 'טוקן לא חוקי או שפג תוקפו'
             });
         }
 
@@ -350,14 +350,14 @@ export const verifyEmail = async (req, res) => {
 
         res.json({
             success: true,
-            message: 'Email успешно подтвержден'
+            message: 'האימייל אומת בהצלחה'
         });
 
     } catch (error) {
-        console.error('Ошибка верификации email:', error);
+        console.error('שגיאה באימות האימייל:', error);
         res.status(500).json({
             success: false,
-            message: 'Внутренняя ошибка сервера'
+            message: 'שגיאת שרת פנימית'
         });
     }
 };
@@ -371,7 +371,7 @@ export const forgotPassword = async (req, res) => {
         if (!user) {
             return res.status(404).json({
                 success: false,
-                message: 'Пользователь с таким email не найден'
+                message: 'משתמש עם אימייל זה לא נמצא'
             });
         }
 
@@ -407,10 +407,10 @@ export const forgotPassword = async (req, res) => {
         }
 
     } catch (error) {
-        console.error('Ошибка запроса сброса пароля:', error);
+        console.error('שגיאה בבקשת איפוס סיסמה:', error);
         res.status(500).json({
             success: false,
-            message: 'Внутренняя ошибка сервера'
+            message: 'שגיאת שרת פנימית'
         });
     }
 };
@@ -436,7 +436,7 @@ export const resetPassword = async (req, res) => {
         if (!user) {
             return res.status(400).json({
                 success: false,
-                message: 'Недействительный или истекший токен'
+                message: 'טוקן לא חוקי או שפג תוקפו'
             });
         }
 
@@ -448,14 +448,14 @@ export const resetPassword = async (req, res) => {
 
         res.json({
             success: true,
-            message: 'Пароль успешно сброшен'
+            message: 'הסיסמה אופסה בהצלחה'
         });
 
     } catch (error) {
-        console.error('Ошибка сброса пароля:', error);
+        console.error('שגיאה באיפוס הסיסמה:', error);
         res.status(500).json({
             success: false,
-            message: 'Внутренняя ошибка сервера'
+            message: 'שגיאת שרת פנימית'
         });
     }
 };
@@ -470,10 +470,10 @@ export const getProfile = async (req, res) => {
             }
         });
     } catch (error) {
-        console.error('Ошибка получения профиля:', error);
+        console.error('שגיאה בקבלת הפרופיל:', error);
         res.status(500).json({
             success: false,
-            message: 'Внутренняя ошибка сервера'
+            message: 'שגיאת שרת פנימית'
         });
     }
 };
@@ -528,7 +528,7 @@ export const updateProfile = async (req, res) => {
         });
 
     } catch (error) {
-        console.error('Ошибка обновления профиля:', error);
+        console.error('שגיאה בעדכון הפרופיל:', error);
 
         // Обрабатываем специфичные ошибки
         if (error.name === 'ValidationError') {
@@ -643,7 +643,7 @@ export const getUserStats = async (req, res) => {
         });
 
     } catch (error) {
-        console.error('Ошибка получения статистики пользователя:', error);
+        console.error('שגיאה בקבלת סטטיסטיקת המשתמש:', error);
         res.status(500).json({
             success: false,
             message: 'שגיאת שרת פנימית'
