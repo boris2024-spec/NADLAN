@@ -426,9 +426,10 @@ function PropertiesPage() {
                                                         size="sm"
                                                         onClick={() => {
                                                             const id = property._id || property.id;
-                                                            if (id) {
-                                                                navigate(`/properties/${id}`);
-                                                            }
+                                                            if (!id) return;
+                                                            // Открыть страницу деталей в новой вкладке (как просили: "открывать новую страницу")
+                                                            const url = `/properties/${id}`;
+                                                            window.open(url, '_blank', 'noopener,noreferrer');
                                                         }}
                                                     >
                                                         פרטים נוספים
