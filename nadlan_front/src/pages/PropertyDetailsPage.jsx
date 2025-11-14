@@ -244,16 +244,16 @@ function PropertyDetailsPage() {
                                         </h1>
                                         <div className="flex items-center text-gray-600 dark:text-gray-300 mb-4">
                                             <MapPin className="w-4 h-4 ml-1" />
-                                            {property?.location?.address || property?.location?.city ? (
+                                            {property?.location?.street || property?.location?.city ? (
                                                 <a
-                                                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${property?.location?.address || ''}${property?.location?.city ? ', ' + property.location.city : ''}`)}`}
+                                                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${property?.location?.street || ''} ${property?.location?.houseNumber || ''}, ${property?.location?.city || ''}`.trim())}`}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
                                                     className="hover:underline text-blue-600 dark:text-blue-400"
                                                 >
-                                                    {property?.location?.address && property?.location?.city
-                                                        ? `${property.location.city}, ${property.location.address}`
-                                                        : property?.location?.address || property?.location?.city || ''}
+                                                    {[property?.location?.city, property?.location?.street, property?.location?.houseNumber]
+                                                        .filter(Boolean)
+                                                        .join(', ')}
                                                 </a>
                                             ) : (
                                                 <span>-</span>

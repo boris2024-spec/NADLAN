@@ -20,7 +20,8 @@ export const usePropertyValidation = (formData) => {
         const baseErrors = validateForm(data);
         const requiredByStep = {
             1: ['title', 'description', 'propertyType', 'transactionType', 'price.amount'],
-            2: ['location.address', 'location.city', 'details.area']
+            2: ['location.address', 'location.city', 'details.area'],
+            4: ['publicContacts']
         };
         const keys = requiredByStep[step] || [];
         const stepErrors = {};
@@ -29,6 +30,46 @@ export const usePropertyValidation = (formData) => {
                 stepErrors[k] = v;
             }
         });
+
+        // Дополнительная проверка для шага 4 - контактная информация
+        if (step === 4) {
+            const contacts = data.publicContacts || [];
+            if (contacts.length === 0) {
+                stepErrors['publicContacts'] = 'חובה להוסיף לפחות איש קשר אחד';
+            } else {
+                // Проверяем что у каждого контакта есть тип и значение
+                contacts.forEach((contact, idx) => {
+                    if (!contact.type || contact.type === '') {
+                        stepErrors[`publicContacts[${idx}].type`] = 'חובה לבחור סוג איש קשר';
+                    }
+                    if (!contact.value || contact.value.trim() === '') {
+                        stepErrors[`publicContacts[${idx}].value`] = 'חובה להזין ערך לאיש קשר';
+                    } else {
+                        // Валидация формата в зависимости от типа
+                        const value = contact.value.trim();
+                        if (contact.type === 'email') {
+                            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                            if (!emailRegex.test(value)) {
+                                stepErrors[`publicContacts[${idx}].value`] = 'כתובת אימייל לא תקינה';
+                            }
+                        } else if (contact.type === 'phone' || contact.type === 'whatsapp') {
+                            // Разрешаем различные форматы телефона
+                            const phoneRegex = /^[\d\s\-+()]+$/;
+                            if (!phoneRegex.test(value) || value.replace(/\D/g, '').length < 9) {
+                                stepErrors[`publicContacts[${idx}].value`] = 'מספר טלפון לא תקין (לפחות 9 ספרות)';
+                            }
+                        } else if (contact.type === 'link') {
+                            try {
+                                new URL(value);
+                            } catch {
+                                stepErrors[`publicContacts[${idx}].value`] = 'קישור לא תקין (חייב להתחיל ב-http:// או https://)';
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
         return stepErrors;
     };
 
@@ -57,7 +98,8 @@ export const usePropertyValidation = (formData) => {
             'details.floor': 'קומה',
             'details.totalFloors': 'מספר קומות',
             'details.buildYear': 'שנת בניה',
-            'details.condition': 'מצב הנכס'
+            'details.condition': 'מצב הנכס',
+            'publicContacts': 'פרטי קשר'
         };
         return fieldNames[field] || field;
     };

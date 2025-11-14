@@ -831,6 +831,11 @@ function CreatePropertyPage() {
                                     : 'bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-300'
                                     }`}>
                                     {currentStep > 4 ? <Check className="w-5 h-5" /> : '4'}
+                                    {isStepValid(4) && currentStep > 4 && (
+                                        <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                                            <Check className="w-2 h-2 text-white" />
+                                        </div>
+                                    )}
                                 </div>
                                 <div className={`w-16 h-1 transition-colors ${currentStep > 4 ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-600'}`}></div>
                                 <div className={`w-10 h-10 rounded-full flex items-center justify-center font-medium transition-colors ${currentStep >= 5
@@ -886,7 +891,7 @@ function CreatePropertyPage() {
                         </div>
                     )}
 
-                    {/* DEBUG: Validation Status - Remove after testing */}
+                    {/* DEBUG: Validation Status - Remove after testing
                     {editId && (
                         <div className="mb-6 p-4 bg-gray-100 dark:bg-gray-800 rounded-lg border border-gray-300 dark:border-gray-600">
                             <div className="text-sm space-y-2">
@@ -939,7 +944,7 @@ function CreatePropertyPage() {
                                 )}
                             </div>
                         </div>
-                    )}
+                    )} */}
 
                     <form onSubmit={handleSubmit}>
                         {/* Step 1: Basic Information */}
@@ -1609,17 +1614,33 @@ function CreatePropertyPage() {
                                     <Check className="w-6 h-6 text-blue-600 ml-3" />
                                     <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
                                         פרטי קשר
+                                        <span className="text-red-600"> *</span>
                                     </h2>
                                 </div>
                                 <div className="space-y-6">
-                                    <p className="text-sm text-gray-600 dark:text-gray-300">
-                                        הוסף עד שני פרטי קשר שיוצגו במודעה. מידע אישי לא יוצג אוטומטית.
-                                    </p>
+                                    <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                                        <p className="text-sm text-blue-800 dark:text-blue-200 mb-2">
+                                            <strong>הוסף לפחות איש קשר אחד (ועד שני)</strong> שיוצג במודעה. מידע אישי לא יוצג אוטומטית.
+                                        </p>
+                                        <ul className="text-xs text-blue-700 dark:text-blue-300 space-y-1 mr-4">
+                                            <li>• <strong>טלפון/ווטסאפ:</strong> לפחות 9 ספרות, למשל: 050-1234567</li>
+                                            <li>• <strong>אימייל:</strong> כתובת אימייל תקינה, למשל: name@example.com</li>
+                                            <li>• <strong>קישור:</strong> URL מלא, למשל: https://example.com</li>
+                                        </ul>
+                                    </div>
+                                    {validationErrors.publicContacts && formData.publicContacts.length === 0 && (
+                                        <div className="flex items-center p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-400">
+                                            <AlertCircle className="w-4 h-4 ml-2" />
+                                            <span className="text-sm">{validationErrors.publicContacts}</span>
+                                        </div>
+                                    )}
                                     <div className="space-y-4">
                                         {formData.publicContacts.map((c, idx) => (
                                             <div key={idx} className="grid grid-cols-1 md:grid-cols-6 gap-4 items-end p-4 bg-gray-50 dark:bg-dark-100 rounded-lg">
                                                 <div className="md:col-span-2">
-                                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">סוג</label>
+                                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                                        סוג<span className="text-red-600"> *</span>
+                                                    </label>
                                                     <select
                                                         value={c.type}
                                                         onChange={e => {
@@ -1629,7 +1650,10 @@ function CreatePropertyPage() {
                                                                 publicContacts: prev.publicContacts.map((pc, i) => i === idx ? { ...pc, type: val } : pc)
                                                             }));
                                                         }}
-                                                        className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-dark-100 text-gray-900 dark:text-gray-100"
+                                                        className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-dark-100 text-gray-900 dark:text-gray-100 ${validationErrors[`publicContacts[${idx}].type`]
+                                                                ? 'border-red-500'
+                                                                : 'border-gray-300 dark:border-gray-600'
+                                                            }`}
                                                     >
                                                         <option value="">בחר סוג</option>
                                                         <option value="phone">טלפון</option>
@@ -1637,9 +1661,17 @@ function CreatePropertyPage() {
                                                         <option value="whatsapp">ווטסאפ</option>
                                                         <option value="link">קישור</option>
                                                     </select>
+                                                    {validationErrors[`publicContacts[${idx}].type`] && (
+                                                        <div className="flex items-center mt-1 text-red-600 text-xs">
+                                                            <AlertCircle className="w-3 h-3 ml-1" />
+                                                            {validationErrors[`publicContacts[${idx}].type`]}
+                                                        </div>
+                                                    )}
                                                 </div>
                                                 <div className="md:col-span-3">
-                                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">ערך</label>
+                                                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                                        ערך<span className="text-red-600"> *</span>
+                                                    </label>
                                                     <Input
                                                         value={c.value}
                                                         onChange={e => {
@@ -1650,7 +1682,14 @@ function CreatePropertyPage() {
                                                             }));
                                                         }}
                                                         placeholder={c.type === 'phone' ? '050-1234567' : c.type === 'email' ? 'user@example.com' : c.type === 'whatsapp' ? '+972501234567' : 'https://...'}
+                                                        className={validationErrors[`publicContacts[${idx}].value`] ? 'border-red-500' : ''}
                                                     />
+                                                    {validationErrors[`publicContacts[${idx}].value`] && (
+                                                        <div className="flex items-center mt-1 text-red-600 text-xs">
+                                                            <AlertCircle className="w-3 h-3 ml-1" />
+                                                            {validationErrors[`publicContacts[${idx}].value`]}
+                                                        </div>
+                                                    )}
                                                 </div>
                                                 <div className="md:col-span-1 flex space-x-2 rtl:space-x-reverse">
                                                     <Button
@@ -1694,18 +1733,30 @@ function CreatePropertyPage() {
                                                 </div>
                                             </div>
                                         ))}
-                                        {formData.publicContacts.length < 2 && (
-                                            <Button
-                                                type="button"
-                                                variant="outline"
-                                                onClick={() => setFormData(prev => ({
-                                                    ...prev,
-                                                    publicContacts: [...prev.publicContacts, { type: '', value: '', name: '', label: '' }]
-                                                }))}
-                                            >
-                                                הוסף איש קשר
-                                            </Button>
-                                        )}
+                                        <div className="space-y-2">
+                                            {formData.publicContacts.length < 2 && (
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    onClick={() => setFormData(prev => ({
+                                                        ...prev,
+                                                        publicContacts: [...prev.publicContacts, { type: '', value: '', name: '', label: '' }]
+                                                    }))}
+                                                >
+                                                    הוסף איש קשר
+                                                </Button>
+                                            )}
+                                            {formData.publicContacts.length === 0 && (
+                                                <p className="text-sm text-amber-600 dark:text-amber-400">
+                                                    חובה להוסיף לפחות איש קשר אחד
+                                                </p>
+                                            )}
+                                            {formData.publicContacts.length >= 2 && (
+                                                <p className="text-sm text-gray-500 dark:text-gray-400">
+                                                    הגעת למקסימום של 2 אנשי קשר
+                                                </p>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                             </Card>
