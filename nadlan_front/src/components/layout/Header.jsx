@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { Button, Tooltip } from '../ui';
@@ -38,6 +38,17 @@ function Header() {
         { name: 'המועדפים שלי', href: '/favorites', icon: Heart },
         { name: 'פרופיל', href: '/profile', icon: User },
     ] : [];
+
+    // Favorites counter (likes)
+    const favoritesCount = isAuthenticated ? (user?.favorites?.length || 0) : 0;
+
+    // Debug: log favorites to console
+    useEffect(() => {
+        if (isAuthenticated) {
+            console.log('Header - user.favorites:', user?.favorites);
+            console.log('Header - favoritesCount:', favoritesCount);
+        }
+    }, [isAuthenticated, user?.favorites, favoritesCount]);
 
     return (
         <header className="header-fixed bg-white dark:bg-dark-50 shadow-sm border-b border-gray-200 dark:border-dark-300 transition-colors">
@@ -105,7 +116,17 @@ function Header() {
                                                     to={item.href}
                                                     className="nav-link"
                                                 >
-                                                    <Icon className="h-4 w-4" />
+                                                    <span className="relative inline-flex">
+                                                        <Icon className="h-6 w-6" />
+                                                        {item.href === '/favorites' && favoritesCount > 0 && (
+                                                            <span
+                                                                className="absolute -top-2 -right-2 rtl:-left 2 rtl:-right-auto inline-flex items-center justify-center h-4 min-w-4 px-1 text-[10px] leading-none rounded-full bg-red-500 text-white border border-white dark:border-dark-100"
+                                                                aria-label={`מספר מועדפים: ${favoritesCount}`}
+                                                            >
+                                                                {favoritesCount}
+                                                            </span>
+                                                        )}
+                                                    </span>
                                                 </Link>
                                             </Tooltip>
                                         );
@@ -213,7 +234,17 @@ function Header() {
                                                 className="flex items-center px-3 py-2 text-base font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:text-gray-100 hover:bg-gray-100 dark:bg-dark-200 rounded-md"
                                                 onClick={() => setIsMenuOpen(false)}
                                             >
-                                                <Icon className="h-5 w-5 ml-2 rtl:ml-1 rtl:mr-2" />
+                                                <span className="relative inline-flex ml-2 rtl:ml-2 rtl:mr-2">
+                                                    <Icon className="h-5 w-5" />
+                                                    {item.href === '/favorites' && favoritesCount > 0 && (
+                                                        <span
+                                                            className="absolute -top-2 -right-2 rtl:-left 2 rtl:-right-auto inline-flex items-center justify-center h-4 min-w-4 px-1 text-[10px] leading-none rounded-full bg-red-500 text-white border border-white dark:border-dark-100"
+                                                            aria-label={`מספר מועדפים: ${favoritesCount}`}
+                                                        >
+                                                            {favoritesCount}
+                                                        </span>
+                                                    )}
+                                                </span>
                                                 {item.name}
                                             </Link>
                                         );

@@ -38,18 +38,23 @@ function LikeButton({ propertyId, className = '', size = 20, initialLiked, onCha
         try {
             setLoading(true);
             if (liked) {
-                await propertiesAPI.removeFromFavorites(propertyId);
+                const response = await propertiesAPI.removeFromFavorites(propertyId);
+                console.log('Remove from favorites response:', response.data);
                 setLiked(false);
-                // Update auth user favorites locally
-                const current = user?.favorites || [];
-                updateUserState({ favorites: current.filter(id => id?.toString() !== propertyId?.toString()) });
+                // Update auth user favorites with server response
+                const updatedFavorites = response.data?.data?.favorites || [];
+                console.log('Updated favorites after remove:', updatedFavorites);
+                updateUserState({ favorites: updatedFavorites });
                 onChange?.(false);
                 toast.success('הוסר מהמועדפים');
             } else {
-                await propertiesAPI.addToFavorites(propertyId);
+                const response = await propertiesAPI.addToFavorites(propertyId);
+                console.log('Add to favorites response:', response.data);
                 setLiked(true);
-                const current = user?.favorites || [];
-                updateUserState({ favorites: [...current, propertyId] });
+                // Update auth user favorites with server response
+                const updatedFavorites = response.data?.data?.favorites || [];
+                console.log('Updated favorites after add:', updatedFavorites);
+                updateUserState({ favorites: updatedFavorites });
                 onChange?.(true);
                 toast.success('נוסף למועדפים');
             }

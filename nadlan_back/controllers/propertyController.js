@@ -616,7 +616,10 @@ export const addToFavorites = async (req, res) => {
 
         res.json({
             success: true,
-            message: 'Объект добавлен в избранное'
+            message: 'Объект добавлен в избранное',
+            data: {
+                favorites: req.user.favorites
+            }
         });
 
     } catch (error) {
@@ -637,7 +640,10 @@ export const removeFromFavorites = async (req, res) => {
 
         res.json({
             success: true,
-            message: 'Объект удален из избранного'
+            message: 'Объект удален из избранного',
+            data: {
+                favorites: req.user.favorites
+            }
         });
 
     } catch (error) {

@@ -86,6 +86,8 @@ export function AuthProvider({ children }) {
 
             try {
                 const response = await authAPI.getProfile();
+                console.log('AuthContext - Profile loaded:', response.data.data.user);
+                console.log('AuthContext - Favorites:', response.data.data.user.favorites);
                 dispatch({ type: AUTH_ACTIONS.SET_USER, payload: response.data.data.user });
             } catch (error) {
                 console.error('שגיאה בבדיקת אימות:', error);
@@ -104,6 +106,9 @@ export function AuthProvider({ children }) {
 
             const response = await authAPI.login(credentials);
             const { user, tokens } = response.data.data;
+
+            console.log('AuthContext - Login user:', user);
+            console.log('AuthContext - Login favorites:', user.favorites);
 
             // שמירת הטוקנים
             tokenManager.setAccessToken(tokens.accessToken);
