@@ -31,7 +31,8 @@ const propertySchema = new mongoose.Schema({
                 'commercial',    // Коммерческая
                 'office',        // Офис
                 'warehouse',     // Склад
-                'land'           // Участок
+                'land',          // Участок
+                'garden_apartment' // Квартира с садом (доп. тип для совместимости с импортом)
             ],
             message: 'Некорректный тип недвижимости'
         }
@@ -58,7 +59,7 @@ const propertySchema = new mongoose.Schema({
         // Для аренды - период
         period: {
             type: String,
-            enum: ['month', 'year', 'day'],
+            enum: ['month', 'year', 'day', 'once'], // 'once' — совместимость с импортом/продажей
             default: 'month'
         }
     },
@@ -452,13 +453,14 @@ propertySchema.methods.incrementViews = function (isUnique = false) {
         this.views.unique += 1;
     }
     this.views.lastViewed = new Date();
-    return this.save();
+    // Валидируем только измененные поля, чтобы не падать на не связанных с просмотрами валидациях
+    return this.save({ validateModifiedOnly: true });
 };
 
 // Метод для добавления контакта
 propertySchema.methods.addContact = function (contactData) {
     this.contacts.push(contactData);
-    return this.save();
+    return this.save({ validateModifiedOnly: true });
 };
 
 // Метод для добавления отзыва
@@ -478,7 +480,7 @@ propertySchema.methods.addReview = function (userId, rating, comment) {
         comment
     });
 
-    return this.save();
+    return this.save({ validateModifiedOnly: true });
 };
 
 // Статический метод для поиска с фильтрами

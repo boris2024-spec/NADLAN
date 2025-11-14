@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Search, Filter, MapPin, Bed, Bath, Square, Heart } from 'lucide-react';
 import { Card, Button, Input, LikeButton } from '../components/ui';
 import { propertiesAPI, handleApiError } from '../services/api';
-import { formatPrice } from '../utils/helpers';
+import { formatPrice, PROPERTY_TYPES } from '../utils/helpers';
 import Box from '@mui/material/Box';
 import Slider from '@mui/material/Slider';
 
@@ -239,10 +239,9 @@ function PropertiesPage() {
                                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500"
                                     >
                                         <option value="all">כל הנכסים</option>
-                                        <option value="apartment">דירה</option>
-                                        <option value="house">בית פרטי</option>
-                                        <option value="penthouse">פנטהאוז</option>
-                                        <option value="studio">סטודיו</option>
+                                        {Object.entries(PROPERTY_TYPES).map(([value, label]) => (
+                                            <option key={value} value={value}>{label}</option>
+                                        ))}
                                     </select>
                                 </div>
 

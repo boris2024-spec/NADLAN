@@ -55,12 +55,12 @@ export function formatRooms(rooms) {
  */
 export const PROPERTY_TYPES = {
     apartment: 'דירה',
-    house: 'בית',
+    house: 'בית פרטי',
     penthouse: 'פנטהאוס',
     studio: 'סטודיו',
     duplex: 'דופלקס',
     villa: 'וילה',
-    townhouse: 'בית עירוני',
+    townhouse: 'טאון האוס',
     loft: 'לופט',
     commercial: 'מסחרי',
     office: 'משרד',

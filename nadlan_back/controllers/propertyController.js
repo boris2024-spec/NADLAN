@@ -224,19 +224,35 @@ export const getPropertyById = async (req, res) => {
             });
         }
 
-        // Увеличиваем счетчик просмотров
-        // Проверяем, уникальный ли это пользователь (простая проверка по IP)
+        // Увеличиваем счетчик просмотров безопасно (без полной валидации схемы)
+        // Проверяем, уникальный ли это пользователь (простая проверка по сессии)
         const userIP = req.ip;
-        const isUnique = !req.session?.viewedProperties?.includes(id);
+        const isUnique = !(req.session && Array.isArray(req.session.viewedProperties) && req.session.viewedProperties.includes(id));
 
         if (isUnique) {
-            if (!req.session.viewedProperties) {
+            // Защита от отсутствующей сессии
+            if (!req.session) req.session = {};
+            if (!Array.isArray(req.session.viewedProperties)) {
                 req.session.viewedProperties = [];
             }
             req.session.viewedProperties.push(id);
         }
 
-        await property.incrementViews(isUnique);
+        // Пытаемся вызвать метод модели, если он есть; при ошибке откатываемся на $inc
+        try {
+            if (typeof property.incrementViews === 'function') {
+                await property.incrementViews(isUnique);
+            } else {
+                const inc = { 'views.total': 1 };
+                if (isUnique) inc['views.unique'] = 1;
+                await Property.updateOne({ _id: property._id }, { $inc: inc });
+            }
+        } catch (incErr) {
+            console.warn('[getPropertyById] incrementViews failed, fallback to $inc:', incErr?.message);
+            const inc = { 'views.total': 1 };
+            if (isUnique) inc['views.unique'] = 1;
+            await Property.updateOne({ _id: property._id }, { $inc: inc }).catch(() => { });
+        }
 
         res.json({
             success: true,
