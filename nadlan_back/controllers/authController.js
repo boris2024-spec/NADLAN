@@ -82,7 +82,7 @@ export const register = async (req, res) => {
         }
 
     } catch (error) {
-        console.error('Ошибка регистрации:', error);
+        console.error('שגיאה בהרשמה :', error);
         res.status(500).json({
             success: false,
             message: 'שגיאת שרת פנימית'
@@ -102,7 +102,7 @@ export const login = async (req, res) => {
         if (!user) {
             return res.status(401).json({
                 success: false,
-                message: 'Неверный email или пароль'
+                message: 'אימייל או סיסמה שגויים'
             });
         }
 
@@ -111,7 +111,7 @@ export const login = async (req, res) => {
         if (!isPasswordValid) {
             return res.status(401).json({
                 success: false,
-                message: 'Неверный email или пароль'
+                message: 'אימייל או סיסמה שגויים'
             });
         }
 
@@ -119,7 +119,7 @@ export const login = async (req, res) => {
         if (!user.isActive) {
             return res.status(401).json({
                 success: false,
-                message: 'Аккаунт деактивирован'
+                message: 'החשבון מושבת'
             });
         }
 
@@ -138,7 +138,7 @@ export const login = async (req, res) => {
 
         res.json({
             success: true,
-            message: 'Успешный вход',
+            message: 'כניסה בוצעה בהצלחה',
             data: {
                 user: userResponse,
                 tokens: {
@@ -149,7 +149,7 @@ export const login = async (req, res) => {
         });
 
     } catch (error) {
-        console.error('Ошибка входа:', error);
+        console.error('שגיאה בכניסה:', error);
         res.status(500).json({
             success: false,
             message: 'שגיאת שרת פנימית'
