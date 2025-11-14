@@ -456,15 +456,7 @@ function PropertiesPage() {
                                 {/* Pagination */}
                                 {totalPages > 1 && (
                                     <div className="mt-8 flex flex-col items-center gap-4">
-                                        <div className="flex items-center gap-2">
-                                            <Button
-                                                onClick={() => setCurrentPage(1)}
-                                                disabled={currentPage === 1}
-                                                variant="outline"
-                                                size="sm"
-                                            >
-                                                ראשון
-                                            </Button>
+                                        <div className="flex items-center gap-3">
                                             <Button
                                                 onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
                                                 disabled={currentPage === 1}
@@ -474,32 +466,9 @@ function PropertiesPage() {
                                                 הקודם
                                             </Button>
 
-                                            <div className="flex items-center gap-1">
-                                                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                                                    let pageNumber;
-                                                    if (totalPages <= 5) {
-                                                        pageNumber = i + 1;
-                                                    } else if (currentPage <= 3) {
-                                                        pageNumber = i + 1;
-                                                    } else if (currentPage >= totalPages - 2) {
-                                                        pageNumber = totalPages - 4 + i;
-                                                    } else {
-                                                        pageNumber = currentPage - 2 + i;
-                                                    }
-
-                                                    return (
-                                                        <Button
-                                                            key={pageNumber}
-                                                            onClick={() => setCurrentPage(pageNumber)}
-                                                            variant={currentPage === pageNumber ? 'primary' : 'outline'}
-                                                            size="sm"
-                                                            className="min-w-[40px]"
-                                                        >
-                                                            {pageNumber}
-                                                        </Button>
-                                                    );
-                                                })}
-                                            </div>
+                                            <span className="text-sm text-gray-600 dark:text-gray-300">
+                                                עמוד {currentPage} מתוך {totalPages}
+                                            </span>
 
                                             <Button
                                                 onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
@@ -509,19 +478,7 @@ function PropertiesPage() {
                                             >
                                                 הבא
                                             </Button>
-                                            <Button
-                                                onClick={() => setCurrentPage(totalPages)}
-                                                disabled={currentPage === totalPages}
-                                                variant="outline"
-                                                size="sm"
-                                            >
-                                                אחרון
-                                            </Button>
                                         </div>
-
-                                        <p className="text-sm text-gray-600 dark:text-gray-300">
-                                            עמוד {currentPage} מתוך {totalPages} ({totalProperties} נכסים)
-                                        </p>
                                     </div>
                                 )}
                             </div>
