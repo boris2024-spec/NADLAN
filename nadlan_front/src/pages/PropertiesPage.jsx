@@ -111,9 +111,16 @@ function PropertiesPage() {
                 const list = data?.data?.properties || [];
                 const pagination = data?.data?.pagination || {};
 
+                console.log('Server response:', {
+                    propertiesCount: list.length,
+                    pagination: pagination,
+                    totalItems: pagination.totalItems,
+                    totalPages: pagination.totalPages
+                });
+
                 setProperties(list);
                 setTotalPages(pagination.totalPages || 1);
-                setTotalProperties(pagination.total || list.length);
+                setTotalProperties(pagination.totalItems || list.length);
             } catch (err) {
                 console.warn('API getProperties failed, using mock data instead:', handleApiError(err));
                 // Client-side sort for mock data
@@ -344,7 +351,7 @@ function PropertiesPage() {
                                 <div className="flex justify-between items-center">
                                     <p className="text-gray-600 dark:text-gray-300">
                                         {totalProperties > 0 ? (
-                                            <>נמצאו {totalProperties} נכסים (מציג {((currentPage - 1) * itemsPerPage) + 1}-{Math.min(currentPage * itemsPerPage, totalProperties)})</>
+                                            <>נמצאו {totalProperties} נכסים</>
                                         ) : (
                                             <>לא נמצאו נכסים</>
                                         )}
