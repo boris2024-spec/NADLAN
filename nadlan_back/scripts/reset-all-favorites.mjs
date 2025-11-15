@@ -13,7 +13,7 @@ async function resetAllFavorites() {
         // Получить статистику перед очисткой
         const usersBefore = await User.find({ 'favorites.0': { $exists: true } })
             .select('firstName lastName email favorites');
-        
+
         console.log('=== Users with favorites before reset ===\n');
         let totalFavorites = 0;
         usersBefore.forEach(user => {
@@ -21,7 +21,7 @@ async function resetAllFavorites() {
             totalFavorites += count;
             console.log(`- ${user.fullName} (${user.email}): ${count} favorites`);
         });
-        
+
         console.log(`\n📊 Total favorites to clear: ${totalFavorites}`);
         console.log(`👥 Users affected: ${usersBefore.length}\n`);
 

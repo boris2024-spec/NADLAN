@@ -1443,7 +1443,7 @@ function CreatePropertyPage() {
                                             <div className="mt-4">
                                                 <label htmlFor="file-upload" className="cursor-pointer">
                                                     <span className="mt-2 block text-lg font-medium text-gray-900 dark:text-gray-100">
-                                                        גרור תמונות או לחץ לבחירה
+                                                        להעלאת תמונה לחץ כאן
                                                     </span>
                                                     <input
                                                         id="file-upload"
@@ -1651,8 +1651,8 @@ function CreatePropertyPage() {
                                                             }));
                                                         }}
                                                         className={`w-full px-3 py-2 border rounded-lg bg-white dark:bg-dark-100 text-gray-900 dark:text-gray-100 ${validationErrors[`publicContacts[${idx}].type`]
-                                                                ? 'border-red-500'
-                                                                : 'border-gray-300 dark:border-gray-600'
+                                                            ? 'border-red-500'
+                                                            : 'border-gray-300 dark:border-gray-600'
                                                             }`}
                                                     >
                                                         <option value="">בחר סוג</option>
