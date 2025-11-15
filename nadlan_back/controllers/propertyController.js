@@ -583,6 +583,13 @@ export const deleteProperty = async (req, res) => {
             });
         }
 
+        // Удаляем объект из избранного у всех пользователей
+        const { User } = await import('../models/index.js');
+        await User.updateMany(
+            { favorites: id },
+            { $pull: { favorites: id } }
+        );
+
         await Property.findByIdAndDelete(id);
 
         res.json({
