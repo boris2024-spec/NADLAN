@@ -36,6 +36,7 @@ import ConsultingPage from './pages/ConsultingPage';
 // Layout
 import Layout from './components/layout/Layout';
 import ScrollToTop from './components/ui/ScrollToTop';
+import CookieBanner from './components/ui/CookieBanner';
 
 // Create a client
 const queryClient = new QueryClient({
@@ -101,6 +102,9 @@ function App() {
                   <Route path="*" element={<NotFoundPage />} />
                 </Routes>
               </Layout>
+
+              {/* Cookie Banner - inside Router */}
+              <CookieBanner />
             </Router>
 
             {/* Toast Notifications */}
