@@ -286,47 +286,47 @@ export const handleApiError = (error) => {
         switch (status) {
             case 400:
                 return {
-                    message: data.message || 'Неверный запрос',
+                    message: data.message || 'בקשה לא תקינה',
                     errors: data.errors || [],
                     type: 'validation'
                 };
             case 401:
                 return {
-                    message: 'Необходима авторизация',
+                    message: 'כתובת המייל או הסיסמה שגויים',
                     type: 'auth'
                 };
             case 403:
                 return {
-                    message: 'Доступ запрещен',
+                    message: 'גישה אסורה',
                     type: 'auth'
                 };
             case 404:
                 return {
-                    message: 'Ресурс не найден',
+                    message: 'המשאב לא נמצא',
                     type: 'notFound'
                 };
             case 429:
                 return {
-                    message: 'Слишком много запросов. Попробуйте позже',
+                    message: 'יותר מדי בקשות. נסה שוב מאוחר יותר',
                     type: 'rateLimit'
                 };
             case 500:
             default:
                 return {
-                    message: 'Внутренняя ошибка сервера',
+                    message: 'שגיאת שרת פנימית',
                     type: 'server'
                 };
         }
     } else if (error.request) {
         // Запрос был отправлен, но ответа не было получено
         return {
-            message: 'Сервер недоступен. Проверьте подключение к интернету',
+            message: 'השרת אינו זמין. בדוק את חיבור האינטרנט',
             type: 'network'
         };
     } else {
         // Что-то пошло не так при настройке запроса
         return {
-            message: error.message || 'Неизвестная ошибка',
+            message: error.message || 'שגיאה לא ידועה',
             type: 'unknown'
         };
     }

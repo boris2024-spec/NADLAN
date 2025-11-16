@@ -8,7 +8,9 @@ import passport from './config/passport.js';
 import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
-import { requestIdMiddleware, errorLogger, errorHandler, notFoundHandler, CorsError } from './middleware/error.js';
+import { requestIdMiddleware, errorLogger as errorLoggerMiddleware, errorHandler, notFoundHandler, CorsError } from './middleware/error.js';
+import morgan from 'morgan';
+import { httpLogger, errorLogger, securityLogger, morganStream } from './utils/logger.js';
 
 // Загружаем переменные окружения
 dotenv.config();
@@ -52,7 +54,11 @@ const allowedOrigins = (process.env.CLIENT_ORIGIN || process.env.FRONTEND_URL ||
 const corsOptions = {
     origin(origin, callback) {
         if (!origin) return callback(null, true); // запросы без Origin разрешаем
-        if (allowedOrigins.includes(origin)) return callback(null, true);
+        if (allowedOrigins.includes(origin)) {
+            securityLogger.info(`CORS allowed: ${origin}`);
+            return callback(null, true);
+        }
+        securityLogger.warn(`CORS blocked: ${origin}`);
         return callback(new CorsError(origin));
     },
     credentials: true,
@@ -64,6 +70,9 @@ app.options('*', cors(corsOptions));
 
 // request id & timing
 app.use(requestIdMiddleware);
+
+// HTTP логирование с morgan
+app.use(morgan('combined', { stream: morganStream }));
 
 // Middleware для парсинга JSON
 app.use(express.json({ limit: '10mb' }));
@@ -98,8 +107,10 @@ const connectDB = async () => {
 
         await mongoose.connect(mongoURI);
         console.log('✅ MongoDB подключена успешно');
+        httpLogger.info('MongoDB connected successfully');
     } catch (error) {
         console.error('❌ Ошибка подключения к MongoDB:', error.message);
+        errorLogger.error('MongoDB connection failed', { error: error.message, stack: error.stack });
         process.exit(1);
     }
 };
@@ -160,7 +171,19 @@ app.use('/api', consultingRoutes);
 
 // 404 и ошибки (порядок важен)
 app.use('*', notFoundHandler);
-app.use(errorLogger);
+app.use(errorLoggerMiddleware);
+app.use((err, req, res, next) => {
+    // Логируем все ошибки в errorLogger
+    errorLogger.error('Application error', {
+        error: err.message,
+        stack: err.stack,
+        requestId: req.id,
+        method: req.method,
+        url: req.url,
+        ip: req.ip
+    });
+    next(err);
+});
 app.use(errorHandler);
 
 // Запуск сервера
@@ -187,12 +210,16 @@ const startServer = async () => {
         await connectDB();
         const selectedPort = await findAvailablePort(parseInt(PORT));
         app.listen(selectedPort, () => {
+            const startupMessage = `Server started on port ${selectedPort} in ${process.env.NODE_ENV || 'development'} mode`;
             console.log(`🚀 Сервер запущен на порту ${selectedPort}`);
             console.log(`🌍 Среда: ${process.env.NODE_ENV || 'development'}`);
             console.log(`📡 API доступен по адресу: http://localhost:${selectedPort}/api`);
+            httpLogger.info(startupMessage);
+            securityLogger.info(`Server started with allowed origins: ${allowedOrigins.join(', ')}`);
         });
     } catch (error) {
         console.error('❌ Не удалось запустить сервер:', error);
+        errorLogger.error('Failed to start server', { error: error.message, stack: error.stack });
         process.exit(1);
     }
 };
@@ -202,12 +229,14 @@ startServer();
 // Graceful shutdown
 process.on('SIGTERM', async () => {
     console.log('🔄 SIGTERM получен, начинаю graceful shutdown...');
+    httpLogger.info('SIGTERM received, starting graceful shutdown');
     await mongoose.connection.close();
     process.exit(0);
 });
 
 process.on('SIGINT', async () => {
     console.log('🔄 SIGINT получен, начинаю graceful shutdown...');
+    httpLogger.info('SIGINT received, starting graceful shutdown');
     await mongoose.connection.close();
     process.exit(0);
 });
