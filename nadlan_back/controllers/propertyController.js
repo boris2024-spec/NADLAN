@@ -1,4 +1,5 @@
 import { Property } from '../models/index.js';
+import { deleteFromCloudinary } from '../middleware/upload.js';
 
 // Helper: sanitize public contacts array (keep up to 2, allowed types, trim values)
 const ALLOWED_PUBLIC_CONTACT_TYPES = ['phone', 'email', 'whatsapp', 'link'];
@@ -581,6 +582,26 @@ export const deleteProperty = async (req, res) => {
                 success: false,
                 message: 'Нет прав для удаления этого объекта'
             });
+        }
+
+        // Сначала удаляем связанные изображения из Cloudinary (если есть)
+        try {
+            const publicIds = Array.isArray(property.images)
+                ? property.images.map(img => img?.publicId).filter(Boolean)
+                : [];
+
+            if (publicIds.length > 0) {
+                const results = await Promise.allSettled(
+                    publicIds.map(pid => deleteFromCloudinary(pid))
+                );
+                const failed = results.filter(r => r.status === 'rejected').length;
+                if (failed > 0) {
+                    console.warn(`[deleteProperty] Не удалось удалить ${failed} изображ.(ия/ий) из Cloudinary для property ${id}`);
+                }
+            }
+        } catch (cloudErr) {
+            console.error('[deleteProperty] Ошибка массового удаления изображений из Cloudinary:', cloudErr);
+            // Продолжаем удаление сущности даже при ошибке Cloudinary
         }
 
         // Удаляем объект из избранного у всех пользователей

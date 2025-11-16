@@ -1,4 +1,5 @@
 import { User, Property } from '../models/index.js';
+import { deleteFromCloudinary } from '../middleware/upload.js';
 
 // GET /api/admin/users
 export const listUsers = async (req, res) => {
@@ -230,6 +231,22 @@ export const deletePropertyAdmin = async (req, res) => {
         const { id } = req.params;
         const property = await Property.findById(id);
         if (!property) return res.status(404).json({ success: false, message: 'מודעה לא נמצאה' });
+
+        // Удаляем все связанные изображения из Cloudinary
+        try {
+            const publicIds = Array.isArray(property.images)
+                ? property.images.map(img => img?.publicId).filter(Boolean)
+                : [];
+            if (publicIds.length > 0) {
+                const results = await Promise.allSettled(publicIds.map(pid => deleteFromCloudinary(pid)));
+                const failed = results.filter(r => r.status === 'rejected').length;
+                if (failed > 0) {
+                    console.warn(`[deletePropertyAdmin] Не удалось удалить ${failed} изображ.(ия/ий) из Cloudinary для property ${id}`);
+                }
+            }
+        } catch (e) {
+            console.error('[deletePropertyAdmin] Ошибка удаления изображений из Cloudinary:', e);
+        }
 
         await Property.findByIdAndDelete(id);
         res.json({ success: true, message: 'מודעה נמחקה' });
