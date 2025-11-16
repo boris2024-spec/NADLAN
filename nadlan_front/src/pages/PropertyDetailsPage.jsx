@@ -124,6 +124,29 @@ function PropertyDetailsPage() {
         return formatPriceUtil(p.amount, p.currency || 'ILS', { period });
     };
 
+    // Полный адрес из Mongo (приоритетные поля) с откатом на составление из street/houseNumber/city
+    const fullAddress = useMemo(() => {
+        const loc = property?.location;
+        if (!loc) return '';
+        return (
+            loc.mongoAddress ||
+            loc.address ||
+            loc.fullAddress ||
+            loc.formattedAddress ||
+            [loc.street, loc.houseNumber, loc.city].filter(Boolean).join(', ')
+        );
+    }, [property]);
+
+    // Адрес с добавлением города, если он не присутствует уже в строке
+    const displayAddress = useMemo(() => {
+        const city = property?.location?.city?.trim();
+        if (!fullAddress) return '';
+        if (city && !fullAddress.includes(city)) {
+            return `${city}, ${fullAddress}`;
+        }
+        return fullAddress;
+    }, [fullAddress, property]);
+
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-dark-50 transition-colors">
             {/* Back Button */}
@@ -246,16 +269,14 @@ function PropertyDetailsPage() {
                                         </h1>
                                         <div className="flex items-center text-gray-600 dark:text-gray-300 mb-4">
                                             <MapPin className="w-4 h-4 ml-1" />
-                                            {property?.location?.street || property?.location?.city ? (
+                                            {displayAddress ? (
                                                 <a
-                                                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(`${property?.location?.street || ''} ${property?.location?.houseNumber || ''}, ${property?.location?.city || ''}`.trim())}`}
+                                                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(displayAddress.trim())}`}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
                                                     className="hover:underline text-blue-600 dark:text-blue-400"
                                                 >
-                                                    {[property?.location?.city, property?.location?.street, property?.location?.houseNumber]
-                                                        .filter(Boolean)
-                                                        .join(', ')}
+                                                    {displayAddress}
                                                 </a>
                                             ) : (
                                                 <span>-</span>
