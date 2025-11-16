@@ -36,6 +36,7 @@ import ConsultingPage from './pages/ConsultingPage';
 // Layout
 import Layout from './components/layout/Layout';
 import ScrollToTop from './components/ui/ScrollToTop';
+import ScrollToTopButton from './components/ui/ScrollToTopButton';
 import CookieBanner from './components/ui/CookieBanner';
 
 // Create a client
@@ -105,6 +106,9 @@ function App() {
 
               {/* Cookie Banner - inside Router */}
               <CookieBanner />
+
+              {/* Scroll to Top Button */}
+              <ScrollToTopButton />
             </Router>
 
             {/* Toast Notifications */}
