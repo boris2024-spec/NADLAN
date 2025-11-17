@@ -435,7 +435,8 @@ function PropertiesPage() {
                                                             const id = property._id || property.id;
                                                             if (!id) return;
                                                             const url = `/properties/${id}`;
-                                                            window.open(url, '_blank', 'noopener,noreferrer');
+                                                            navigate(url, { state: { property } });
+                                                         
                                                         }}
                                                     >
                                                         פרטים נוספים
