@@ -108,7 +108,7 @@ const priceSchema = Joi.object({
     amount: Joi.number().min(0).required().messages({ 'number.min': 'Цена должна быть положительным числом' }),
     currency: Joi.string().valid('ILS', 'USD', 'EUR').optional(),
     // Для аренды - период (совпадает с моделью)
-    period: Joi.string().valid('month', 'year', 'day').optional()
+    period: Joi.string().valid('month', 'year', 'day', 'once').optional()
 });
 
 const detailsSchemaBase = {
