@@ -38,7 +38,7 @@ function Footer() {
                         <div className="flex items-center space-x-2 rtl:space-x-reverse">
                             <img src="/nadlanLogo3.png" alt="Logo" className="h-14 w-14" />
                             <span className="text-xl font-bold text-white">
-                                נדלן
+                                נדל"ן
                             </span>
                         </div>
 
@@ -146,7 +146,7 @@ function Footer() {
                 <div className="py-6 border-t border-secondary-700">
                     <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
                         <p className="text-secondary-400 text-sm text-center md:text-right rtl:md:text-left">
-                            © {currentYear} נדלן. כל הזכויות שמורות.
+                            © {currentYear} נדל"ן. כל הזכויות שמורות.
                         </p>
 
                         <div className="flex items-center space-x-6 rtl:space-x-reverse">
