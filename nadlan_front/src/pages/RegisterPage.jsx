@@ -147,7 +147,7 @@ function RegisterPage() {
 
                         <div>
                             <label htmlFor="phone" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                                מספר טלפון <span className="text-gray-400 dark:text-gray-500 dark:text-gray-400 text-sm">(אופציונלי - ניתן להוסיף מאוחר יותר)</span>
+                                מספר טלפון <span className="text-gray-400 dark:text-gray-500 dark:text-gray-400 text-sm"></span>
                             </label>
                             <div className="relative">
                                 <Input
