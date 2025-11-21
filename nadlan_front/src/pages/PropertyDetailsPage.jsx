@@ -267,7 +267,7 @@ function PropertyDetailsPage() {
                                         <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-2">
                                             {property.title}
                                         </h1>
-                                        <div className="flex items-center text-gray-600 dark:text-gray-300 mb-4">
+                                        <div className="flex items-center text-gray-600 dark:text-gray-300 mb-2">
                                             <MapPin className="w-4 h-4 ml-1" />
                                             {displayAddress ? (
                                                 <a
@@ -282,6 +282,26 @@ function PropertyDetailsPage() {
                                                 <span>-</span>
                                             )}
                                         </div>
+                                        {property?.propertyType && (
+                                            <div className="flex items-center text-gray-600 dark:text-gray-300 mb-4">
+                                                <Building className="w-4 h-4 ml-1" />
+                                                <span className="text-sm">
+                                                    {property.propertyType === 'apartment' && 'דירה'}
+                                                    {property.propertyType === 'house' && 'בית'}
+                                                    {property.propertyType === 'penthouse' && 'פנטהאוז'}
+                                                    {property.propertyType === 'studio' && 'סטודיו'}
+                                                    {property.propertyType === 'duplex' && 'דופלקס'}
+                                                    {property.propertyType === 'villa' && 'וילה'}
+                                                    {property.propertyType === 'townhouse' && 'טאונהאוס'}
+                                                    {property.propertyType === 'loft' && 'לופט'}
+                                                    {property.propertyType === 'commercial' && 'מסחרי'}
+                                                    {property.propertyType === 'office' && 'משרד'}
+                                                    {property.propertyType === 'warehouse' && 'מחסן'}
+                                                    {property.propertyType === 'land' && 'מגרש'}
+                                                    {property.propertyType === 'garden_apartment' && 'דירת גן'}
+                                                </span>
+                                            </div>
+                                        )}
                                     </div>
 
                                     <div className="text-right">
@@ -484,10 +504,10 @@ function PropertyDetailsPage() {
                                         <span className="text-gray-600 dark:text-gray-300">צפיות:</span>
                                         <span className="font-medium">{property?.views?.total ?? 0}</span>
                                     </div>
-                                    <div className="flex justify-between">
+                                    {/* <div className="flex justify-between">
                                         <span className="text-gray-600 dark:text-gray-300">מספר נכס:</span>
                                         <span className="font-medium">#{property?._id || id}</span>
-                                    </div>
+                                    </div> */}
                                 </div>
                             </Card>
 
