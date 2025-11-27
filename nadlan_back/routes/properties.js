@@ -31,14 +31,14 @@ import { uploadPropertyImages, handleUploadError, processUploadedImages } from '
 
 const router = express.Router();
 
-// Публичные роуты
+// Public routes
 router.get('/', validatePropertySearch, optionalAuth, getProperties);
 router.get('/stats', getPropertyStats);
 
-// Защищенные роуты (располагаем до параметризованных путей)
+// Protected routes (placed before parameterized paths)
 router.get('/mine', authenticateToken, getMyProperties);
 
-// Параметризованные роуты — в конце, чтобы не перехватывать статические пути
+// Parameterized routes — placed at the end to avoid intercepting static paths
 router.get('/:id', validateObjectId('id'), optionalAuth, getPropertyById);
 router.get('/:id/similar', validateObjectId('id'), getSimilarProperties);
 router.post('/', authenticateToken, validatePropertyCreate, createProperty);
@@ -46,20 +46,20 @@ router.post('/draft', authenticateToken, validatePropertyDraft, saveDraft);
 router.put('/:id', authenticateToken, validateObjectId('id'), validatePropertyUpdate, updateProperty);
 router.delete('/:id', authenticateToken, validateObjectId('id'), deleteProperty);
 
-// Избранное
+// Favorites
 router.get('/user/favorites', authenticateToken, getFavorites);
 router.post('/:id/favorites', authenticateToken, validateObjectId('id'), addToFavorites);
 router.delete('/:id/favorites', authenticateToken, validateObjectId('id'), removeFromFavorites);
 
-// Отзывы и контакты
+// Reviews and contacts
 router.post('/:id/reviews', authenticateToken, validateObjectId('id'), addReview);
 router.post('/:id/contacts', authenticateToken, validateObjectId('id'), addContact);
 
-// Загрузка изображений недвижимости
+// Property images upload
 router.post('/upload-images', authenticateToken, uploadPropertyImages, handleUploadError, processUploadedImages, (req, res) => {
     res.status(200).json({
         success: true,
-        message: 'Изображения успешно загружены',
+        message: 'Images uploaded successfully',
         images: req.uploadedImages
     });
 });

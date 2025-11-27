@@ -18,7 +18,7 @@ import { validateObjectId } from '../middleware/validation.js';
 
 const router = express.Router();
 
-// Роуты для загрузки изображений недвижимости
+// Routes for uploading property images
 router.post('/properties/:propertyId/images',
     authenticateToken,
     validateObjectId('propertyId'),
@@ -48,7 +48,7 @@ router.put('/properties/:propertyId/images/reorder',
     reorderPropertyImages
 );
 
-// Роуты для загрузки аватара пользователя
+// Routes for uploading user avatar
 router.post('/avatar',
     authenticateToken,
     uploadAvatar,

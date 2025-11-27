@@ -12,7 +12,7 @@ router.post('/send-consulting-email', async (req, res) => {
             return res.status(400).json({ error: 'Missing required fields' });
         }
 
-        // Отправка письма через emailService
+        // Sending email through emailService
         await emailService.sendConsultingEmail({
             name,
             email,

@@ -1,7 +1,7 @@
 import express from 'express';
 import { v2 as cloudinary } from 'cloudinary';
 
-// Убедимся, что конфиг загружен из .env (dotenv уже вызывается в server.js)
+// Make sure the config is loaded from .env (dotenv is already called in server.js)
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
     api_key: process.env.CLOUDINARY_API_KEY,
@@ -10,13 +10,13 @@ cloudinary.config({
 
 const router = express.Router();
 
-// Подписание параметров для подписанных загрузок Cloudinary Upload Widget
+// Signing parameters for signed uploads with Cloudinary Upload Widget
 // POST /api/cloudinary/sign
 // body: { folder?: string }
 router.post('/sign', (req, res) => {
     try {
-        // Виджет передает "paramsToSign". Нужно подписать ИХ БЕЗ ИЗМЕНЕНИЯ порядка ключей,
-        // добавив/переопределив только upload_preset и folder, если нужно.
+        // The widget sends "paramsToSign". We need to sign THEM WITHOUT CHANGING the order of keys,
+        // adding/overriding only upload_preset and folder if needed.
         const incoming = req.body?.paramsToSign || req.body?.params_to_sign || {};
 
         const paramsToSign = {
@@ -25,7 +25,7 @@ router.post('/sign', (req, res) => {
             folder: req.body?.folder || process.env.CLOUDINARY_FOLDER || incoming.folder || 'nadlan/properties',
         };
 
-        // Удаляем пустые значения, чтобы не сломать подпись
+        // Remove empty values to avoid breaking the signature
         Object.keys(paramsToSign).forEach((k) => {
             if (paramsToSign[k] === undefined || paramsToSign[k] === null || paramsToSign[k] === '') {
                 delete paramsToSign[k];
