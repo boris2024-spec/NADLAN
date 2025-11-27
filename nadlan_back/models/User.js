@@ -31,9 +31,9 @@ const userSchema = new mongoose.Schema({
     password: {
         type: String,
         minlength: [6, 'הסיסמה חייבת להכיל לפחות 6 תווים'],
-        select: false, // По умолчанию не включать пароль в запросы
+        select: false, // By default, do not include the password in queries
         required: function () {
-            // Пароль обязателен только если нет OAuth ID
+            // Password is required only if there is no OAuth ID
             return !this.googleId;
         }
     },
@@ -62,7 +62,7 @@ const userSchema = new mongoose.Schema({
     googleId: {
         type: String,
         unique: true,
-        sparse: true // Позволяет null значения быть уникальными
+        sparse: true // Allows null values to be unique
     },
     refreshToken: {
         type: String,
@@ -102,7 +102,7 @@ const userSchema = new mongoose.Schema({
             }
         }
     },
-    // Для агентов недвижимости
+    // For agents: additional info
     agentInfo: {
         licenseNumber: String,
         agency: String,
@@ -120,12 +120,12 @@ const userSchema = new mongoose.Schema({
             default: 0
         }
     },
-    // Избранные объекты
+    // Favorites
     favorites: [{
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Property'
     }],
-    // Поисковые запросы пользователя
+    // User's saved searches
     savedSearches: [{
         name: String,
         criteria: {
@@ -147,12 +147,12 @@ const userSchema = new mongoose.Schema({
     toObject: { virtuals: true }
 });
 
-// Виртуальное поле для полного имени
+// Virtual field for full name
 userSchema.virtual('fullName').get(function () {
     return `${this.firstName} ${this.lastName}`;
 });
 
-// Виртуальное поле для подсчета объявлений агента
+// Virtual field for counting agent's properties
 userSchema.virtual('propertiesCount', {
     ref: 'Property',
     localField: '_id',
@@ -160,30 +160,30 @@ userSchema.virtual('propertiesCount', {
     count: true
 });
 
-// Индексы для оптимизации поиска
+// Indexes for optimizing search
 userSchema.index({ email: 1 });
 userSchema.index({ googleId: 1 });
 userSchema.index({ role: 1 });
 userSchema.index({ isActive: 1 });
 userSchema.index({ 'agentInfo.rating': -1 });
 
-// Хеширование пароля перед сохранением
+// Password hashing before saving
 userSchema.pre('save', async function (next) {
-    // Только если пароль был модифицирован
+    // Only if the password was modified
     if (!this.isModified('password')) return next();
 
-    // Хешируем пароль с cost 12
+    // Hash the password with cost 12
     const saltRounds = parseInt(process.env.BCRYPT_SALT_ROUNDS) || 12;
     this.password = await bcrypt.hash(this.password, saltRounds);
     next();
 });
 
-// Метод для проверки пароля
+// Method for checking password
 userSchema.methods.comparePassword = async function (candidatePassword) {
     return bcrypt.compare(candidatePassword, this.password);
 };
 
-// Метод для генерации токена сброса пароля
+// Method for generating password reset token
 userSchema.methods.createPasswordResetToken = function () {
     const resetToken = crypto.randomBytes(32).toString('hex');
 
@@ -192,18 +192,18 @@ userSchema.methods.createPasswordResetToken = function () {
         .update(resetToken)
         .digest('hex');
 
-    // Токен действителен 10 минут
+    // Token is valid for 10 minutes
     this.passwordResetExpires = Date.now() + 10 * 60 * 1000;
 
     return resetToken;
 };
 
-// Метод для проверки активности пользователя
+// Method for checking if the account is active
 userSchema.methods.isAccountActive = function () {
     return this.isActive && this.isVerified;
 };
 
-// Метод для добавления в избранное
+// Method for adding to favorites
 userSchema.methods.addToFavorites = function (propertyId) {
     if (!this.favorites.includes(propertyId)) {
         this.favorites.push(propertyId);
@@ -211,7 +211,7 @@ userSchema.methods.addToFavorites = function (propertyId) {
     return this.save();
 };
 
-// Метод для удаления из избранного
+// Method for removing from favorites
 userSchema.methods.removeFromFavorites = function (propertyId) {
     this.favorites = this.favorites.filter(
         id => id.toString() !== propertyId.toString()
@@ -219,7 +219,7 @@ userSchema.methods.removeFromFavorites = function (propertyId) {
     return this.save();
 };
 
-// Обновление времени последнего входа
+// Method for updating last login time
 userSchema.methods.updateLastLogin = function () {
     this.lastLogin = new Date();
     return this.save();

@@ -3,21 +3,21 @@ import mongoose from 'mongoose';
 const propertySchema = new mongoose.Schema({
     title: {
         type: String,
-        required: [true, 'Заголовок объявления обязателен'],
+        required: [true, 'Title is required'],
         trim: true,
-        minlength: [5, 'Заголовок должен содержать минимум 5 символов'],
-        maxlength: [200, 'Заголовок не должен превышать 200 символов']
+        minlength: [5, 'Title must be at least 5 characters long'],
+        maxlength: [200, 'Title must not exceed 200 characters']
     },
     description: {
         type: String,
-        required: [true, 'Описание обязательно'],
+        required: [true, 'Description is required'],
         trim: true,
-        minlength: [20, 'Описание должно содержать минимум 20 символов'],
-        maxlength: [5000, 'Описание не должно превышать 5000 символов']
+        minlength: [20, 'Description must be at least 20 characters long'],
+        maxlength: [5000, 'Description must not exceed 5000 characters']
     },
     propertyType: {
         type: String,
-        required: [true, 'Тип недвижимости обязателен'],
+        required: [true, 'Property type is required'],
         enum: {
             values: [
                 'apartment',      // Квартира
@@ -34,39 +34,39 @@ const propertySchema = new mongoose.Schema({
                 'land',          // Участок
                 'garden_apartment' // Квартира с садом (доп. тип для совместимости с импортом)
             ],
-            message: 'Некорректный тип недвижимости'
+            message: 'Invalid property type'
         }
     },
     transactionType: {
         type: String,
-        required: [true, 'Тип сделки обязателен'],
+        required: [true, 'Transaction type is required'],
         enum: {
             values: ['sale', 'rent'],
-            message: 'Тип сделки может быть: продажа или аренда'
+            message: 'Transaction type must be either sale or rent'
         }
     },
     price: {
         amount: {
             type: Number,
-            required: [true, 'Цена обязательна'],
-            min: [0, 'Цена не может быть отрицательной']
+            required: [true, 'Price is required'],
+            min: [0, 'Price must be a positive number']
         },
         currency: {
             type: String,
             enum: ['ILS', 'USD', 'EUR'],
             default: 'ILS'
         },
-        // Для аренды - период
+        // For rent - period
         period: {
             type: String,
-            enum: ['month', 'year', 'day', 'once'], // 'once' — совместимость с импортом/продажей
+            enum: ['month', 'year', 'day', 'once'], // 'once' — compatibility with import/sale
             default: 'month'
         }
     },
     location: {
         address: {
             type: String,
-            required: [true, 'Адрес (улица) обязателен'],
+            required: [true, 'Address (street) is required'],
             trim: true
         },
         street: {
@@ -79,7 +79,7 @@ const propertySchema = new mongoose.Schema({
         },
         city: {
             type: String,
-            required: [true, 'Город обязателен'],
+            required: [true, 'City is required'],
             trim: true
         },
         district: {
@@ -89,49 +89,49 @@ const propertySchema = new mongoose.Schema({
         coordinates: {
             latitude: {
                 type: Number,
-                min: [-90, 'Широта должна быть между -90 и 90'],
-                max: [90, 'Широта должна быть между -90 и 90']
+                min: [-90, 'Latitude must be between -90 and 90'],
+                max: [90, 'Latitude must be between -90 and 90']
             },
             longitude: {
                 type: Number,
-                min: [-180, 'Долгота должна быть между -180 и 180'],
-                max: [180, 'Долгота должна быть между -180 и 180']
+                min: [-180, 'Longitude must be between -180 and 180'],
+                max: [180, 'Longitude must be between -180 and 180']
             }
         }
     },
     details: {
         area: {
             type: Number,
-            required: [true, 'Площадь обязательна'],
-            min: [1, 'Площадь должна быть положительной']
+            required: [true, 'Area is required'],
+            min: [1, 'Area must be a positive number']
         },
         rooms: {
             type: Number,
-            min: [0, 'Количество комнат не может быть отрицательным'],
-            max: [50, 'Слишком много комнат']
+            min: [0, 'Number of rooms cannot be negative'],
+            max: [50, 'Too many rooms']
         },
         bedrooms: {
             type: Number,
-            min: [0, 'Количество спален не может быть отрицательным'],
-            max: [20, 'Слишком много спален']
+            min: [0, 'Number of bedrooms cannot be negative'],
+            max: [20, 'Too many bedrooms']
         },
         bathrooms: {
             type: Number,
-            min: [0, 'Количество ванных не может быть отрицательным'],
-            max: [20, 'Слишком много ванных']
+            min: [0, 'Number of bathrooms cannot be negative'],
+            max: [20, 'Too many bathrooms']
         },
         floor: {
             type: Number,
-            min: [0, 'Этаж не может быть отрицательным']
+            min: [0, 'Floor cannot be negative']
         },
         totalFloors: {
             type: Number,
-            min: [1, 'Общее количество этажей должно быть положительным']
+            min: [1, 'Total number of floors must be positive']
         },
         buildYear: {
             type: Number,
-            min: [1800, 'Год постройки не может быть раньше 1800'],
-            max: [new Date().getFullYear() + 5, 'Год постройки не может быть в далеком будущем']
+            min: [1800, 'Build year cannot be earlier than 1800'],
+            max: [new Date().getFullYear() + 5, 'Build year cannot be in the distant future']
         },
         condition: {
             type: String,
@@ -176,7 +176,7 @@ const propertySchema = new mongoose.Schema({
         url: {
             type: String,
             required: function () {
-                // URL обязателен только если тип не 'NO' и указан
+                // URL required only if type is not 'NO' and specified
                 return this.virtualTour && this.virtualTour.type && this.virtualTour.type !== 'NO';
             }
         },
@@ -189,7 +189,7 @@ const propertySchema = new mongoose.Schema({
     agent: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
-        required: [true, 'Агент обязателен']
+        required: [true, 'Agent is required']
     },
     owner: {
         type: mongoose.Schema.Types.ObjectId,
@@ -199,7 +199,7 @@ const propertySchema = new mongoose.Schema({
         type: String,
         enum: {
             values: ['active', 'pending', 'sold', 'rented', 'inactive', 'draft'],
-            message: 'Некорректный статус объявления'
+            message: 'Invalid property status'
         },
         default: 'active'
     },
@@ -208,7 +208,7 @@ const propertySchema = new mongoose.Schema({
         enum: ['standard', 'featured', 'premium'],
         default: 'standard'
     },
-    // SEO поля
+    // SEO fields
     seo: {
         metaTitle: String,
         metaDescription: String,
@@ -218,13 +218,13 @@ const propertySchema = new mongoose.Schema({
             sparse: true
         }
     },
-    // Статистика просмотров
+    // Views statistics
     views: {
         total: { type: Number, default: 0 },
         unique: { type: Number, default: 0 },
         lastViewed: Date
     },
-    // Контакты и показы
+    // Contacts and viewings
     contacts: [{
         user: {
             type: mongoose.Schema.Types.ObjectId,
@@ -246,7 +246,7 @@ const propertySchema = new mongoose.Schema({
             default: 'pending'
         }
     }],
-    // Публичные контакты, которые владелец выбирает показывать в объявлении (до 2)
+    // Public contacts that the owner chooses to display in the listing (up to 2)
     publicContacts: {
         type: [{
             type: {
@@ -258,27 +258,27 @@ const propertySchema = new mongoose.Schema({
                 type: String,
                 trim: true,
                 required: true,
-                maxlength: [200, 'Значение контакта слишком длинное']
+                maxlength: [200, 'Contact value is too long']
             },
             name: {
                 type: String,
                 trim: true,
-                maxlength: [100, 'Имя контакта слишком длинное']
+                maxlength: [100, 'Contact name is too long']
             },
             label: {
                 type: String,
                 trim: true,
-                maxlength: [50, 'Метка контакта слишком длинная']
+                maxlength: [50, 'Contact label is too long']
             }
         }],
         validate: {
             validator: function (arr) {
                 return !arr || arr.length <= 2;
             },
-            message: 'Можно добавить не более 2 контактов'
+            message: 'You can add up to 2 contacts only'
         }
     },
-    // Отзывы и рейтинг
+    // Reviews and ratings
     reviews: [{
         user: {
             type: mongoose.Schema.Types.ObjectId,
@@ -303,21 +303,21 @@ const propertySchema = new mongoose.Schema({
         max: 5,
         default: 0
     },
-    // Дополнительные расходы
+    // Additional costs
     additionalCosts: {
         managementFee: Number,
         propertyTax: Number,
         utilities: Number,
         insurance: Number
     },
-    // Доступность
+    // Availability
     availableFrom: Date,
-    // Срок действия объявления
+    // Listing expiration
     expiresAt: {
         type: Date,
-        default: () => new Date(Date.now() + 90 * 24 * 60 * 60 * 1000) // 90 дней
+        default: () => new Date(Date.now() + 90 * 24 * 60 * 60 * 1000) // 90 days
     },
-    // Аналитика
+    // Analytics
     analytics: {
         impressions: { type: Number, default: 0 },
         clicks: { type: Number, default: 0 },
@@ -330,7 +330,7 @@ const propertySchema = new mongoose.Schema({
     toObject: { virtuals: true }
 });
 
-// Виртуальные поля
+// Virtual fields
 propertySchema.virtual('pricePerMeter').get(function () {
     if (this.details.area && this.price.amount) {
         return Math.round(this.price.amount / this.details.area);
@@ -356,7 +356,7 @@ propertySchema.virtual('mainImage').get(function () {
     return null;
 });
 
-// Индексы для оптимизации поиска
+// Indexes for search optimization
 propertySchema.index({ status: 1, propertyType: 1 });
 propertySchema.index({ 'location.city': 1 });
 propertySchema.index({ 'price.amount': 1 });
@@ -370,7 +370,7 @@ propertySchema.index({ priority: -1, createdAt: -1 });
 propertySchema.index({ averageRating: -1 });
 propertySchema.index({ 'views.total': -1 });
 
-// Сложный индекс для поиска
+// Complex index for search
 propertySchema.index({
     status: 1,
     propertyType: 1,
@@ -379,7 +379,7 @@ propertySchema.index({
     'price.amount': 1
 });
 
-// Текстовый индекс для поиска
+// Text index for search
 propertySchema.index({
     title: 'text',
     description: 'text',
@@ -389,9 +389,9 @@ propertySchema.index({
     'location.district': 'text'
 });
 
-// Middleware для синхронизации полей адреса
+// Middleware for synchronizing address fields
 propertySchema.pre('save', function (next) {
-    // Если есть street и/или houseNumber, синхронизируем с address
+    // If there is a street and/or houseNumber, synchronize with address
     if (this.isModified('location.street') || this.isModified('location.houseNumber')) {
         const parts = [];
         if (this.location.street) parts.push(this.location.street);
@@ -400,13 +400,13 @@ propertySchema.pre('save', function (next) {
             this.location.address = parts.join(' ');
         }
     }
-    // Если изменился только address и при этом street пустой, пытаемся разделить его
+    // If only address changed and street is empty, try to split it
     else if (this.isModified('location.address') && this.location.address && !this.location.street) {
-        // Простая логика: последнее слово - номер дома (если это число)
+        // Simple logic: last word is house number (if it's a number)
         const parts = this.location.address.trim().split(/\s+/);
         if (parts.length > 1) {
             const lastPart = parts[parts.length - 1];
-            // Проверяем, является ли последняя часть номером
+            // Check if the last part is a house number
             if (/^\d+[א-ת]?$/.test(lastPart)) {
                 this.location.houseNumber = lastPart;
                 this.location.street = parts.slice(0, -1).join(' ');
@@ -420,7 +420,7 @@ propertySchema.pre('save', function (next) {
     next();
 });
 
-// Middleware для генерации slug
+// Middleware for generating slug
 propertySchema.pre('save', function (next) {
     if (this.isModified('title') || this.isNew) {
         this.seo.slug = this.title
@@ -433,7 +433,7 @@ propertySchema.pre('save', function (next) {
     next();
 });
 
-// Middleware для обновления рейтинга при изменении отзывов
+// Middleware for updating rating when reviews change
 propertySchema.pre('save', function (next) {
     if (this.isModified('reviews')) {
         if (this.reviews && this.reviews.length > 0) {
@@ -446,32 +446,32 @@ propertySchema.pre('save', function (next) {
     next();
 });
 
-// Метод для увеличения просмотров
+// Method for incrementing views
 propertySchema.methods.incrementViews = function (isUnique = false) {
     this.views.total += 1;
     if (isUnique) {
         this.views.unique += 1;
     }
     this.views.lastViewed = new Date();
-    // Валидируем только измененные поля, чтобы не падать на не связанных с просмотрами валидациях
+    // Validate only modified fields to avoid failing on validations unrelated to views
     return this.save({ validateModifiedOnly: true });
 };
 
-// Метод для добавления контакта
+// Method for adding a contact
 propertySchema.methods.addContact = function (contactData) {
     this.contacts.push(contactData);
     return this.save({ validateModifiedOnly: true });
 };
 
-// Метод для добавления отзыва
+// Method for adding a review
 propertySchema.methods.addReview = function (userId, rating, comment) {
-    // Проверяем, не оставлял ли уже этот пользователь отзыв
+    // Check if this user has already left a review
     const existingReview = this.reviews.find(
         review => review.user.toString() === userId.toString()
     );
 
     if (existingReview) {
-        throw new Error('Вы уже оставляли отзыв для этого объекта');
+        throw new Error('You have already left a review for this property');
     }
 
     this.reviews.push({
@@ -483,7 +483,7 @@ propertySchema.methods.addReview = function (userId, rating, comment) {
     return this.save({ validateModifiedOnly: true });
 };
 
-// Статический метод для поиска с фильтрами
+// Static method for finding with filters
 propertySchema.statics.findWithFilters = function (filters, options = {}) {
     const {
         page = 1,
@@ -505,7 +505,7 @@ propertySchema.statics.findWithFilters = function (filters, options = {}) {
         .skip((page - 1) * limit);
 };
 
-// Статический метод для получения статистики
+// Static method for getting statistics
 propertySchema.statics.getStats = function () {
     return this.aggregate([
         {
