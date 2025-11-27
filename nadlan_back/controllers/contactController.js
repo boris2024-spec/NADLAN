@@ -14,11 +14,11 @@ export async function sendContact(req, res) {
         if (error) {
             return res.status(400).json({
                 success: false,
-                message: 'Ошибки валидации',
+                message: 'טעויות באימות הנתונים',
                 errors: error.details.map(d => ({ field: d.path.join('.'), message: d.message }))
             });
         }
-        const ticketId = req.requestId; // используем корреляционный ID запроса как номер тикета
+        const ticketId = req.requestId; // use request correlation ID as ticket number
         if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
             console.warn('SMTP credentials are not configured. Logging contact message instead of sending email.');
             console.log('CONTACT_MESSAGE', JSON.stringify({ ...value, ticketId }));

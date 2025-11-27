@@ -26,7 +26,7 @@ function sanitizePublicContacts(input) {
     return cleaned.slice(0, 2);
 }
 
-// Получить объекты недвижимости текущего пользователя (агента или владельца)
+// get properties of the authenticated user with filtering and pagination
 export const getMyProperties = async (req, res) => {
     try {
         const {
@@ -40,7 +40,7 @@ export const getMyProperties = async (req, res) => {
 
         const userId = req.user._id;
 
-        // Базовый фильтр: объекты, где пользователь — агент или владелец
+        // Base filter: properties where the user is an agent or owner
         const filter = {
             $or: [{ agent: userId }, { owner: userId }]
         };
@@ -76,18 +76,18 @@ export const getMyProperties = async (req, res) => {
             }
         });
     } catch (error) {
-        console.error('Ошибка получения объектов пользователя:', error);
+        console.error('Error getting user properties', error);
         res.status(500).json({
             success: false,
-            message: 'Внутренняя ошибка сервера'
+            message: 'Internal server error'
         });
     }
 };
 
-// Получить все объекты недвижимости с фильтрацией
+// Get all properties with filtering
 export const getProperties = async (req, res) => {
     try {
-        // Валидация осуществляется Joi middleware
+        // Validation is done by Joi middleware
 
         const {
             page = 1,
@@ -107,28 +107,28 @@ export const getProperties = async (req, res) => {
             status = 'active'
         } = req.query;
 
-        // Построение фильтра
+        // Build filter
         const filter = { status };
 
         if (propertyType) filter.propertyType = propertyType;
         if (transactionType) filter.transactionType = transactionType;
         if (city) filter['location.city'] = new RegExp(city, 'i');
 
-        // Фильтр по цене
+        // Filter by price
         if (priceMin || priceMax) {
             filter['price.amount'] = {};
             if (priceMin) filter['price.amount'].$gte = parseFloat(priceMin);
             if (priceMax) filter['price.amount'].$lte = parseFloat(priceMax);
         }
 
-        // Фильтр по площади
+        // Filter by area
         if (areaMin || areaMax) {
             filter['details.area'] = {};
             if (areaMin) filter['details.area'].$gte = parseFloat(areaMin);
             if (areaMax) filter['details.area'].$lte = parseFloat(areaMax);
         }
 
-        // Фильтр по комнатам
+        // Filter by rooms
         if (rooms) filter['details.rooms'] = parseInt(rooms);
         if (roomsMin) {
             const min = parseInt(roomsMin);
@@ -139,16 +139,16 @@ export const getProperties = async (req, res) => {
         }
         if (bedrooms) filter['details.bedrooms'] = parseInt(bedrooms);
 
-        // Текстовый поиск
+        // Full-text search
         if (search) {
             filter.$text = { $search: search };
         }
 
-        // Подсчет общего количества
+        // Count total documents
         const total = await Property.countDocuments(filter);
         const totalPages = Math.ceil(total / limit);
 
-        // Получение объектов недвижимости
+        // Get properties
         // Normalize sort to nested fields where needed
         const normalizeSort = (s) => {
             if (!s || typeof s !== 'string') return '-createdAt';
@@ -205,7 +205,7 @@ export const getProperties = async (req, res) => {
     }
 };
 
-// Получить объект недвижимости по ID
+// Get property by ID
 export const getPropertyById = async (req, res) => {
     try {
         const { id } = req.params;
@@ -225,13 +225,13 @@ export const getPropertyById = async (req, res) => {
             });
         }
 
-        // Увеличиваем счетчик просмотров безопасно (без полной валидации схемы)
-        // Проверяем, уникальный ли это пользователь (простая проверка по сессии)
+        // Safely increment view count (without full schema validation)
+        // Check if the user is unique (simple session-based check)
         const userIP = req.ip;
         const isUnique = !(req.session && Array.isArray(req.session.viewedProperties) && req.session.viewedProperties.includes(id));
 
         if (isUnique) {
-            // Защита от отсутствующей сессии
+            // Protect against missing session
             if (!req.session) req.session = {};
             if (!Array.isArray(req.session.viewedProperties)) {
                 req.session.viewedProperties = [];
@@ -239,7 +239,7 @@ export const getPropertyById = async (req, res) => {
             req.session.viewedProperties.push(id);
         }
 
-        // Пытаемся вызвать метод модели, если он есть; при ошибке откатываемся на $inc
+        // Try to call model method if it exists; fallback to $inc on error
         try {
             if (typeof property.incrementViews === 'function') {
                 await property.incrementViews(isUnique);
@@ -269,7 +269,7 @@ export const getPropertyById = async (req, res) => {
     }
 };
 
-// Создать новый объект недвижимости
+// Create new property
 export const createProperty = async (req, res) => {
     try {
         // Debug logging of incoming create payload (trimmed for readability)
@@ -278,14 +278,14 @@ export const createProperty = async (req, res) => {
             console.log('[createProperty] Incoming body preview:', preview);
         } catch (_) { /* noop */ }
 
-        // Валидация осуществляется Joi middleware
+        // Validation is done by Joi middleware
 
         const propertyData = {
             ...req.body,
             agent: req.user._id
         };
 
-        // Санитизация публичных контактов (до 2)
+        // Sanitize public contacts (up to 2)
         if (req.body?.publicContacts) {
             const sanitized = sanitizePublicContacts(req.body.publicContacts);
             if (sanitized) {
@@ -295,26 +295,26 @@ export const createProperty = async (req, res) => {
             }
         }
 
-        // Если пользователь не агент и не администратор, устанавливаем его как владельца
+        // If the user is not an agent or administrator, set them as the owner
         if (req.user.role === 'user') {
             propertyData.owner = req.user._id;
-            propertyData.status = 'draft'; // Обычные пользователи создают черновики
+            propertyData.status = 'draft'; // Regular users create drafts
         }
 
-        // Санитизация изображений: удаляем элементы без обязательных полей (publicId/url)
+        // Sanitize images: remove items without required fields (publicId/url)
         if (Array.isArray(propertyData.images)) {
             const originalCount = propertyData.images.length;
             propertyData.images = propertyData.images.filter(img => img && img.url && img.publicId);
             const filteredCount = propertyData.images.length;
             if (filteredCount === 0) {
-                delete propertyData.images; // не сохраняем пустой массив
+                delete propertyData.images; // do not save empty array
             }
             if (originalCount !== filteredCount) {
                 console.log(`[createProperty] Filtered images without publicId/url: ${originalCount - filteredCount} removed`);
             }
         }
 
-        // Очистка координат если они пустые или некорректные
+        // Clean coordinates if they are empty or invalid
         if (propertyData.location?.coordinates) {
             const { latitude, longitude } = propertyData.location.coordinates || {};
             if (latitude === '' || latitude === null || latitude === undefined ||
@@ -323,7 +323,7 @@ export const createProperty = async (req, res) => {
             }
         }
 
-        // Финальный предпросмотр данных перед сохранением
+        // Final preview of data before saving
         try {
             const preview = JSON.stringify(propertyData).slice(0, 1200);
             console.log('[createProperty] Sanitized propertyData preview:', preview);
@@ -341,9 +341,9 @@ export const createProperty = async (req, res) => {
         });
 
     } catch (error) {
-        console.error('Ошибка создания объекта недвижимости:', error);
+        console.error('Error creating property:', error);
 
-        // Если это ошибка валидации MongoDB
+        // IF MongoDB ValidationError
         if (error.name === 'ValidationError') {
             const validationErrors = {};
             for (let field in error.errors) {
@@ -353,19 +353,19 @@ export const createProperty = async (req, res) => {
 
             return res.status(400).json({
                 success: false,
-                message: 'Ошибки валидации данных',
-                errors: [{ param: 'validation', msg: 'Проверьте заполненные поля', details: validationErrors }]
+                message: 'טעויות באימות הנתונים',
+                errors: [{ param: 'validation', msg: 'יש לבדוק את השדות המוזנים', details: validationErrors }]
             });
         }
 
         res.status(500).json({
             success: false,
-            message: 'Внутренняя ошибка сервера'
+            message: 'שגיאת שרת פנימית'
         });
     }
 };
 
-// Создать или сохранить черновик недвижимости
+// Create or save property draft
 export const saveDraft = async (req, res) => {
     try {
         // Debug logging of incoming draft payload (trimmed for readability)
@@ -374,7 +374,7 @@ export const saveDraft = async (req, res) => {
             console.log('[saveDraft] Incoming body preview:', preview);
         } catch (_) { /* noop */ }
 
-        // Валидация осуществляется Joi middleware
+        // Validation is performed by Joi middleware
 
         const propertyData = {
             ...req.body,
@@ -382,7 +382,7 @@ export const saveDraft = async (req, res) => {
             status: 'draft'
         };
 
-        // Санитизация публичных контактов (до 2)
+        // Sanitize public contacts (up to 2)
         if (req.body?.publicContacts) {
             const sanitized = sanitizePublicContacts(req.body.publicContacts);
             if (sanitized) {
@@ -392,56 +392,56 @@ export const saveDraft = async (req, res) => {
             }
         }
 
-        // Если пользователь не агент и не администратор, устанавливаем его как владельца
+        // If user is not an agent or admin, set them as the owner
         if (req.user.role === 'user') {
             propertyData.owner = req.user._id;
         }
 
-        // Устанавливаем минимальные значения по умолчанию только если поля пусты
+        // Set minimum default values only if fields are empty
         if (!propertyData.title?.trim()) {
-            propertyData.title = `Черновик ${new Date().toLocaleDateString('he-IL')}`;
+            propertyData.title = `Draft ${new Date().toLocaleDateString('he-IL')}`;
         }
 
         if (!propertyData.description?.trim()) {
-            propertyData.description = 'Описание будет добавлено позже';
+            propertyData.description = 'תיאור הנכס יתווסף מאוחר יותר';
         }
 
         if (!propertyData.location?.address?.trim()) {
             propertyData.location = {
                 ...propertyData.location,
-                address: 'Адрес будет добавлен позже'
+                address: 'כתובת הנכס תתווסף מאוחר יותר'
             };
         }
 
         if (!propertyData.location?.city?.trim()) {
             propertyData.location = {
                 ...propertyData.location,
-                city: 'Город будет добавлен позже'
+                city: 'העיר תתווסף מאוחר יותר'
             };
         }
 
         if (!propertyData.details?.area || propertyData.details.area <= 0) {
             propertyData.details = {
                 ...propertyData.details,
-                area: 1 // Минимальное значение для прохождения валидации
+                area: 1 // Minimum value to pass validation
             };
         }
 
         if (!propertyData.price?.amount || propertyData.price.amount <= 0) {
             propertyData.price = {
                 ...propertyData.price,
-                amount: 1 // Минимальное значение для прохождения валидации
+                amount: 1 // Minimum value to pass validation
             };
         }
 
-        // Санитизация изображений: удаляем элементы без обязательных полей (publicId/url)
+        // Sanitize images: remove items without required fields (publicId/url)
         if (Array.isArray(propertyData.images)) {
             const originalCount = propertyData.images.length;
             propertyData.images = propertyData.images.filter(img => img && img.url && img.publicId);
             const filteredCount = propertyData.images.length;
 
             if (filteredCount === 0) {
-                delete propertyData.images; // не сохраняем пустой массив
+                delete propertyData.images; // do not save empty array
             }
 
             if (originalCount !== filteredCount) {
@@ -449,18 +449,18 @@ export const saveDraft = async (req, res) => {
             }
         }
 
-        // Очистка координат если они пустые или некорректные
+        // Clear coordinates if they are empty or invalid
         if (propertyData.location?.coordinates) {
             const { latitude, longitude } = propertyData.location.coordinates;
 
-            // Удаляем координаты если они пустые или некорректные
+            // Remove coordinates if they are empty or invalid
             if (latitude === '' || latitude === null || latitude === undefined ||
                 longitude === '' || longitude === null || longitude === undefined) {
                 delete propertyData.location.coordinates;
             }
         }
 
-        // Финальный предпросмотр данных перед сохранением
+        // Final preview of data before saving
         try {
             const preview = JSON.stringify(propertyData).slice(0, 1200);
             console.log('[saveDraft] Sanitized propertyData preview:', preview);
@@ -473,12 +473,12 @@ export const saveDraft = async (req, res) => {
 
         res.status(201).json({
             success: true,
-            message: 'Черновик успешно сохранен',
+            message: 'הטיוטה נשמרה בהצלחה',
             data: { property }
         });
 
     } catch (error) {
-        console.error('Ошибка сохранения черновика:', error);
+        console.error('שגיאה בשמירת הטיוטה:', error);
 
         // Если это ошибка валидации MongoDB
         if (error.name === 'ValidationError') {
@@ -491,22 +491,22 @@ export const saveDraft = async (req, res) => {
 
             return res.status(400).json({
                 success: false,
-                message: 'Ошибки валидации данных',
-                errors: [{ param: 'validation', msg: 'Проверьте заполненные поля', details: validationErrors }]
+                message: 'שגיאות באימות הנתונים',
+                errors: [{ param: 'validation', msg: 'אנא בדוק את השדות המלאים', details: validationErrors }]
             });
         }
 
         res.status(500).json({
             success: false,
-            message: 'Внутренняя ошибка сервера'
+            message: 'שגיאת שרת פנימית'
         });
     }
 };
 
-// Обновить объект недвижимости
+// Update property by ID
 export const updateProperty = async (req, res) => {
     try {
-        // Валидация осуществляется Joi middleware
+        // Validation is performed by Joi middleware
 
         const { id } = req.params;
 
@@ -514,11 +514,11 @@ export const updateProperty = async (req, res) => {
         if (!property) {
             return res.status(404).json({
                 success: false,
-                message: 'Объект недвижимости не найден'
+                message: 'נכס הנדל"ן לא נמצא'
             });
         }
 
-        // Проверяем права доступа
+        // Check access rights
         const isOwner = property.agent.toString() === req.user._id.toString() ||
             property.owner?.toString() === req.user._id.toString();
         const isAdmin = req.user.role === 'admin';
@@ -526,11 +526,11 @@ export const updateProperty = async (req, res) => {
         if (!isOwner && !isAdmin) {
             return res.status(403).json({
                 success: false,
-                message: 'Нет прав для редактирования этого объекта'
+                message: 'אין הרשאות לערוך נכס זה'
             });
         }
 
-        // Санитизация публичных контактов при обновлении
+        // Sanitize public contacts on update
         const updatePayload = { ...req.body };
         if (req.body?.publicContacts !== undefined) {
             const sanitized = sanitizePublicContacts(req.body.publicContacts);
@@ -546,20 +546,20 @@ export const updateProperty = async (req, res) => {
 
         res.json({
             success: true,
-            message: 'Объект недвижимости успешно обновлен',
+            message: 'נכס הנדל"ן עודכן בהצלחה',
             data: { property: updatedProperty }
         });
 
     } catch (error) {
-        console.error('Ошибка обновления объекта недвижимости:', error);
+        console.error('שגיאה בעדכון נכס הנדל"ן:', error);
         res.status(500).json({
             success: false,
-            message: 'Внутренняя ошибка сервера'
+            message: 'שגיאת שרת פנימית'
         });
     }
 };
 
-// Удалить объект недвижимости
+// Delete property by ID
 export const deleteProperty = async (req, res) => {
     try {
         const { id } = req.params;
@@ -568,11 +568,11 @@ export const deleteProperty = async (req, res) => {
         if (!property) {
             return res.status(404).json({
                 success: false,
-                message: 'Объект недвижимости не найден'
+                message: 'נכס הנדל"ן לא נמצא'
             });
         }
 
-        // Проверяем права доступа
+        // Check access rights
         const isOwner = property.agent.toString() === req.user._id.toString() ||
             property.owner?.toString() === req.user._id.toString();
         const isAdmin = req.user.role === 'admin';
@@ -580,11 +580,11 @@ export const deleteProperty = async (req, res) => {
         if (!isOwner && !isAdmin) {
             return res.status(403).json({
                 success: false,
-                message: 'Нет прав для удаления этого объекта'
+                message: 'אין הרשאות למחוק נכס זה'
             });
         }
 
-        // Сначала удаляем связанные изображения из Cloudinary (если есть)
+        // First, delete associated images from Cloudinary (if any)
         try {
             const publicIds = Array.isArray(property.images)
                 ? property.images.map(img => img?.publicId).filter(Boolean)
@@ -596,15 +596,15 @@ export const deleteProperty = async (req, res) => {
                 );
                 const failed = results.filter(r => r.status === 'rejected').length;
                 if (failed > 0) {
-                    console.warn(`[deleteProperty] Не удалось удалить ${failed} изображ.(ия/ий) из Cloudinary для property ${id}`);
+                    console.warn(`[deleteProperty] Failed to delete ${failed} image(s) from Cloudinary for property ${id}`);
                 }
             }
         } catch (cloudErr) {
-            console.error('[deleteProperty] Ошибка массового удаления изображений из Cloudinary:', cloudErr);
-            // Продолжаем удаление сущности даже при ошибке Cloudinary
+            console.error('[deleteProperty] Error bulk deleting images from Cloudinary:', cloudErr);
+            // Continue deleting the entity even if Cloudinary deletion fails
         }
 
-        // Удаляем объект из избранного у всех пользователей
+        // Remove property from all users' favorites
         const { User } = await import('../models/index.js');
         await User.updateMany(
             { favorites: id },
@@ -615,19 +615,19 @@ export const deleteProperty = async (req, res) => {
 
         res.json({
             success: true,
-            message: 'Объект недвижимости успешно удален'
+            message: 'נכס הנדל"ן נמחק בהצלחה'
         });
 
     } catch (error) {
-        console.error('Ошибка удаления объекта недвижимости:', error);
+        console.error('שגיאה במחיקת נכס הנדל"ן:', error);
         res.status(500).json({
             success: false,
-            message: 'Внутренняя ошибка сервера'
+            message: 'שגיאת שרת פנימית'
         });
     }
 };
 
-// Добавить объект в избранное
+// הוסף נכס לנבחרים
 export const addToFavorites = async (req, res) => {
     try {
         const { id } = req.params;
@@ -636,7 +636,7 @@ export const addToFavorites = async (req, res) => {
         if (!property) {
             return res.status(404).json({
                 success: false,
-                message: 'Объект недвижимости не найден'
+                message: 'נכס הנדל"ן לא נמצא'
             });
         }
 
@@ -644,22 +644,22 @@ export const addToFavorites = async (req, res) => {
 
         res.json({
             success: true,
-            message: 'Объект добавлен в избранное',
+            message: 'נכס הנדל"ן נוסף לנבחרים',
             data: {
                 favorites: req.user.favorites
             }
         });
 
     } catch (error) {
-        console.error('Ошибка добавления в избранное:', error);
+        console.error('שגיאה בהוספה לנבחרים:', error);
         res.status(500).json({
             success: false,
-            message: 'Внутренняя ошибка сервера'
+            message: 'שגיאת שרת פנימית'
         });
     }
 };
 
-// Удалить объект из избранного
+// הסר נכס מהנבחרים
 export const removeFromFavorites = async (req, res) => {
     try {
         const { id } = req.params;
@@ -668,22 +668,22 @@ export const removeFromFavorites = async (req, res) => {
 
         res.json({
             success: true,
-            message: 'Объект удален из избранного',
+            message: 'נכס הנדל"ן הוסר מהנבחרים',
             data: {
                 favorites: req.user.favorites
             }
         });
 
     } catch (error) {
-        console.error('Ошибка удаления из избранного:', error);
+        console.error('שגיאה בהסרה מהנבחרים:', error);
         res.status(500).json({
             success: false,
-            message: 'Внутренняя ошибка сервера'
+            message: 'שגיאת שרת פנימית'
         });
     }
 };
 
-// Получить избранные объекты пользователя
+// קבל נכסים מועדפים של המשתמש
 export const getFavorites = async (req, res) => {
     try {
         const { page = 1, limit = 12 } = req.query;
@@ -720,15 +720,15 @@ export const getFavorites = async (req, res) => {
         });
 
     } catch (error) {
-        console.error('Ошибка получения избранного:', error);
+        console.error('שגיאה בקבלת הנבחרים:', error);
         res.status(500).json({
             success: false,
-            message: 'Внутренняя ошибка сервера'
+            message: 'שגיאת שרת פנימית'
         });
     }
 };
 
-// Добавить отзыв к объекту недвижимости
+// הוסף ביקורת לנכס הנדל"ן
 export const addReview = async (req, res) => {
     try {
         const { id } = req.params;
@@ -745,7 +745,7 @@ export const addReview = async (req, res) => {
         if (!property) {
             return res.status(404).json({
                 success: false,
-                message: 'Объект недвижимости не найден'
+                message: 'נכס הנדל"ן לא נמצא'
             });
         }
 
@@ -759,7 +759,7 @@ export const addReview = async (req, res) => {
 
             res.json({
                 success: true,
-                message: 'Отзыв успешно добавлен',
+                message: 'הביקורת נוספה בהצלחה',
                 data: { property }
             });
 
@@ -771,15 +771,15 @@ export const addReview = async (req, res) => {
         }
 
     } catch (error) {
-        console.error('Ошибка добавления отзыва:', error);
+        console.error('שגיאה בהוספת ביקורת:', error);
         res.status(500).json({
             success: false,
-            message: 'Внутренняя ошибка сервера'
+            message: 'שגיאת שרת פנימית'
         });
     }
 };
 
-// Добавить контакт к объекту недвижимости
+// Add contact request for property
 export const addContact = async (req, res) => {
     try {
         const { id } = req.params;
@@ -788,7 +788,7 @@ export const addContact = async (req, res) => {
         if (!['call', 'email', 'whatsapp', 'viewing'].includes(type)) {
             return res.status(400).json({
                 success: false,
-                message: 'Некорректный тип контакта'
+                message: 'סוג הקשר שגוי'
             });
         }
 
@@ -796,7 +796,7 @@ export const addContact = async (req, res) => {
         if (!property) {
             return res.status(404).json({
                 success: false,
-                message: 'Объект недвижимости не найден'
+                message: 'נכס הנדל"ן לא נמצא'
             });
         }
 
@@ -810,19 +810,19 @@ export const addContact = async (req, res) => {
 
         res.json({
             success: true,
-            message: 'Запрос на контакт успешно отправлен'
+            message: 'בקשת הקשר נשלחה בהצלחה'
         });
 
     } catch (error) {
-        console.error('Ошибка добавления контакта:', error);
+        console.error('שגיאה בהוספת קשר:', error);
         res.status(500).json({
             success: false,
-            message: 'Внутренняя ошибка сервера'
+            message: 'שגיאת שרת פנימית'
         });
     }
 };
 
-// Получить статистику по недвижимости
+// Get property statistics
 export const getPropertyStats = async (req, res) => {
     try {
         const stats = await Property.getStats();
@@ -833,15 +833,15 @@ export const getPropertyStats = async (req, res) => {
         });
 
     } catch (error) {
-        console.error('Ошибка получения статистики:', error);
+        console.error('שגיאה בקבלת הסטטיסטיקות:', error);
         res.status(500).json({
             success: false,
-            message: 'Внутренняя ошибка сервера'
+            message: 'שגיאת שרת פנימית'
         });
     }
 };
 
-// Получить похожие объекты недвижимости
+// Get similar properties
 export const getSimilarProperties = async (req, res) => {
     try {
         const { id } = req.params;
@@ -851,15 +851,15 @@ export const getSimilarProperties = async (req, res) => {
         if (!property) {
             return res.status(404).json({
                 success: false,
-                message: 'Объект недвижимости не найден'
+                message: 'נכס הנדל"ן לא נמצא'
             });
         }
 
-        // Ищем похожие объекты по типу недвижимости, городу и ценовой категории
-        const priceRange = property.price.amount * 0.3; // ±30% от цены
+        // Find similar properties based on type, transaction, location, and price range
+        const priceRange = property.price.amount * 0.3; // ±30% of the price
 
         const similarProperties = await Property.find({
-            _id: { $ne: id }, // Исключаем текущий объект
+            _id: { $ne: id }, // Exclude the current property
             status: 'active',
             propertyType: property.propertyType,
             transactionType: property.transactionType,
@@ -880,10 +880,10 @@ export const getSimilarProperties = async (req, res) => {
         });
 
     } catch (error) {
-        console.error('Ошибка получения похожих объектов:', error);
+        console.error('שגיאה בקבלת נכסים דומים:', error);
         res.status(500).json({
             success: false,
-            message: 'Внутренняя ошибка сервера'
+            message: 'שגיאת שרת פנימית'
         });
     }
 };

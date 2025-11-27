@@ -4,17 +4,17 @@ import { User } from '../models/index.js';
 import { generateTokens, verifyRefreshToken } from '../middleware/auth.js';
 import emailService from '../utils/emailService.js';
 
-// Регистрация пользователя
+// User registration
 export const register = async (req, res) => {
     try {
         console.log('Register request body:', req.body);
         console.log('Register request headers:', req.headers);
 
-        // Валидация теперь выполняется Joi middleware до контроллера
+        // Validation is now done by Joi middleware before the controller
 
         const { firstName, lastName, email, password, phone, role = 'user' } = req.body;
 
-        // Проверяем, существует ли пользователь
+        // Check if user already exists
         const existingUser = await User.findOne({ email });
         if (existingUser) {
             return res.status(400).json({
@@ -23,7 +23,7 @@ export const register = async (req, res) => {
             });
         }
 
-        // Создаем пользователя
+        // Create user
         const user = new User({
             firstName,
             lastName,
@@ -33,24 +33,24 @@ export const register = async (req, res) => {
             role
         });
 
-        // Генерируем токен для верификации email
+        // Generate email verification token
         const verificationToken = crypto.randomBytes(32).toString('hex');
         user.emailVerificationToken = crypto
             .createHash('sha256')
             .update(verificationToken)
             .digest('hex');
-        user.emailVerificationExpires = Date.now() + 24 * 60 * 60 * 1000; // 24 часа
+        user.emailVerificationExpires = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
 
         await user.save();
 
-        // Генерируем JWT токены
+        // Generate JWT tokens
         const { accessToken, refreshToken } = generateTokens(user._id);
 
-        // Сохраняем refresh token в базе
+        // Save refresh token in the database
         user.refreshToken = refreshToken;
         await user.save();
 
-        // Отправляем ответ без пароля
+        // Send response without password
         const userResponse = user.toJSON();
         delete userResponse.password;
         delete userResponse.refreshToken;
@@ -68,7 +68,7 @@ export const register = async (req, res) => {
             }
         });
 
-        // Отправляем email для верификации
+        // Send verification email
         try {
             await emailService.sendVerificationEmail(
                 user.email,
@@ -78,7 +78,7 @@ export const register = async (req, res) => {
             console.log('Verification email sent successfully to:', user.email);
         } catch (emailError) {
             console.error('Failed to send verification email:', emailError);
-            // Не прерываем процесс регистрации из-за ошибки email
+            // Do not interrupt the registration process due to email error
         }
 
     } catch (error) {
@@ -90,14 +90,14 @@ export const register = async (req, res) => {
     }
 };
 
-// Вход пользователя
+// User login
 export const login = async (req, res) => {
     try {
-        // Валидация производится Joi middleware
+        // Validation is done by Joi middleware
 
         const { email, password } = req.body;
 
-        // Находим пользователя с паролем
+        // Find user with password
         const user = await User.findOne({ email }).select('+password');
         if (!user) {
             return res.status(401).json({
@@ -106,7 +106,7 @@ export const login = async (req, res) => {
             });
         }
 
-        // Проверяем пароль
+        // Check password
         const isPasswordValid = await user.comparePassword(password);
         if (!isPasswordValid) {
             return res.status(401).json({
@@ -115,7 +115,7 @@ export const login = async (req, res) => {
             });
         }
 
-        // Проверяем активность аккаунта
+        // Check if account is active
         if (!user.isActive) {
             return res.status(401).json({
                 success: false,
@@ -123,15 +123,15 @@ export const login = async (req, res) => {
             });
         }
 
-        // Генерируем новые токены
+        // Generate new tokens
         const { accessToken, refreshToken } = generateTokens(user._id);
 
-        // Сохраняем новый refresh token
+        // Save new refresh token
         user.refreshToken = refreshToken;
         user.lastLogin = new Date();
         await user.save();
 
-        // Убираем чувствительные данные
+        // Remove sensitive data
         const userResponse = user.toJSON();
         delete userResponse.password;
         delete userResponse.refreshToken;
@@ -157,7 +157,7 @@ export const login = async (req, res) => {
     }
 };
 
-// Обновление токена доступа
+// Refresh access token
 export const refreshToken = async (req, res) => {
     try {
         const { refreshToken } = req.body;
@@ -169,10 +169,10 @@ export const refreshToken = async (req, res) => {
             });
         }
 
-        // Проверяем refresh token
+        // Verify refresh token
         const decoded = verifyRefreshToken(refreshToken);
 
-        // Находим пользователя
+        // Find user
         const user = await User.findById(decoded.userId).select('+refreshToken');
         if (!user || user.refreshToken !== refreshToken) {
             return res.status(401).json({
@@ -181,10 +181,10 @@ export const refreshToken = async (req, res) => {
             });
         }
 
-        // Генерируем новые токены
+        // Generate new tokens
         const tokens = generateTokens(user._id);
 
-        // Сохраняем новый refresh token
+        // Save new refresh token
         user.refreshToken = tokens.refreshToken;
         await user.save();
 
@@ -212,13 +212,13 @@ export const refreshToken = async (req, res) => {
     }
 };
 
-// Выход пользователя
+// User logout
 export const logout = async (req, res) => {
     try {
         const { refreshToken } = req.body;
 
         if (refreshToken && req.user) {
-            // Удаляем refresh token из базы
+            // Remove refresh token from database
             await User.findByIdAndUpdate(req.user._id, {
                 $unset: { refreshToken: 1 }
             });
@@ -238,7 +238,7 @@ export const logout = async (req, res) => {
     }
 };
 
-// Повторная отправка email верификации
+// Resend verification email
 export const resendVerificationEmail = async (req, res) => {
     try {
         const { email } = req.body;
@@ -250,7 +250,7 @@ export const resendVerificationEmail = async (req, res) => {
             });
         }
 
-        // Находим пользователя
+        // Find user
         const user = await User.findOne({ email });
         if (!user) {
             return res.status(404).json({
@@ -259,7 +259,7 @@ export const resendVerificationEmail = async (req, res) => {
             });
         }
 
-        // Проверяем, не верифицирован ли уже email
+        // Check if email is already verified
         if (user.isVerified) {
             return res.status(400).json({
                 success: false,
@@ -267,17 +267,17 @@ export const resendVerificationEmail = async (req, res) => {
             });
         }
 
-        // Генерируем новый токен верификации
+        // Generate new verification token
         const verificationToken = crypto.randomBytes(32).toString('hex');
         user.emailVerificationToken = crypto
             .createHash('sha256')
             .update(verificationToken)
             .digest('hex');
-        user.emailVerificationExpires = Date.now() + 24 * 60 * 60 * 1000; // 24 часа
+        user.emailVerificationExpires = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
 
         await user.save({ validateBeforeSave: false });
 
-        // Отправляем email
+        // Send email
         try {
             await emailService.sendVerificationEmail(
                 user.email,
@@ -309,18 +309,18 @@ export const resendVerificationEmail = async (req, res) => {
     }
 };
 
-// Верификация email
+// Email verification
 export const verifyEmail = async (req, res) => {
     try {
         const { token } = req.params;
 
-        // Хешируем токен для сравнения
+        // Hash token for comparison
         const hashedToken = crypto
             .createHash('sha256')
             .update(token)
             .digest('hex');
 
-        // Находим пользователя с активным токеном
+        // Find user with active token
         const user = await User.findOne({
             emailVerificationToken: hashedToken,
             emailVerificationExpires: { $gt: Date.now() }
@@ -333,19 +333,19 @@ export const verifyEmail = async (req, res) => {
             });
         }
 
-        // Подтверждаем email
+        // Confirm email
         user.isVerified = true;
         user.emailVerificationToken = undefined;
         user.emailVerificationExpires = undefined;
         await user.save();
 
-        // Отправляем приветственное письмо
+        // Send welcome email
         try {
             await emailService.sendWelcomeEmail(user.email, user.fullName);
             console.log('Welcome email sent successfully to:', user.email);
         } catch (emailError) {
             console.error('Failed to send welcome email:', emailError);
-            // Не прерываем процесс верификации из-за ошибки email
+            // Do not interrupt the verification process due to email error
         }
 
         res.json({
@@ -362,7 +362,7 @@ export const verifyEmail = async (req, res) => {
     }
 };
 
-// Запрос сброса пароля
+// Password reset request
 export const forgotPassword = async (req, res) => {
     try {
         const { email } = req.body;
@@ -375,11 +375,11 @@ export const forgotPassword = async (req, res) => {
             });
         }
 
-        // Генерируем токен сброса пароля
+        // Generate password reset token
         const resetToken = user.createPasswordResetToken();
         await user.save({ validateBeforeSave: false });
 
-        // Отправляем email с токеном сброса
+        // Send email with reset token
         try {
             await emailService.sendPasswordResetEmail(
                 user.email,
@@ -395,7 +395,7 @@ export const forgotPassword = async (req, res) => {
         } catch (emailError) {
             console.error('Failed to send password reset email:', emailError);
 
-            // Отменяем токен сброса если email не отправился
+            // Cancel reset token if email was not sent
             user.passwordResetToken = undefined;
             user.passwordResetExpires = undefined;
             await user.save({ validateBeforeSave: false });
@@ -415,19 +415,19 @@ export const forgotPassword = async (req, res) => {
     }
 };
 
-// Сброс пароля
+// Password reset
 export const resetPassword = async (req, res) => {
     try {
         const { token } = req.params;
         const { password } = req.body;
 
-        // Хешируем токен
+        // Hash token
         const hashedToken = crypto
             .createHash('sha256')
             .update(token)
             .digest('hex');
 
-        // Находим пользователя с активным токеном
+        // Find user with active token
         const user = await User.findOne({
             passwordResetToken: hashedToken,
             passwordResetExpires: { $gt: Date.now() }
@@ -440,7 +440,7 @@ export const resetPassword = async (req, res) => {
             });
         }
 
-        // Устанавливаем новый пароль
+        // Set new password
         user.password = password;
         user.passwordResetToken = undefined;
         user.passwordResetExpires = undefined;
@@ -460,7 +460,7 @@ export const resetPassword = async (req, res) => {
     }
 };
 
-// Получение профиля пользователя
+// Get user profile
 export const getProfile = async (req, res) => {
     try {
         res.json({
@@ -478,14 +478,14 @@ export const getProfile = async (req, res) => {
     }
 };
 
-// Обновление профиля пользователя
+// Update user profile
 export const updateProfile = async (req, res) => {
     try {
-        // Валидация производится Joi middleware
+        // Validation is done by Joi middleware
 
         const { firstName, lastName, phone, preferences, agentInfo } = req.body;
 
-        // Подготавливаем объект для обновления
+        // Prepare update object
         const updateData = {
             firstName,
             lastName,
@@ -493,11 +493,11 @@ export const updateProfile = async (req, res) => {
             preferences
         };
 
-        // Добавляем agentInfo только для агентов
+        // Add agentInfo only for agents
         if (req.user.role === 'agent' && agentInfo) {
             updateData.agentInfo = {
-                ...req.user.agentInfo,  // Сохраняем существующие данные
-                ...agentInfo            // Обновляем переданные поля
+                ...req.user.agentInfo,  // Preserve existing data
+                ...agentInfo            // Update with provided fields
             };
         }
 
@@ -512,7 +512,7 @@ export const updateProfile = async (req, res) => {
             }
         );
 
-        // Убираем чувствительные данные
+        // Remove sensitive data
         const userResponse = updatedUser.toJSON();
         delete userResponse.password;
         delete userResponse.refreshToken;
@@ -530,7 +530,7 @@ export const updateProfile = async (req, res) => {
     } catch (error) {
         console.error('שגיאה בעדכון הפרופיל:', error);
 
-        // Обрабатываем специфичные ошибки
+        // Handle specific errors
         if (error.name === 'ValidationError') {
             const validationErrors = Object.values(error.errors).map(err => ({
                 field: err.path,
@@ -572,27 +572,27 @@ export const googleAuth = async (req, res) => {
             });
             await user.save();
         } else if (!user.googleId && user.email === email) {
-            // חיבור חשבון קיים ל-Google
+            // Connect Google account to existing user
             user.googleId = googleId;
             user.isVerified = true;
             if (avatar) user.avatar = { url: avatar };
             await user.save();
         }
 
-        // בדיקת הרשאות מיוחדות
+        // check for admin email
         if (user.email === process.env.ADMIN_EMAIL) {
             user.role = 'admin';
             await user.save();
         }
 
-        // יצירת טוקנים
+        //  create JWT tokens
         const { accessToken, refreshToken } = generateTokens(user._id);
 
         user.refreshToken = refreshToken;
         user.lastLogin = new Date();
         await user.save();
 
-        // הפניה לקליינט עם הטוקנים
+        // redirect to frontend with tokens
         const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
         res.redirect(`${frontendUrl}/auth/success?token=${accessToken}&refresh=${refreshToken}`);
 
@@ -609,12 +609,12 @@ export const googleAuthFailure = (req, res) => {
     res.redirect(`${frontendUrl}/auth/error?message=אימות Google נכשל`);
 };
 
-// Получение статистики пользователя
+// Get user statistics
 export const getUserStats = async (req, res) => {
     try {
         const userId = req.user._id;
 
-        // Получаем количество избранных (напрямую из пользователя)
+        // Get count of favorites (directly from user)
         const favoritesCount = req.user.favorites?.length || 0;
 
         // Получаем количество сохраненных поисков
@@ -623,11 +623,11 @@ export const getUserStats = async (req, res) => {
         let stats = {
             favoritesCount,
             savedSearchesCount,
-            viewsCount: 0, // TODO: Реализовать отслеживание просмотров
+            viewsCount: 0, // TODO: Implement view tracking
             propertiesCount: 0
         };
 
-        // Если пользователь - агент, получаем количество его объявлений
+        // if user is an agent, get count of their properties
         if (req.user.role === 'agent') {
             const { Property } = await import('../models/index.js');
             const propertiesCount = await Property.countDocuments({
@@ -651,10 +651,10 @@ export const getUserStats = async (req, res) => {
     }
 };
 
-// יצירת משתמש אדמין (רק פעם אחת)
+// create admin account if not exists
 export const createAdmin = async (req, res) => {
     try {
-        // בדיקה אם כבר קיים אדמין
+        // check if admin already exists
         const existingAdmin = await User.findOne({ role: 'admin' });
         if (existingAdmin) {
             return res.status(400).json({

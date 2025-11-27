@@ -1,7 +1,7 @@
 import { Property, User } from '../models/index.js';
 import { deleteFromCloudinary } from '../middleware/upload.js';
 
-// Загрузка изображений для объекта недвижимости
+// Load property images
 export const uploadPropertyImages = async (req, res) => {
     try {
         const { propertyId } = req.params;
@@ -9,57 +9,57 @@ export const uploadPropertyImages = async (req, res) => {
         if (!req.uploadedImages || req.uploadedImages.length === 0) {
             return res.status(400).json({
                 success: false,
-                message: 'Файлы для загрузки не предоставлены'
+                message: 'קובץ להעלאה לא סופק'
             });
         }
 
-        // Находим объект недвижимости
+        // Find the property
         const property = await Property.findById(propertyId);
         if (!property) {
             return res.status(404).json({
                 success: false,
-                message: 'Объект недвижимости не найден'
+                message: 'נכס הנדל"ן לא נמצא'
             });
         }
 
-        // Проверяем права доступа
+        // Check access rights
         const isOwner = property.agent.toString() === req.user._id.toString() ||
             property.owner?.toString() === req.user._id.toString();
         const isAdmin = req.user.role === 'admin';
 
         if (!isOwner && !isAdmin) {
-            // Удаляем загруженные файлы, если нет прав
+            // Delete uploaded files if no permission
             for (const image of req.uploadedImages) {
                 try {
                     await deleteFromCloudinary(image.publicId);
                 } catch (error) {
-                    console.error('Ошибка удаления файла:', error);
+                    console.error('שגיאה במחיקת הקובץ:', error);
                 }
             }
 
             return res.status(403).json({
                 success: false,
-                message: 'Нет прав для редактирования этого объекта'
+                message: 'אין הרשאה לערוך נכס זה'
             });
         }
 
-        // Обновляем порядок изображений
+        // Update image order
         const currentImages = property.images || [];
         const nextOrder = currentImages.length;
 
         const updatedImages = req.uploadedImages.map((image, index) => ({
             ...image,
             order: nextOrder + index,
-            isMain: currentImages.length === 0 && index === 0 // Первое изображение главное, если других нет
+            isMain: currentImages.length === 0 && index === 0 // The first image is main if there are no others
         }));
 
-        // Добавляем новые изображения к существующим
+        // Add new images to property
         property.images.push(...updatedImages);
         await property.save();
 
         res.json({
             success: true,
-            message: 'Изображения успешно загружены',
+            message: 'תמונות הועלו בהצלחה',
             data: {
                 images: updatedImages,
                 totalImages: property.images.length
@@ -67,27 +67,27 @@ export const uploadPropertyImages = async (req, res) => {
         });
 
     } catch (error) {
-        console.error('Ошибка загрузки изображений:', error);
+        console.error('שגיאה בהעלאת תמונות:', error);
 
-        // Удаляем загруженные файлы в случае ошибки
+        // Delete uploaded files in case of error
         if (req.uploadedImages) {
             for (const image of req.uploadedImages) {
                 try {
                     await deleteFromCloudinary(image.publicId);
                 } catch (deleteError) {
-                    console.error('Ошибка удаления файла:', deleteError);
+                    console.error('שגיאה במחיקת הקובץ:', deleteError);
                 }
             }
         }
 
         res.status(500).json({
             success: false,
-            message: 'Внутренняя ошибка сервера'
+            message: 'שגיאה פנימית בשרת'
         });
     }
 };
 
-// Удаление изображения объекта недвижимости
+// Delete property image
 export const deletePropertyImage = async (req, res) => {
     try {
         const { propertyId, imageId } = req.params;
@@ -96,11 +96,11 @@ export const deletePropertyImage = async (req, res) => {
         if (!property) {
             return res.status(404).json({
                 success: false,
-                message: 'Объект недвижимости не найден'
+                message: 'נכס הנדל"ן לא נמצא'
             });
         }
 
-        // Проверяем права доступа
+        // Check access rights
         const isOwner = property.agent.toString() === req.user._id.toString() ||
             property.owner?.toString() === req.user._id.toString();
         const isAdmin = req.user.role === 'admin';
@@ -108,16 +108,16 @@ export const deletePropertyImage = async (req, res) => {
         if (!isOwner && !isAdmin) {
             return res.status(403).json({
                 success: false,
-                message: 'Нет прав для редактирования этого объекта'
+                message: 'אין הרשאה לערוך נכס זה'
             });
         }
 
-        // Находим изображение
+        // Find the image
         const imageIndex = property.images.findIndex(img => img._id.toString() === imageId);
         if (imageIndex === -1) {
             return res.status(404).json({
                 success: false,
-                message: 'Изображение не найдено'
+                message: 'התמונה לא נמצאה'
             });
         }
 
@@ -127,13 +127,13 @@ export const deletePropertyImage = async (req, res) => {
         try {
             await deleteFromCloudinary(imageToDelete.publicId);
         } catch (cloudinaryError) {
-            console.error('Ошибка удаления из Cloudinary:', cloudinaryError);
+            console.error('שגיאה במחיקת הקובץ מ-Cloudinary:', cloudinaryError);
         }
 
-        // Удаляем изображение из базы данных
+        // Remove image from database
         property.images.splice(imageIndex, 1);
 
-        // Если удаляемое изображение было главным и есть другие изображения
+        // If the deleted image was the main one and there are other images
         if (imageToDelete.isMain && property.images.length > 0) {
             property.images[0].isMain = true;
         }
@@ -142,22 +142,22 @@ export const deletePropertyImage = async (req, res) => {
 
         res.json({
             success: true,
-            message: 'Изображение успешно удалено',
+            message: 'התמונה נמחקה בהצלחה',
             data: {
                 remainingImages: property.images.length
             }
         });
 
     } catch (error) {
-        console.error('Ошибка удаления изображения:', error);
+        console.error('שגיאה במחיקת התמונה:', error);
         res.status(500).json({
             success: false,
-            message: 'Внутренняя ошибка сервера'
+            message: 'שגיאה פנימית בשרת'
         });
     }
 };
 
-// Установка главного изображения
+// Setting the main image
 export const setMainPropertyImage = async (req, res) => {
     try {
         const { propertyId, imageId } = req.params;
@@ -166,11 +166,11 @@ export const setMainPropertyImage = async (req, res) => {
         if (!property) {
             return res.status(404).json({
                 success: false,
-                message: 'Объект недвижимости не найден'
+                message: 'נכס הנדל"ן לא נמצא'
             });
         }
 
-        // Проверяем права доступа
+        // Check access rights
         const isOwner = property.agent.toString() === req.user._id.toString() ||
             property.owner?.toString() === req.user._id.toString();
         const isAdmin = req.user.role === 'admin';
@@ -178,11 +178,11 @@ export const setMainPropertyImage = async (req, res) => {
         if (!isOwner && !isAdmin) {
             return res.status(403).json({
                 success: false,
-                message: 'Нет прав для редактирования этого объекта'
+                message: 'אין הרשאה לערוך נכס זה'
             });
         }
 
-        // Сбрасываем все изображения как не главные
+        // Reset all images as not main
         property.images.forEach(img => {
             img.isMain = img._id.toString() === imageId;
         });
@@ -191,28 +191,27 @@ export const setMainPropertyImage = async (req, res) => {
 
         res.json({
             success: true,
-            message: 'Главное изображение успешно установлено'
+            message: 'התמונה הראשית הוגדרה בהצלחה'
         });
 
     } catch (error) {
-        console.error('Ошибка установки главного изображения:', error);
+        console.error('שגיאה בהגדרת התמונה הראשית:', error);
         res.status(500).json({
             success: false,
-            message: 'Внутренняя ошибка сервера'
+            message: 'שגיאה פנימית בשרת'
         });
     }
 };
 
-// Изменение порядка изображений
+// Replacing the order of property images
 export const reorderPropertyImages = async (req, res) => {
     try {
         const { propertyId } = req.params;
-        const { imageOrder } = req.body; // Массив с ID изображений в нужном порядке
-
+        const { imageOrder } = req.body; // Array with image IDs in the desired order
         if (!Array.isArray(imageOrder)) {
             return res.status(400).json({
                 success: false,
-                message: 'Неверный формат данных для изменения порядка'
+                message: 'פורמט הנתונים לשינוי הסדר שגוי'
             });
         }
 
@@ -220,11 +219,11 @@ export const reorderPropertyImages = async (req, res) => {
         if (!property) {
             return res.status(404).json({
                 success: false,
-                message: 'Объект недвижимости не найден'
+                message: 'נכס הנדל"ן לא נמצא'
             });
         }
 
-        // Проверяем права доступа
+        // Check access rights
         const isOwner = property.agent.toString() === req.user._id.toString() ||
             property.owner?.toString() === req.user._id.toString();
         const isAdmin = req.user.role === 'admin';
@@ -232,11 +231,11 @@ export const reorderPropertyImages = async (req, res) => {
         if (!isOwner && !isAdmin) {
             return res.status(403).json({
                 success: false,
-                message: 'Нет прав для редактирования этого объекта'
+                message: 'אין הרשאה לערוך נכס זה'
             });
         }
 
-        // Изменяем порядок изображений
+        // Change the order of images
         imageOrder.forEach((imageId, index) => {
             const image = property.images.find(img => img._id.toString() === imageId);
             if (image) {
@@ -244,78 +243,78 @@ export const reorderPropertyImages = async (req, res) => {
             }
         });
 
-        // Сортируем изображения по новому порядку
+        // Sort images by the new order
         property.images.sort((a, b) => a.order - b.order);
 
         await property.save();
 
         res.json({
             success: true,
-            message: 'Порядок изображений успешно изменен'
+            message: 'סדר התמונות שונה בהצלחה'
         });
 
     } catch (error) {
-        console.error('Ошибка изменения порядка изображений:', error);
+        console.error('שגיאה בשינוי סדר התמונות:', error);
         res.status(500).json({
             success: false,
-            message: 'Внутренняя ошибка сервера'
+            message: 'שגיאה פנימית בשרת'
         });
     }
 };
 
-// Загрузка аватара пользователя
+// Load user avatar
 export const uploadUserAvatar = async (req, res) => {
     try {
         if (!req.uploadedAvatar) {
             return res.status(400).json({
                 success: false,
-                message: 'Файл для загрузки не предоставлен'
+                message: 'קובץ להעלאה לא סופק'
             });
         }
 
         const user = await User.findById(req.user._id);
 
-        // Удаляем старый аватар, если он есть
+        // Delete old avatar if exists
         if (user.avatar?.publicId) {
             try {
                 await deleteFromCloudinary(user.avatar.publicId);
             } catch (error) {
-                console.error('Ошибка удаления старого аватара:', error);
+                console.error('שגיאה במחיקת תמונת הפרופיל הישנה:', error);
             }
         }
 
-        // Обновляем аватар пользователя
+        // Update user avatar
         user.avatar = req.uploadedAvatar;
         await user.save();
 
         res.json({
             success: true,
-            message: 'Аватар успешно загружен',
+            message: 'תמונת הפרופיל הועלתה בהצלחה',
             data: {
                 avatar: user.avatar
             }
         });
 
     } catch (error) {
-        console.error('Ошибка загрузки аватара:', error);
+        console.error('שגיאה בהעלאת תמונת הפרופיל:', error);
 
-        // Удаляем загруженный файл в случае ошибки
+        // Delete uploaded file in case of error
         if (req.uploadedAvatar) {
             try {
                 await deleteFromCloudinary(req.uploadedAvatar.publicId);
             } catch (deleteError) {
-                console.error('Ошибка удаления файла:', deleteError);
+                console.error('שגיאה במחיקת הקובץ:', deleteError);
             }
         }
 
         res.status(500).json({
             success: false,
-            message: 'Внутренняя ошибка сервера'
+            message: 'שגיאה פנימית בשרת'
         });
     }
 };
 
-// Удаление аватара пользователя
+// Delete user avatar
 export const deleteUserAvatar = async (req, res) => {
     try {
         const user = await User.findById(req.user._id);
@@ -323,31 +322,31 @@ export const deleteUserAvatar = async (req, res) => {
         if (!user.avatar?.publicId) {
             return res.status(400).json({
                 success: false,
-                message: 'У пользователя нет аватара'
+                message: 'למשתמש אין תמונת פרופיל'
             });
         }
 
-        // Удаляем аватар из Cloudinary
+        // Delete avatar from Cloudinary
         try {
             await deleteFromCloudinary(user.avatar.publicId);
         } catch (cloudinaryError) {
-            console.error('Ошибка удаления из Cloudinary:', cloudinaryError);
+            console.error('שגיאה במחיקה מ-Cloudinary:', cloudinaryError);
         }
 
-        // Удаляем аватар из базы данных
+        // Delete avatar from database
         user.avatar = undefined;
         await user.save();
 
         res.json({
             success: true,
-            message: 'Аватар успешно удален'
+            message: 'תמונת הפרופיל נמחקה בהצלחה'
         });
 
     } catch (error) {
-        console.error('Ошибка удаления аватара:', error);
+        console.error('שגיאה במחיקת תמונת הפרופיל:', error);
         res.status(500).json({
             success: false,
-            message: 'Внутренняя ошибка сервера'
+            message: 'שגיאה פנימית בשרת'
         });
     }
 };
