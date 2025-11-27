@@ -3,14 +3,14 @@ import { v2 as cloudinary } from 'cloudinary';
 import { CloudinaryStorage } from 'multer-storage-cloudinary';
 import path from 'path';
 
-// Настройка Cloudinary
+// Cloudinary configuration
 cloudinary.config({
     cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
     api_key: process.env.CLOUDINARY_API_KEY,
     api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
-// Функция для генерации уникального имени файла
+// Function to generate unique file names
 const generateFileName = (originalname) => {
     const timestamp = Date.now();
     const random = Math.round(Math.random() * 1E9);
@@ -18,7 +18,7 @@ const generateFileName = (originalname) => {
     return `${timestamp}_${random}${ext}`;
 };
 
-// Настройка хранилища для изображений недвижимости
+// Storage configuration for property images
 const propertyImageStorage = new CloudinaryStorage({
     cloudinary: cloudinary,
     params: {
@@ -32,7 +32,7 @@ const propertyImageStorage = new CloudinaryStorage({
     }
 });
 
-// Настройка хранилища для аватаров пользователей
+// Storage configuration for user avatars
 const avatarStorage = new CloudinaryStorage({
     cloudinary: cloudinary,
     params: {
@@ -46,7 +46,7 @@ const avatarStorage = new CloudinaryStorage({
     }
 });
 
-// Фильтр файлов для изображений
+// File filter for images
 const imageFileFilter = (req, file, cb) => {
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
 
@@ -57,17 +57,17 @@ const imageFileFilter = (req, file, cb) => {
     }
 };
 
-// Middleware для загрузки множественных изображений недвижимости
+// Middleware for uploading multiple property images
 export const uploadPropertyImages = multer({
     storage: propertyImageStorage,
     fileFilter: imageFileFilter,
     limits: {
-        fileSize: parseInt(process.env.CLOUDINARY_MAX_FILE_MB) * 1024 * 1024, // В байтах
-        files: 10 // Максимум 10 файлов
+        fileSize: parseInt(process.env.CLOUDINARY_MAX_FILE_MB) * 1024 * 1024, // In bytes
+        files: 10 // Maximum 10 files
     }
 }).array('images', 10);
 
-// Middleware для загрузки одного изображения (аватар)
+// Middleware for uploading a single image (avatar)
 export const uploadAvatar = multer({
     storage: avatarStorage,
     fileFilter: imageFileFilter,
@@ -76,29 +76,29 @@ export const uploadAvatar = multer({
     }
 }).single('avatar');
 
-// Middleware для обработки ошибок загрузки
+// Middleware for handling upload errors
 export const handleUploadError = (error, req, res, next) => {
     if (error instanceof multer.MulterError) {
         switch (error.code) {
             case 'LIMIT_FILE_SIZE':
                 return res.status(400).json({
                     success: false,
-                    message: 'Файл слишком большой'
+                    message: 'File too large'
                 });
             case 'LIMIT_FILE_COUNT':
                 return res.status(400).json({
                     success: false,
-                    message: 'Слишком много файлов'
+                    message: 'Too many files'
                 });
             case 'LIMIT_UNEXPECTED_FILE':
                 return res.status(400).json({
                     success: false,
-                    message: 'Неожиданное поле файла'
+                    message: 'Unexpected file field'
                 });
             default:
                 return res.status(400).json({
                     success: false,
-                    message: 'Ошибка загрузки файла'
+                    message: 'File upload error'
                 });
         }
     }
@@ -113,7 +113,7 @@ export const handleUploadError = (error, req, res, next) => {
     next(error);
 };
 
-// Функция для удаления файла из Cloudinary
+// Function to delete a file from Cloudinary
 export const deleteFromCloudinary = async (publicId) => {
     try {
         const result = await cloudinary.uploader.destroy(publicId);
@@ -124,7 +124,7 @@ export const deleteFromCloudinary = async (publicId) => {
     }
 };
 
-// Функция для получения оптимизированного URL изображения
+// Function to get optimized image URL
 export const getOptimizedImageUrl = (publicId, width = 800, height = 600, quality = 'auto:good') => {
     return cloudinary.url(publicId, {
         width,
@@ -135,14 +135,14 @@ export const getOptimizedImageUrl = (publicId, width = 800, height = 600, qualit
     });
 };
 
-// Middleware для обработки загруженных файлов
+// Middleware for processing uploaded files
 export const processUploadedImages = (req, res, next) => {
     if (req.files && req.files.length > 0) {
         req.uploadedImages = req.files.map((file, index) => ({
             url: file.path,
             publicId: file.filename,
             alt: `Property image ${index + 1}`,
-            isMain: index === 0, // Первое изображение как главное
+            isMain: index === 0, // First image as main
             order: index
         }));
     }

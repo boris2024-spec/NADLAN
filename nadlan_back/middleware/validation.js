@@ -1,6 +1,6 @@
 import Joi from 'joi';
 
-// Универсальный фабричный метод создания middleware для Joi
+// Universal factory method for creating middleware for Joi
 const createValidator = (schema, { source = 'body', stripUnknown = true, allowUnknown = false } = {}) => {
     return (req, res, next) => {
         const target = req[source] || {};
@@ -13,7 +13,7 @@ const createValidator = (schema, { source = 'body', stripUnknown = true, allowUn
         if (error) {
             const errors = error.details.map(d => ({
                 field: d.path.join('.'),
-                param: d.path.join('.'), // совместимость с прежним форматом
+                param: d.path.join('.'), // compatibility with the previous format
                 msg: d.message,
                 message: d.message,
                 type: d.type
@@ -24,18 +24,18 @@ const createValidator = (schema, { source = 'body', stripUnknown = true, allowUn
                 errors
             });
         }
-        req[source] = value; // нормализованные данные
+        req[source] = value; // normalize the data
         next();
     };
 };
 
-// Общие наборы
+// Common sets
 const nameRegex = /^[a-zA-Zа-яёА-ЯЁ\u0590-\u05FF\s]+$/;
 const propertyTypes = ['apartment', 'house', 'penthouse', 'studio', 'duplex', 'villa', 'townhouse', 'loft', 'commercial', 'office', 'warehouse', 'land'];
 const transactionTypes = ['sale', 'rent'];
 const statusValues = ['active', 'pending', 'sold', 'rented', 'inactive', 'draft'];
 
-// Схемы
+// Schemas
 const registerSchema = Joi.object({
     firstName: Joi.string().min(2).max(50).pattern(nameRegex).required().messages({
         'string.min': 'השם חייב להכיל בין 2 ל-50 תווים',
@@ -62,8 +62,8 @@ const registerSchema = Joi.object({
 });
 
 const loginSchema = Joi.object({
-    email: Joi.string().email().required().messages({ 'string.email': 'Некорректный email адрес' }),
-    password: Joi.string().min(1).required().messages({ 'string.empty': 'Пароль обязателен' })
+    email: Joi.string().email().required().messages({ 'string.email': 'Invalid email address' }),
+    password: Joi.string().min(1).required().messages({ 'string.empty': 'Password is required' })
 });
 
 const profileSchema = Joi.object({
@@ -87,15 +87,15 @@ const profileSchema = Joi.object({
 });
 
 const forgotPasswordSchema = Joi.object({
-    email: Joi.string().email().required().messages({ 'string.email': 'Некорректный email адрес' })
+    email: Joi.string().email().required().messages({ 'string.email': 'Invalid email address' })
 });
 
 const resetPasswordSchema = Joi.object({
     password: Joi.string().min(6).pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
         .required()
         .messages({
-            'string.min': 'Пароль должен содержать минимум 6 символов',
-            'string.pattern.base': 'Пароль должен содержать минимум одну заглавную букву, одну строчную букву и одну цифру'
+            'string.min': 'Password must be at least 6 characters long',
+            'string.pattern.base': 'Password must contain at least one lowercase letter, one uppercase letter, and one number'
         })
 });
 
@@ -105,14 +105,14 @@ const coordinatesSchema = Joi.object({
 });
 
 const priceSchema = Joi.object({
-    amount: Joi.number().min(0).required().messages({ 'number.min': 'Цена должна быть положительным числом' }),
+    amount: Joi.number().min(0).required().messages({ 'number.min': 'Price must be a positive number' }),
     currency: Joi.string().valid('ILS', 'USD', 'EUR').optional(),
-    // Для аренды - период (совпадает с моделью)
+    // For rent - period (matches the model)
     period: Joi.string().valid('month', 'year', 'day', 'once').optional()
 });
 
 const detailsSchemaBase = {
-    area: Joi.number().min(1).required().messages({ 'number.min': 'Площадь должна быть положительным числом' }),
+    area: Joi.number().min(1).required().messages({ 'number.min': 'Area must be a positive number' }),
     rooms: Joi.number().integer().min(0).max(50).required(),
     bedrooms: Joi.number().integer().min(0).max(20).optional(),
     bathrooms: Joi.number().integer().min(0).max(20).optional(),
@@ -127,10 +127,10 @@ const detailsSchemaDraftOverrides = {
 };
 
 const locationSchemaBase = Joi.object({
-    address: Joi.string().min(2).required().messages({ 'string.min': 'Адрес обязателен и должен содержать минимум 2 символа' }),
+    address: Joi.string().min(2).required().messages({ 'string.min': 'Address is required and must be at least 2 characters long' }),
     street: Joi.string().optional(),
     houseNumber: Joi.string().optional(),
-    city: Joi.string().min(2).required().messages({ 'string.min': 'Город обязателен и должен содержать минимум 2 символа' }),
+    city: Joi.string().min(2).required().messages({ 'string.min': 'City is required and must be at least 2 characters long' }),
     district: Joi.string().optional(),
     country: Joi.string().optional(),
     coordinates: coordinatesSchema.optional()
@@ -154,7 +154,7 @@ const imageSchema = Joi.object({
     order: Joi.number().integer().min(0).optional()
 });
 
-// Дополнительные схемы, отсутствовавшие ранее, но присутствующие в модели
+// Additional schemas that were not previously present but are present in the model
 const featuresSchema = Joi.object({
     hasParking: Joi.boolean().optional(),
     hasElevator: Joi.boolean().optional(),
@@ -190,10 +190,10 @@ const publicContactSchema = Joi.object({
 });
 
 const propertyCreateSchema = Joi.object({
-    title: Joi.string().min(5).max(200).required().messages({ 'string.min': 'Заголовок должен содержать от 5 до 200 символов' }),
-    description: Joi.string().min(20).max(5000).required().messages({ 'string.min': 'Описание должно содержать от 20 до 5000 символов' }),
-    propertyType: Joi.string().valid(...propertyTypes).required().messages({ 'any.only': 'Некорректный тип недвижимости' }),
-    transactionType: Joi.string().valid(...transactionTypes).required().messages({ 'any.only': 'Тип сделки может быть только продажа или аренда' }),
+    title: Joi.string().min(5).max(200).required().messages({ 'string.min': 'Title must be between 5 and 200 characters long' }),
+    description: Joi.string().min(20).max(5000).required().messages({ 'string.min': 'Description must be between 20 and 5000 characters long' }),
+    propertyType: Joi.string().valid(...propertyTypes).required().messages({ 'any.only': 'Invalid property type' }),
+    transactionType: Joi.string().valid(...transactionTypes).required().messages({ 'any.only': 'Transaction type can only be sale or rent' }),
     price: priceSchema.required(),
     location: locationSchemaBase.required(),
     details: Joi.object(detailsSchemaBase).required(),
@@ -276,8 +276,8 @@ export const validateResetPassword = [
         if (!token || token.length === 0) {
             return res.status(400).json({
                 success: false,
-                message: 'Ошибки валидации',
-                errors: [{ field: 'token', param: 'token', msg: 'Токен обязателен', message: 'Токен обязателен' }]
+                message: 'Errors in validation',
+                errors: [{ field: 'token', param: 'token', msg: 'Token is required', message: 'Token is required' }]
             });
         }
         next();
@@ -293,8 +293,8 @@ export const validateObjectId = (paramName = 'id') => (req, res, next) => {
     if (!value || !/^[0-9a-fA-F]{24}$/.test(value)) {
         return res.status(400).json({
             success: false,
-            message: 'Ошибки валидации',
-            errors: [{ field: paramName, param: paramName, msg: `Некорректный ${paramName}`, message: `Некорректный ${paramName}` }]
+            message: 'Errors in validation',
+            errors: [{ field: paramName, param: paramName, msg: `Invalid ${paramName}`, message: `Invalid ${paramName}` }]
         });
     }
     next();
