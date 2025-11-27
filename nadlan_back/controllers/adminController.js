@@ -56,7 +56,7 @@ export const listUsers = async (req, res) => {
 // PATCH /api/admin/users/:id
 export const updateUser = async (req, res) => {
     try {
-        // Валидация выполнена Joi middleware
+        // Validation is done by Joi middleware
 
         const { id } = req.params;
         const {
@@ -70,7 +70,7 @@ export const updateUser = async (req, res) => {
             agentInfo
         } = req.body;
 
-        // Нельзя деактивировать или разжаловать самих себя
+        // Cannot deactivate or demote yourself
         if (req.user._id.toString() === id) {
             if (isActive === false || (role && role !== 'admin')) {
                 return res.status(400).json({ success: false, message: 'אין לשנות לעצמך הרשאות קריטיות' });
@@ -110,19 +110,18 @@ export const deleteUser = async (req, res) => {
     try {
         const { id } = req.params;
 
-        // Защита: нельзя удалить самого себя
+        // Protection: cannot delete yourself
         if (req.user._id.toString() === id) {
-            return res.status(400).json({ success: false, message: 'Нельзя удалить собственный аккаунт' });
+            return res.status(400).json({ success: false, message: 'Cannot delete your own account' });
         }
 
         const user = await User.findById(id);
-        if (!user) return res.status(404).json({ success: false, message: 'משתמש לא נמצא' });
-
-        // Удаляем все объявления, где пользователь является агентом или владельцем
+        if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+        // Delete all properties where the user is an agent or owner
         const deleteFilter = { $or: [{ agent: id }, { owner: id }] };
         const { deletedCount } = await Property.deleteMany(deleteFilter);
 
-        // TODO: при необходимости добавить очистку ресурсов (изображений) в Cloudinary
+        // TODO: add resource cleanup (images) in Cloudinary if needed
 
         await User.findByIdAndDelete(id);
 
@@ -232,7 +231,7 @@ export const deletePropertyAdmin = async (req, res) => {
         const property = await Property.findById(id);
         if (!property) return res.status(404).json({ success: false, message: 'מודעה לא נמצאה' });
 
-        // Удаляем все связанные изображения из Cloudinary
+        // Delete all related images from Cloudinary
         try {
             const publicIds = Array.isArray(property.images)
                 ? property.images.map(img => img?.publicId).filter(Boolean)
@@ -241,11 +240,11 @@ export const deletePropertyAdmin = async (req, res) => {
                 const results = await Promise.allSettled(publicIds.map(pid => deleteFromCloudinary(pid)));
                 const failed = results.filter(r => r.status === 'rejected').length;
                 if (failed > 0) {
-                    console.warn(`[deletePropertyAdmin] Не удалось удалить ${failed} изображ.(ия/ий) из Cloudinary для property ${id}`);
+                    console.warn(`[deletePropertyAdmin] Failed to delete ${failed} images from Cloudinary for property ${id}`);
                 }
             }
         } catch (e) {
-            console.error('[deletePropertyAdmin] Ошибка удаления изображений из Cloudinary:', e);
+            console.error('[deletePropertyAdmin] Error deleting images from Cloudinary:', e);
         }
 
         await Property.findByIdAndDelete(id);
@@ -261,14 +260,14 @@ export const updatePropertyAdmin = async (req, res) => {
     try {
         const { id } = req.params;
 
-        // Валидация выполнена Joi middleware
+        // Validation is done by Joi middleware
 
         const property = await Property.findById(id);
         if (!property) {
             return res.status(404).json({ success: false, message: 'מודעה לא נמצאה' });
         }
 
-        // Безопасное обновление: точечно обновляем поля, не затирая вложенные объекты целиком
+        // Safe update: update fields selectively without overwriting nested objects entirely
         const {
             title,
             description,
