@@ -46,6 +46,8 @@ const consultingSchema = Joi.object({
 });
 
 function ConsultingPage() {
+    // URL backend take from ENV (VITE_API_URL)
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
     const [formData, setFormData] = useState({
         name: '',
         email: '',
@@ -105,14 +107,20 @@ function ConsultingPage() {
         setLoading(true);
 
         try {
-            // Реальный запрос к backend для отправки email
-            const response = await fetch('/api/send-consulting-email', {
+            // Используем адрес backend из переменной окружения
+            const response = await fetch(`${API_URL}/send-consulting-email`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData)
             });
             if (!response.ok) {
-                throw new Error('שגיאה בשליחת הבקשה');
+                // Пытаемся получить текст ошибки с сервера
+                let errorMsg = 'שגיאה בשליחת הבקשה';
+                try {
+                    const data = await response.json();
+                    if (data && data.error) errorMsg = data.error;
+                } catch { }
+                throw new Error(errorMsg);
             }
             toast.success('הבקשה לייעוץ נשלחה בהצלחה!');
             setSubmitted(true);
@@ -126,7 +134,7 @@ function ConsultingPage() {
             });
         } catch (err) {
             console.error(err);
-            toast.error('שגיאה בשליחת הבקשה');
+            toast.error(err.message || 'שגיאה בשליחת הבקשה');
         } finally {
             setLoading(false);
         }

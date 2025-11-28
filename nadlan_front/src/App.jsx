@@ -12,6 +12,7 @@ import PropertyDetailsPage from './pages/PropertyDetailsPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import ProfilePage from './pages/ProfilePage';
+import PrivateRoute from './components/PrivateRoute';
 import CreatePropertyPage from './pages/CreatePropertyPage';
 import NotFoundPage from './pages/NotFoundPage';
 import AuthSuccessPage from './pages/AuthSuccessPage';
@@ -80,7 +81,11 @@ function App() {
                   <Route path="/auth/error" element={<AuthErrorPage />} />
 
                   {/* Protected Routes */}
-                  <Route path="/profile" element={<ProfilePage />} />
+                  <Route path="/profile" element={
+                    <PrivateRoute>
+                      <ProfilePage />
+                    </PrivateRoute>
+                  } />
                   <Route path="/my-listings" element={<MyListingsPage />} />
                   <Route path="/properties/create" element={<CreatePropertyPage />} />
                   <Route path="/create-property" element={<CreatePropertyPage />} />

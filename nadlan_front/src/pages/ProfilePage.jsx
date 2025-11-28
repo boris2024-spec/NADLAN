@@ -20,7 +20,7 @@ function ProfilePage() {
         propertiesCount: 0
     });
 
-    // Инициализируем formData на основе данных пользователя
+    // Initialize formData based on user data
     const [formData, setFormData] = useState({
         firstName: '',
         lastName: '',
@@ -41,7 +41,7 @@ function ProfilePage() {
         }
     });
 
-    // Обновляем formData когда user загружается
+    // Update formData when user loads
     useEffect(() => {
         if (user) {
             setFormData({
@@ -66,20 +66,20 @@ function ProfilePage() {
         }
     }, [user]);
 
-    // Загружаем статистику пользователя
+    // Load user statistics
     useEffect(() => {
         const loadStatistics = async () => {
             if (!user) return;
 
             try {
-                // Получаем статистику через API
+                // Fetch statistics via API
                 const statsResponse = await authAPI.getUserStats();
                 const stats = statsResponse.data.data.stats;
 
                 setStatistics(stats);
             } catch (error) {
-                console.error('Ошибка загрузки статистики:', error);
-                // Fallback к локальным данным
+                console.error('Error loading statistics:', error);
+                // Fallback to local data
                 setStatistics({
                     favoritesCount: user.favorites?.length || 0,
                     viewsCount: 0,
@@ -92,12 +92,12 @@ function ProfilePage() {
         loadStatistics();
     }, [user]);
 
-    // Обработчики форм
+    // Form handlers
     const handleInputChange = (e) => {
         const { name, value, type, checked } = e.target;
 
         if (name.includes('.')) {
-            // Обрабатываем вложенные поля (preferences.language, etc.)
+            // Handle nested fields (preferences.language, etc.)
             const keys = name.split('.');
             setFormData(prev => {
                 const newData = { ...prev };
@@ -135,7 +135,7 @@ function ProfilePage() {
         try {
             setIsLoading(true);
 
-            // Подготавливаем данные для отправки
+            // Prepare data for submission
             const updateData = {
                 firstName: formData.firstName,
                 lastName: formData.lastName,
@@ -143,7 +143,7 @@ function ProfilePage() {
                 preferences: formData.preferences
             };
 
-            // Добавляем agentInfo только для агентов
+            // add agentInfo only for agents
             if (user?.role === 'agent') {
                 updateData.agentInfo = formData.agentInfo;
             }
@@ -165,7 +165,7 @@ function ProfilePage() {
     };
 
     const handleCancel = () => {
-        // Возвращаем данные к исходным значениям
+        // Reset data to initial values
         if (user) {
             setFormData({
                 firstName: user.firstName || '',
@@ -194,13 +194,13 @@ function ProfilePage() {
         const file = e.target.files?.[0];
         if (!file) return;
 
-        // Проверяем размер файла (максимум 5MB)
+        // Check file size (maximum 5MB)
         if (file.size > 5 * 1024 * 1024) {
             toast.error('גודל הקובץ חייב להיות קטן מ-5MB');
             return;
         }
 
-        // Проверяем тип файла
+        // Check file type
         if (!file.type.startsWith('image/')) {
             toast.error('יש לבחור קובץ תמונה');
             return;
@@ -210,7 +210,7 @@ function ProfilePage() {
             setAvatarUploading(true);
             await uploadAPI.uploadAvatar(file);
             toast.success('התמונה עודכנה בהצלחה');
-            // TODO: Обновить пользователя в контексте
+            // TODO: update user in context
         } catch (error) {
             const errorInfo = handleApiError(error);
             toast.error(errorInfo.message);
@@ -472,11 +472,12 @@ function ProfilePage() {
                                         </label>
                                         {isEditing ? (
                                             <Input
+                                            
                                                 name="phone"
                                                 type="tel"
                                                 value={formData.phone}
                                                 onChange={handleInputChange}
-                                                placeholder="מספר טלפון (אופציונלי)"
+                                                placeholder="מספר טלפון"
                                             />
                                         ) : (
                                             <p className="py-2 px-3 bg-gray-50 dark:bg-dark-100 rounded-lg">

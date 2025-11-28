@@ -72,7 +72,9 @@ const ForgotPasswordPage = () => {
                                     אם לא קיבלת את האימייל, בדוק את תיקיית הספאם.
                                 </div>
                             </div>
-                            <div className="space-y-3">
+                            <div className="space-y-3"
+                            style={{ gap: '0px', display: 'flex', flexDirection: 'column' }}
+                            >
                                 <Button
                                     onClick={() => {
                                         setIsSuccess(false);

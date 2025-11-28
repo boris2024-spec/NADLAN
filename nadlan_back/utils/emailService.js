@@ -14,6 +14,7 @@ class EmailService {
         const pass = process.env.SMTP_PASS;
         const secure = port === 465; // 465 = SSL, 587 = STARTTLS
 
+
         const options = {
             host,
             port,
@@ -23,7 +24,9 @@ class EmailService {
             requireTLS: !secure,
             pool: true,
             maxConnections: 5,
-            maxMessages: 100
+            maxMessages: 100,
+            // Игнорировать self-signed сертификаты только в разработке
+            ...(process.env.NODE_ENV !== 'production' && { tls: { rejectUnauthorized: false } })
         };
 
         if (process.env.NODE_ENV !== 'production') {
