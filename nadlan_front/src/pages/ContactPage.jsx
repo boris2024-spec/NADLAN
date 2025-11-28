@@ -156,12 +156,12 @@ function ContactPage() {
                     <div className="p-6 bg-white dark:bg-dark-50 rounded-lg shadow border border-gray-200 dark:border-dark-300">
                         <Mail className="h-6 w-6 mx-auto mb-3 text-primary-600" />
                         <h3 className="font-semibold mb-1">אימייל</h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-300">info@nadlan.co.il</p>
+                        <a href="mailto:boriaa85@gmail.com" className="text-sm text-gray-600 dark:text-gray-300 hover:underline">boriaa85@gmail.com</a>
                     </div>
                     <div className="p-6 bg-white dark:bg-dark-50 rounded-lg shadow border border-gray-200 dark:border-dark-300">
                         <Phone className="h-6 w-6 mx-auto mb-3 text-primary-600" />
                         <h3 className="font-semibold mb-1">טלפון</h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-300">03-1234567</p>
+                        <a href="tel:054-2663030" className="text-sm text-gray-600 dark:text-gray-300 hover:underline">054-2663030</a>
                     </div>
                     <div className="p-6 bg-white dark:bg-dark-50 rounded-lg shadow border border-gray-200 dark:border-dark-300">
                         <MessageSquare className="h-6 w-6 mx-auto mb-3 text-primary-600" />
