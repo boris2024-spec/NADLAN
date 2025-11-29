@@ -34,16 +34,20 @@ function LoginPage() {
             const result = await login(formData);
             if (result.success) {
                 navigate('/');
+            } else if (result.error?.message === 'החשבון מושבת') {
+                setError('החשבון שלך אינו פעיל. פנה לתמיכה או לאדמין לצורך הפעלה מחדש.');
+            } else if (
+                result.error?.message?.toLowerCase().includes('inactive')
+            ) {
+                setError('החשבון שלך אינו פעיל. פנה לתמיכה או לאדמין לצורך הפעלה מחדש.');
+            } else if (
+                result.error?.message?.toLowerCase().includes('invalid') ||
+                result.error?.message?.toLowerCase().includes('wrong') ||
+                result.error?.message?.toLowerCase().includes('incorrect')
+            ) {
+                setError('כתובת המייל או הסיסמה שגויים');
             } else {
-                // Проверяем, если ошибка связана с неактивным пользователем
-                if (
-                    result.error?.message?.includes('החשבון מושבת') ||
-                    result.error?.message?.toLowerCase().includes('inactive')
-                ) {
-                    setError('החשבון שלך אינו פעיל. פנה לתמיכה או לאדמין לצורך הפעלה מחדש.');
-                } else {
-                    setError(result.error?.message || 'שגיאה בכניסה למערכת');
-                }
+                setError(result.error?.message || 'שגיאה בכניסה למערכת');
             }
         } catch (err) {
             setError(err.message || 'שגיאה בכניסה למערכת');

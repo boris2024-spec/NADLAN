@@ -29,8 +29,8 @@ export const deleteProfile = async (req, res) => {
             try { await deleteFromCloudinary(user.avatar.publicId); } catch (e) { /* ignore */ }
         }
 
-        // 5. Deactivate user (soft delete)
-        await User.findByIdAndUpdate(userId, { isActive: false, avatar: {} });
+        // 5. Delete user (hard delete)
+        await User.findByIdAndDelete(userId);
 
         res.json({
             success: true,

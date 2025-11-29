@@ -293,7 +293,7 @@ export const handleApiError = (error) => {
                 };
             case 401:
                 return {
-                    message: 'כתובת המייל או הסיסמה שגויים',
+                    message: data.message || 'כתובת המייל או הסיסמה שגויים',
                     type: 'auth'
                 };
             case 403:
