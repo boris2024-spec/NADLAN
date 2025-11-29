@@ -1,3 +1,49 @@
+// Удаление собственного профиля
+import { Property } from '../models/index.js';
+import { deleteFromCloudinary } from '../middleware/upload.js';
+
+export const deleteProfile = async (req, res) => {
+    try {
+        const userId = req.user._id;
+
+        // 1. Find all properties of the user (as agent or owner)
+        const properties = await Property.find({ $or: [{ agent: userId }, { owner: userId }] });
+
+        // 2. Delete property images from Cloudinary
+        for (const property of properties) {
+            if (property.images && property.images.length > 0) {
+                for (const img of property.images) {
+                    if (img.publicId) {
+                        try { await deleteFromCloudinary(img.publicId); } catch (e) { /* ignore */ }
+                    }
+                }
+            }
+        }
+
+        // 3. Delete the properties themselves
+        await Property.deleteMany({ $or: [{ agent: userId }, { owner: userId }] });
+
+        // 4. Delete user avatar from Cloudinary
+        const user = await User.findById(userId);
+        if (user?.avatar?.publicId) {
+            try { await deleteFromCloudinary(user.avatar.publicId); } catch (e) { /* ignore */ }
+        }
+
+        // 5. Deactivate user (soft delete)
+        await User.findByIdAndUpdate(userId, { isActive: false, avatar: {} });
+
+        res.json({
+            success: true,
+            message: 'החשבון וכל המידע נמחקו'
+        });
+    } catch (error) {
+        console.error('Error deleting profile:', error);
+        res.status(500).json({
+            success: false,
+            message: 'שגיאת שרת פנימית'
+        });
+    }
+};
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { User } from '../models/index.js';

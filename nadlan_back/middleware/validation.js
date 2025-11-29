@@ -70,6 +70,9 @@ const profileSchema = Joi.object({
     firstName: Joi.string().min(2).max(50).pattern(nameRegex).optional(),
     lastName: Joi.string().min(2).max(50).pattern(nameRegex).optional(),
     phone: Joi.string().pattern(/^[\+]?[0-9][\d]{0,15}$/).optional(),
+    isActive: Joi.boolean().optional(),
+    isVerified: Joi.boolean().optional(),
+    role: Joi.string().valid('user', 'agent', 'admin').optional(),
     preferences: Joi.object({
         language: Joi.string().valid('he', 'en', 'ru').optional(),
         currency: Joi.string().valid('ILS', 'USD', 'EUR').optional(),

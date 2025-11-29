@@ -5,11 +5,21 @@ import {
     Settings, Bell, BellOff, Star, Eye, Search, Trash2
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import { authAPI, propertiesAPI, uploadAPI, handleApiError } from '../services/api';
 import toast from 'react-hot-toast';
 
 function ProfilePage() {
-    const { user, updateProfile } = useAuth();
+    const { user, updateProfile, deleteProfile } = useAuth();
+    const navigate = useNavigate();
+    // Delete profile handler
+    const handleDeleteProfile = async () => {
+        if (!window.confirm('האם אתה בטוח שברצונך למחוק את החשבון? פעולה זו בלתי הפיכה.')) return;
+        const result = await deleteProfile();
+        if (result.success) {
+            navigate('/');
+        }
+    };
     const [isEditing, setIsEditing] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [avatarUploading, setAvatarUploading] = useState(false);
@@ -307,11 +317,24 @@ function ProfilePage() {
                                 {/* Verification Status */}
                                 <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
                                     <div className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${user?.isVerified
-                                            ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                                            : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
+                                        ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                                        : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
                                         }`}>
                                         {user?.isVerified ? 'מאומת' : 'לא מאומת'}
                                     </div>
+                                </div>
+
+                                {/* Delete Profile Button */}
+                                <div className="mt-6">
+                                    <Button
+
+                                        variant="destructive"
+                                        className="w-full flex items-center justify-center"
+                                        onClick={handleDeleteProfile}
+                                    >
+                                        <Trash2 className="w-4 h-4 ml-2" color='red' />
+                                        <span style={{ color: 'red' }}>מחק חשבון</span>
+                                    </Button>
                                 </div>
                             </Card>
 
@@ -472,7 +495,7 @@ function ProfilePage() {
                                         </label>
                                         {isEditing ? (
                                             <Input
-                                            
+
                                                 name="phone"
                                                 type="tel"
                                                 value={formData.phone}
@@ -669,8 +692,8 @@ function ProfilePage() {
                                                 />
                                             ) : (
                                                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${formData.preferences.notifications.email
-                                                        ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                                                        : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400'
+                                                    ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                                                    : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400'
                                                     }`}>
                                                     {formData.preferences.notifications.email ? 'פעיל' : 'כבוי'}
                                                 </span>
@@ -702,8 +725,8 @@ function ProfilePage() {
                                                 />
                                             ) : (
                                                 <span className={`px-2 py-1 rounded-full text-xs font-medium ${formData.preferences.notifications.sms
-                                                        ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                                                        : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400'
+                                                    ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                                                    : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400'
                                                     }`}>
                                                     {formData.preferences.notifications.sms ? 'פעיל' : 'כבוי'}
                                                 </span>

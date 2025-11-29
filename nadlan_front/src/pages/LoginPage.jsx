@@ -35,7 +35,15 @@ function LoginPage() {
             if (result.success) {
                 navigate('/');
             } else {
-                setError(result.error?.message || 'שגיאה בכניסה למערכת');
+                // Проверяем, если ошибка связана с неактивным пользователем
+                if (
+                    result.error?.message?.includes('החשבון מושבת') ||
+                    result.error?.message?.toLowerCase().includes('inactive')
+                ) {
+                    setError('החשבון שלך אינו פעיל. פנה לתמיכה או לאדמין לצורך הפעלה מחדש.');
+                } else {
+                    setError(result.error?.message || 'שגיאה בכניסה למערכת');
+                }
             }
         } catch (err) {
             setError(err.message || 'שגיאה בכניסה למערכת');

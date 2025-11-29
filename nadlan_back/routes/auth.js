@@ -14,7 +14,8 @@ import {
     getUserStats,
     googleAuth,
     googleAuthFailure,
-    createAdmin
+    createAdmin,
+    deleteProfile
 } from '../controllers/authController.js';
 import {
     validateRegister,
@@ -56,6 +57,9 @@ router.post('/logout', authenticateToken, logout);
 router.get('/profile', authenticateToken, getProfile);
 router.put('/profile', authenticateToken, validateProfileUpdate, updateProfile);
 router.get('/profile/stats', authenticateToken, getUserStats);
+
+// Удаление собственного профиля
+router.delete('/profile', authenticateToken, deleteProfile);
 
 // Admin routes
 router.post('/create-admin', createAdmin);

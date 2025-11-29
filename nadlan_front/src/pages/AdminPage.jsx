@@ -69,7 +69,14 @@ export default function AdminPage() {
             toast.success('סטטוס עודכן');
             qc.invalidateQueries({ queryKey: ['admin', 'properties'] });
         },
-        onError: (e) => toast.error(handleApiError(e).message)
+        onError: (e) => {
+            const msg = handleApiError(e).message;
+            if (msg && msg.includes('אין לשנות לעצמך')) {
+                toast.error('אי אפשר לשנות לעצמך הרשאות או סטטוס!');
+            } else {
+                toast.error(msg);
+            }
+        }
     });
 
     const deletePropMut = useMutation({
@@ -170,13 +177,34 @@ export default function AdminPage() {
 
     const updateUserMut = useMutation({
         mutationFn: async ({ id, patch }) => {
-            await adminAPI.updateUser(id, patch);
+            // Явно приводим isActive к булеву типу, если оно есть
+            if (patch.hasOwnProperty('isActive')) {
+                patch.isActive = Boolean(patch.isActive);
+            }
+            console.log('PATCH TO SEND:', patch);
+            const res = await adminAPI.updateUser(id, patch);
+            return { id, patch, updatedUser: res.data?.data?.user };
         },
-        onSuccess: () => {
+        onSuccess: ({ id, patch, updatedUser }) => {
             toast.success('המשתמש עודכן');
+            qc.setQueryData(
+                ['admin', 'users', { page: userPage, limit: userLimit, role: userRole, isActive: userActive, search: userSearch }],
+                (oldData) => {
+                    if (!oldData || !oldData.users) return oldData;
+                    return {
+                        ...oldData,
+                        users: oldData.users.map(u =>
+                            u._id === id ? { ...u, ...patch, ...updatedUser } : u
+                        )
+                    };
+                }
+            );
             qc.invalidateQueries({ queryKey: ['admin', 'users'] });
         },
-        onError: (e) => toast.error(handleApiError(e).message)
+        onError: (e) => {
+            console.error('UPDATE USER ERROR:', e);
+            toast.error(handleApiError(e).message);
+        }
     });
 
     const deleteUserMut = useMutation({
@@ -577,7 +605,10 @@ export default function AdminPage() {
                                                         <input
                                                             type="checkbox"
                                                             checked={!!u.isActive}
-                                                            onChange={(e) => updateUserMut.mutate({ id: u._id, patch: { isActive: e.target.checked } })}
+                                                            onChange={(e) => {
+                                                                // Явно приводим к булеву
+                                                                updateUserMut.mutate({ id: u._id, patch: { isActive: Boolean(e.target.checked) } });
+                                                            }}
                                                         />
                                                         <span>{u.isActive ? 'פעיל' : 'לא פעיל'}</span>
                                                     </label>

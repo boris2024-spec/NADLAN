@@ -86,6 +86,7 @@ export const updateUser = async (req, res) => {
             update.role = role;
         }
         if (typeof isActive === 'boolean') update.isActive = isActive;
+        else if (typeof isActive === 'string') update.isActive = isActive === 'true';
         if (typeof isVerified === 'boolean') update.isVerified = isVerified;
         if (typeof firstName === 'string') update.firstName = firstName;
         if (typeof lastName === 'string') update.lastName = lastName;
@@ -93,6 +94,7 @@ export const updateUser = async (req, res) => {
         if (preferences && typeof preferences === 'object') update.preferences = preferences;
         if (agentInfo && typeof agentInfo === 'object') update.agentInfo = agentInfo;
 
+        console.log('ADMIN UPDATE USER PATCH:', update);
         const user = await User.findByIdAndUpdate(id, update, { new: true, runValidators: true })
             .select('-password -refreshToken -emailVerificationToken -passwordResetToken');
 

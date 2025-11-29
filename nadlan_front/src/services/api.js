@@ -84,7 +84,6 @@ api.interceptors.response.use(
     }
 );
 
-// Auth API
 export const authAPI = {
     // Регистрация
     register: (userData) => api.post('/auth/register', userData),
@@ -112,6 +111,8 @@ export const authAPI = {
 
     // Сброс пароля
     resetPassword: (token, password) => api.post(`/auth/reset-password/${token}`, { password }),
+    // Удаление собственного профиля
+    deleteProfile: () => api.delete('/auth/profile'),
 };
 
 // Properties API
