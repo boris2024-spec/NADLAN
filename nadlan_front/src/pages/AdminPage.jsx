@@ -61,6 +61,50 @@ export default function AdminPage() {
     const propsList = adminPropsData?.properties || [];
     const propsPagination = adminPropsData?.pagination;
 
+    // Sorting: properties
+    const [propSort, setPropSort] = useState({ field: null, dir: 'desc' });
+    const togglePropSort = (field) => {
+        setPropSort((s) =>
+            s.field === field ? { field, dir: s.dir === 'asc' ? 'desc' : 'asc' } : { field, dir: 'desc' }
+        );
+    };
+    const propSortArrow = (field) => (propSort.field === field ? (propSort.dir === 'asc' ? '↑' : '↓') : '');
+
+    const sortedPropsList = useMemo(() => {
+        if (!propsList) return [];
+        if (!propSort.field) return propsList;
+        const arr = [...propsList];
+        const dir = propSort.dir === 'asc' ? 1 : -1;
+        arr.sort((a, b) => {
+            let av; let bv;
+            switch (propSort.field) {
+                case 'title':
+                    av = a?.title || '';
+                    bv = b?.title || '';
+                    return dir * av.localeCompare(bv, 'he');
+                case 'city':
+                    av = a?.location?.city || '';
+                    bv = b?.location?.city || '';
+                    return dir * av.localeCompare(bv, 'he');
+                case 'price':
+                    av = a?.price?.amount ?? -Infinity;
+                    bv = b?.price?.amount ?? -Infinity;
+                    return dir * (av - bv);
+                case 'favorites':
+                    av = a?.favoritesCount ?? 0;
+                    bv = b?.favoritesCount ?? 0;
+                    return dir * (av - bv);
+                case 'status':
+                    av = a?.status || '';
+                    bv = b?.status || '';
+                    return dir * av.localeCompare(bv, 'he');
+                default:
+                    return 0;
+            }
+        });
+        return arr;
+    }, [propsList, propSort]);
+
     const updatePropStatusMut = useMutation({
         mutationFn: async ({ id, status }) => {
             await adminAPI.updatePropertyStatus(id, status);
@@ -174,6 +218,50 @@ export default function AdminPage() {
 
     const usersList = adminUsersData?.users || [];
     const usersPagination = adminUsersData?.pagination;
+
+    // Sorting: users
+    const [userSort, setUserSort] = useState({ field: null, dir: 'desc' });
+    const toggleUserSort = (field) => {
+        setUserSort((s) =>
+            s.field === field ? { field, dir: s.dir === 'asc' ? 'desc' : 'asc' } : { field, dir: 'desc' }
+        );
+    };
+    const userSortArrow = (field) => (userSort.field === field ? (userSort.dir === 'asc' ? '↑' : '↓') : '');
+
+    const sortedUsersList = useMemo(() => {
+        if (!usersList) return [];
+        if (!userSort.field) return usersList;
+        const arr = [...usersList];
+        const dir = userSort.dir === 'asc' ? 1 : -1;
+        arr.sort((a, b) => {
+            let av; let bv;
+            switch (userSort.field) {
+                case 'name':
+                    av = `${a?.firstName || ''} ${a?.lastName || ''}`.trim();
+                    bv = `${b?.firstName || ''} ${b?.lastName || ''}`.trim();
+                    return dir * av.localeCompare(bv, 'he');
+                case 'email':
+                    av = a?.email || '';
+                    bv = b?.email || '';
+                    return dir * av.localeCompare(bv, 'he');
+                case 'role':
+                    av = a?.role || '';
+                    bv = b?.role || '';
+                    return dir * av.localeCompare(bv, 'he');
+                case 'active':
+                    av = a?.isActive ? 1 : 0;
+                    bv = b?.isActive ? 1 : 0;
+                    return dir * (av - bv);
+                case 'createdAt':
+                    av = a?.createdAt ? new Date(a.createdAt).getTime() : 0;
+                    bv = b?.createdAt ? new Date(b.createdAt).getTime() : 0;
+                    return dir * (av - bv);
+                default:
+                    return 0;
+            }
+        });
+        return arr;
+    }, [usersList, userSort]);
 
     const updateUserMut = useMutation({
         mutationFn: async ({ id, patch }) => {
@@ -407,11 +495,31 @@ export default function AdminPage() {
                                 <table className="min-w-full text-sm">
                                     <thead>
                                         <tr className="text-left text-gray-600 dark:text-gray-300">
-                                            <th className="py-2 pr-3">כותרת</th>
-                                            <th className="py-2 pr-3">עיר</th>
-                                            <th className="py-2 pr-3">מחיר</th>
-                                            <th className="py-2 pr-3">מועדפים</th>
-                                            <th className="py-2 pr-3">סטטוס</th>
+                                            <th className="py-2 pr-3">
+                                                <button type="button" onClick={() => togglePropSort('title')} className="flex items-center gap-1">
+                                                    כותרת <span className="text-xs">{propSortArrow('title')}</span>
+                                                </button>
+                                            </th>
+                                            <th className="py-2 pr-3">
+                                                <button type="button" onClick={() => togglePropSort('city')} className="flex items-center gap-1">
+                                                    עיר <span className="text-xs">{propSortArrow('city')}</span>
+                                                </button>
+                                            </th>
+                                            <th className="py-2 pr-3">
+                                                <button type="button" onClick={() => togglePropSort('price')} className="flex items-center gap-1">
+                                                    מחיר <span className="text-xs">{propSortArrow('price')}</span>
+                                                </button>
+                                            </th>
+                                            <th className="py-2 pr-3">
+                                                <button type="button" onClick={() => togglePropSort('favorites')} className="flex items-center gap-1">
+                                                    מועדפים <span className="text-xs">{propSortArrow('favorites')}</span>
+                                                </button>
+                                            </th>
+                                            <th className="py-2 pr-3">
+                                                <button type="button" onClick={() => togglePropSort('status')} className="flex items-center gap-1">
+                                                    סטטוס <span className="text-xs">{propSortArrow('status')}</span>
+                                                </button>
+                                            </th>
                                             <th className="py-2 pr-3">פעולות</th>
                                         </tr>
                                     </thead>
@@ -420,7 +528,7 @@ export default function AdminPage() {
                                             <tr><td className="py-4" colSpan={6}>טוען…</td></tr>
                                         ) : propsList.length === 0 ? (
                                             <tr><td className="py-4" colSpan={6}>לא נמצאו מודעות</td></tr>
-                                        ) : propsList.map((p) => (
+                                        ) : sortedPropsList.map((p) => (
                                             <tr key={p._id} className="border-t border-gray-200 dark:border-dark-300">
                                                 <td className="py-2 pr-3">
                                                     <Link className="text-blue-600" to={`/properties/${p._id}`}>{p.title}</Link>
@@ -578,20 +686,40 @@ export default function AdminPage() {
                                 <table className="min-w-full text-sm">
                                     <thead>
                                         <tr className="text-left text-gray-600 dark:text-gray-300">
-                                            <th className="py-2 pr-3">שם</th>
-                                            <th className="py-2 pr-3">אימייל</th>
-                                            <th className="py-2 pr-3">תפקיד</th>
-                                            <th className="py-2 pr-3">מצב</th>
-                                            <th className="py-2 pr-3">נוצר</th>
+                                            <th className="py-2 pr-3">
+                                                <button type="button" onClick={() => toggleUserSort('name')} className="flex items-center gap-1">
+                                                    שם <span className="text-xs">{userSortArrow('name')}</span>
+                                                </button>
+                                            </th>
+                                            <th className="py-2 pr-3">
+                                                <button type="button" onClick={() => toggleUserSort('email')} className="flex items-center gap-1">
+                                                    אימייל <span className="text-xs">{userSortArrow('email')}</span>
+                                                </button>
+                                            </th>
+                                            <th className="py-2 pr-3">
+                                                <button type="button" onClick={() => toggleUserSort('role')} className="flex items-center gap-1">
+                                                    תפקיד <span className="text-xs">{userSortArrow('role')}</span>
+                                                </button>
+                                            </th>
+                                            <th className="py-2 pr-3">
+                                                <button type="button" onClick={() => toggleUserSort('active')} className="flex items-center gap-1">
+                                                    מצב <span className="text-xs">{userSortArrow('active')}</span>
+                                                </button>
+                                            </th>
+                                            <th className="py-2 pr-3">
+                                                <button type="button" onClick={() => toggleUserSort('createdAt')} className="flex items-center gap-1">
+                                                    נוצר <span className="text-xs">{userSortArrow('createdAt')}</span>
+                                                </button>
+                                            </th>
                                             <th className="py-2 pr-3">פעולות</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {usersLoading ? (
-                                            <tr><td className="py-4" colSpan={5}>טוען…</td></tr>
+                                            <tr><td className="py-4" colSpan={6}>טוען…</td></tr>
                                         ) : usersList.length === 0 ? (
-                                            <tr><td className="py-4" colSpan={5}>לא נמצאו משתמשים</td></tr>
-                                        ) : usersList.map((u) => (
+                                            <tr><td className="py-4" colSpan={6}>לא נמצאו משתמשים</td></tr>
+                                        ) : sortedUsersList.map((u) => (
                                             <tr key={u._id} className="border-t border-gray-200 dark:border-dark-300">
                                                 <td className="py-2 pr-3">{u.firstName} {u.lastName}</td>
                                                 <td className="py-2 pr-3">{u.email}</td>
