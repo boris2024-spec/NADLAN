@@ -181,10 +181,32 @@ export const listProperties = async (req, res) => {
             .limit(parseInt(limit))
             .skip((parseInt(page) - 1) * parseInt(limit));
 
+        // Count how many users have each property in favorites
+        const propertyIds = properties.map(p => p._id);
+        const favoriteCounts = await User.aggregate([
+            { $match: { favorites: { $in: propertyIds } } },
+            { $unwind: '$favorites' },
+            { $match: { favorites: { $in: propertyIds } } },
+            { $group: { _id: '$favorites', count: { $sum: 1 } } }
+        ]);
+
+        // Create a map of propertyId -> favoriteCount
+        const favoriteCountMap = {};
+        favoriteCounts.forEach(fc => {
+            favoriteCountMap[fc._id.toString()] = fc.count;
+        });
+
+        // Add favoriteCount to each property
+        const propertiesWithFavorites = properties.map(p => {
+            const prop = p.toObject();
+            prop.favoritesCount = favoriteCountMap[p._id.toString()] || 0;
+            return prop;
+        });
+
         res.json({
             success: true,
             data: {
-                properties,
+                properties: propertiesWithFavorites,
                 pagination: {
                     currentPage: parseInt(page),
                     totalPages,

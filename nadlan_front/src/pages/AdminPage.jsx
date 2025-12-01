@@ -43,7 +43,7 @@ export default function AdminPage() {
     // Properties list (admin)
     // -------------------------
     const [propPage, setPropPage] = useState(1);
-    const [propLimit] = useState(10);
+    const [propLimit] = useState(100);
     const [propStatus, setPropStatus] = useState('');
     const [propSearch, setPropSearch] = useState('');
 
@@ -410,15 +410,16 @@ export default function AdminPage() {
                                             <th className="py-2 pr-3">כותרת</th>
                                             <th className="py-2 pr-3">עיר</th>
                                             <th className="py-2 pr-3">מחיר</th>
+                                            <th className="py-2 pr-3">מועדפים</th>
                                             <th className="py-2 pr-3">סטטוס</th>
                                             <th className="py-2 pr-3">פעולות</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {propsLoading ? (
-                                            <tr><td className="py-4" colSpan={5}>טוען…</td></tr>
+                                            <tr><td className="py-4" colSpan={6}>טוען…</td></tr>
                                         ) : propsList.length === 0 ? (
-                                            <tr><td className="py-4" colSpan={5}>לא נמצאו מודעות</td></tr>
+                                            <tr><td className="py-4" colSpan={6}>לא נמצאו מודעות</td></tr>
                                         ) : propsList.map((p) => (
                                             <tr key={p._id} className="border-t border-gray-200 dark:border-dark-300">
                                                 <td className="py-2 pr-3">
@@ -426,6 +427,11 @@ export default function AdminPage() {
                                                 </td>
                                                 <td className="py-2 pr-3">{p?.location?.city || '—'}</td>
                                                 <td className="py-2 pr-3">{p?.price?.amount ? `₪ ${Number(p.price.amount).toLocaleString('he-IL')}` : '—'}</td>
+                                                <td className="py-2 pr-3">
+                                                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-amber-100 dark:bg-amber-900/20 text-amber-800 dark:text-amber-400">
+                                                        {p.favoritesCount || 0}
+                                                    </span>
+                                                </td>
                                                 <td className="py-2 pr-3">
                                                     <select
                                                         value={p.status}

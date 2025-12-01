@@ -1,11 +1,11 @@
 import axios from 'axios';
 import Cookies from 'js-cookie';
 
-// Базовая конфигурация API
+// Base API configuration
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api';
 const API_TIMEOUT = import.meta.env.VITE_API_TIMEOUT || 100000;
 
-// Создание экземпляра axios
+// Creating axios instance
 const api = axios.create({
     baseURL: API_BASE_URL,
     timeout: API_TIMEOUT,
@@ -14,7 +14,7 @@ const api = axios.create({
     },
 });
 
-// Функции для работы с токенами
+// Functions for working with tokens
 const TOKEN_KEY = 'nadlan_access_token';
 const REFRESH_TOKEN_KEY = 'nadlan_refresh_token';
 
@@ -33,7 +33,7 @@ export const tokenManager = {
     }
 };
 
-// Interceptor для добавления токена к запросам
+// Interceptor for adding token to requests
 api.interceptors.request.use(
     (config) => {
         const token = tokenManager.getAccessToken();
@@ -47,7 +47,7 @@ api.interceptors.request.use(
     }
 );
 
-// Interceptor для обработки ответов и refresh token
+// Interceptor for handling responses and refresh token
 api.interceptors.response.use(
     (response) => response,
     async (error) => {
@@ -68,11 +68,11 @@ api.interceptors.response.use(
                     tokenManager.setAccessToken(accessToken);
                     tokenManager.setRefreshToken(newRefreshToken);
 
-                    // Повторяем оригинальный запрос с новым токеном
+                    // Retry original request with new token
                     originalRequest.headers.Authorization = `Bearer ${accessToken}`;
                     return api(originalRequest);
                 } catch (refreshError) {
-                    // Refresh token недействителен, перенаправляем на логин
+                    // Refresh token invalid, redirecting to login
                     tokenManager.clearTokens();
                     window.location.href = '/login';
                     return Promise.reject(refreshError);
@@ -85,50 +85,50 @@ api.interceptors.response.use(
 );
 
 export const authAPI = {
-    // Регистрация
+    // registration
     register: (userData) => api.post('/auth/register', userData),
 
-    // Вход
+    // login
     login: (credentials) => api.post('/auth/login', credentials),
 
-    // Выход
+    // logout
     logout: (refreshToken) => api.post('/auth/logout', { refreshToken }),
 
-    // Получение профиля
+    // get profile
     getProfile: () => api.get('/auth/profile'),
 
-    // Обновление профиля
+    // update profile
     updateProfile: (profileData) => api.put('/auth/profile', profileData),
 
-    // Получение статистики пользователя
+    // get user statistics
     getUserStats: () => api.get('/auth/profile/stats'),
 
-    // Верификация email
+    // verificate email
     verifyEmail: (token) => api.get(`/auth/verify-email/${token}`),
 
-    // Запрос сброса пароля
+    // forgot password
     forgotPassword: (email) => api.post('/auth/forgot-password', { email }),
 
-    // Сброс пароля
+    // reset password
     resetPassword: (token, password) => api.post(`/auth/reset-password/${token}`, { password }),
-    // Удаление собственного профиля
+    // delete own profile
     deleteProfile: () => api.delete('/auth/profile'),
 };
 
 // Properties API
 export const propertiesAPI = {
-    // Получение списка объектов недвижимости
+    // get list of properties
     getProperties: (filters = {}, options = {}) => {
         const params = new URLSearchParams();
 
-        // Добавляем фильтры
+        // add filters
         Object.entries(filters).forEach(([key, value]) => {
             if (value !== undefined && value !== null && value !== '') {
                 params.append(key, value);
             }
         });
 
-        // Добавляем опции пагинации и сортировки
+        // add pagination and sorting options
         Object.entries(options).forEach(([key, value]) => {
             if (value !== undefined && value !== null && value !== '') {
                 params.append(key, value);
@@ -138,28 +138,28 @@ export const propertiesAPI = {
         return api.get(`/properties?${params.toString()}`);
     },
 
-    // Получение объекта по ID
+    // get property by ID
     getPropertyById: (id) => api.get(`/properties/${id}`),
 
-    // Создание объекта недвижимости
+    // create property
     createProperty: (propertyData) => api.post('/properties', propertyData),
 
-    // Сохранение черновика недвижимости
+    // save draft
     saveDraft: (draftData) => api.post('/properties/draft', draftData),
 
-    // Обновление объекта недвижимости
+    // update property
     updateProperty: (id, propertyData) => api.put(`/properties/${id}`, propertyData),
 
-    // Удаление объекта недвижимости
+    // delete property
     deleteProperty: (id) => api.delete(`/properties/${id}`),
 
-    // Получение похожих объектов
+    // get similar properties
     getSimilarProperties: (id, limit = 6) => api.get(`/properties/${id}/similar?limit=${limit}`),
 
-    // Получение статистики
+    // get statistics
     getStats: () => api.get('/properties/stats'),
 
-    // Мои объявления (пользователя)
+    // my properties (user's own properties)
     getMyProperties: (page = 1, limit = 12, filters = {}) => {
         const params = new URLSearchParams();
         params.append('page', page);
@@ -170,15 +170,15 @@ export const propertiesAPI = {
         return api.get(`/properties/mine?${params.toString()}`);
     },
 
-    // Избранное
+    // favorites
     getFavorites: (page = 1, limit = 12) => api.get(`/properties/user/favorites?page=${page}&limit=${limit}`),
     addToFavorites: (id) => api.post(`/properties/${id}/favorites`),
     removeFromFavorites: (id) => api.delete(`/properties/${id}/favorites`),
 
-    // Отзывы
+    // reviews
     addReview: (id, reviewData) => api.post(`/properties/${id}/reviews`, reviewData),
 
-    // Контакты
+    // contacts
     addContact: (id, contactData) => api.post(`/properties/${id}/contacts`, contactData),
 };
 
@@ -215,7 +215,7 @@ export const adminAPI = {
 
 // Upload API
 export const uploadAPI = {
-    // Загрузка изображений недвижимости
+    // upload property images
     uploadPropertyImages: (propertyId, files) => {
         const formData = new FormData();
         Array.from(files).forEach((file) => {
@@ -229,14 +229,14 @@ export const uploadAPI = {
         });
     },
 
-    // Временная загрузка изображений (без propertyId) для создания объявления
+    // Temporary upload of images (without propertyId) for creating a listing
     uploadTempPropertyImages: (files) => {
         const formData = new FormData();
         Array.from(files).forEach((file) => {
             formData.append('images', file);
         });
 
-        // Бэкенд роут: POST /api/properties/upload-images
+        // Backend route: POST /api/properties/upload-images
         return api.post(`/properties/upload-images`, formData, {
             headers: {
                 'Content-Type': 'multipart/form-data',
@@ -244,19 +244,19 @@ export const uploadAPI = {
         });
     },
 
-    // Удаление изображения недвижимости
+    // Deleting property image
     deletePropertyImage: (propertyId, imageId) =>
         api.delete(`/upload/properties/${propertyId}/images/${imageId}`),
 
-    // Установка главного изображения
+    // Setting main image
     setMainPropertyImage: (propertyId, imageId) =>
         api.put(`/upload/properties/${propertyId}/images/${imageId}/main`),
 
-    // Изменение порядка изображений
+    // Reordering images
     reorderPropertyImages: (propertyId, imageOrder) =>
         api.put(`/upload/properties/${propertyId}/images/reorder`, { imageOrder }),
 
-    // Загрузка аватара пользователя
+    // Uploading user avatar
     uploadAvatar: (file) => {
         const formData = new FormData();
         formData.append('avatar', file);
@@ -268,20 +268,20 @@ export const uploadAPI = {
         });
     },
 
-    // Удаление аватара пользователя
+    // Deleting user avatar
     deleteAvatar: () => api.delete('/upload/avatar'),
 };
 
-// Общие API функции
+// Common API functions
 export const commonAPI = {
-    // Проверка здоровья сервера
+    // Health check
     healthCheck: () => api.get('/health'),
 };
 
-// Обработчик ошибок
+// Error handler
 export const handleApiError = (error) => {
     if (error.response) {
-        // Сервер ответил с кодом ошибки
+        // Server responded with an error status
         const { status, data } = error.response;
 
         switch (status) {
@@ -319,13 +319,13 @@ export const handleApiError = (error) => {
                 };
         }
     } else if (error.request) {
-        // Запрос был отправлен, но ответа не было получено
+        // Request was sent but no response was received
         return {
             message: 'השרת אינו זמין. בדוק את חיבור האינטרנט',
             type: 'network'
         };
     } else {
-        // Что-то пошло не так при настройке запроса
+        // Something went wrong while setting up the request
         return {
             message: error.message || 'שגיאה לא ידועה',
             type: 'unknown'
@@ -333,12 +333,12 @@ export const handleApiError = (error) => {
     }
 };
 
-// Функция для создания cancel token
+// Function to create cancel token
 export const createCancelToken = () => {
     return axios.CancelToken.source();
 };
 
-// Функция для проверки, была ли запрос отменен
+// Function to check if a request was canceled
 export const isRequestCanceled = (error) => {
     return axios.isCancel(error);
 };
