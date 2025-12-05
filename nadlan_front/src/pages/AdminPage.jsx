@@ -43,7 +43,8 @@ export default function AdminPage() {
     // Properties list (admin)
     // -------------------------
     const [propPage, setPropPage] = useState(1);
-    const [propLimit] = useState(100);
+    // use very high limit so admin sees all properties
+    const [propLimit] = useState(1000000);
     const [propStatus, setPropStatus] = useState('');
     const [propSearch, setPropSearch] = useState('');
 
@@ -488,6 +489,9 @@ export default function AdminPage() {
                                     />
                                     <Button variant="outline" onClick={() => { setPropStatus(''); setPropSearch(''); setPropPage(1); }}>נקה</Button>
                                 </div>
+                                <div className="text-sm text-gray-600 dark:text-gray-300 mt-1 md:mt-0">
+                                    נמצאו {propsList.length} נכסים
+                                </div>
                             </div>
 
                             {/* Table */}
@@ -643,14 +647,7 @@ export default function AdminPage() {
                                 </div>
                             )}
 
-                            {/* Pagination */}
-                            {propsPagination && propsPagination.totalPages > 1 && (
-                                <div className="flex items-center justify-center gap-2 mt-4">
-                                    <Button variant="outline" disabled={!propsPagination.hasPrevPage} onClick={() => setPropPage(p => Math.max(1, p - 1))}>הקודם</Button>
-                                    <span className="text-sm text-gray-600 dark:text-gray-300">עמוד {propsPagination.currentPage} מתוך {propsPagination.totalPages}</span>
-                                    <Button variant="outline" disabled={!propsPagination.hasNextPage} onClick={() => setPropPage(p => Math.min(propsPagination.totalPages, p + 1))}>הבא</Button>
-                                </div>
-                            )}
+                        
                         </div>
                     ) : (
                         <div className="space-y-4">
@@ -678,6 +675,9 @@ export default function AdminPage() {
                                         style={{ minWidth: 220 }}
                                     />
                                     <Button variant="outline" onClick={() => { setUserRole(''); setUserActive(''); setUserSearch(''); setUserPage(1); }}>נקה</Button>
+                                </div>
+                                <div className="text-sm text-gray-600 dark:text-gray-300 mt-1 md:mt-0">
+                                    נמצאו {usersList.length} משתמשים
                                 </div>
                             </div>
 
@@ -740,7 +740,7 @@ export default function AdminPage() {
                                                             type="checkbox"
                                                             checked={!!u.isActive}
                                                             onChange={(e) => {
-                                                                // Явно приводим к булеву
+                                                                // It is boolean field, so convert to boolean
                                                                 updateUserMut.mutate({ id: u._id, patch: { isActive: Boolean(e.target.checked) } });
                                                             }}
                                                         />
@@ -829,14 +829,6 @@ export default function AdminPage() {
                                 </div>
                             )}
 
-                            {/* Pagination */}
-                            {usersPagination && usersPagination.totalPages > 1 && (
-                                <div className="flex items-center justify-center gap-2 mt-4">
-                                    <Button variant="outline" disabled={!usersPagination.hasPrevPage} onClick={() => setUserPage(p => Math.max(1, p - 1))}>הקודם</Button>
-                                    <span className="text-sm text-gray-600 dark:text-gray-300">עמוד {usersPagination.currentPage} מתוך {usersPagination.totalPages}</span>
-                                    <Button variant="outline" disabled={!usersPagination.hasNextPage} onClick={() => setUserPage(p => Math.min(usersPagination.totalPages, p + 1))}>הבא</Button>
-                                </div>
-                            )}
                         </div>
                     )}
                 </Card>

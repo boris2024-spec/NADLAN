@@ -20,19 +20,19 @@ const propertySchema = new mongoose.Schema({
         required: [true, 'Property type is required'],
         enum: {
             values: [
-                'apartment',      // Квартира
-                'house',         // Дом
-                'penthouse',     // Пентхаус
-                'studio',        // Студия
-                'duplex',        // Дуплекс
-                'villa',         // Вилла
-                'townhouse',     // Таунхаус
-                'loft',          // Лофт
-                'commercial',    // Коммерческая
-                'office',        // Офис
-                'warehouse',     // Склад
-                'land',          // Участок
-                'garden_apartment' // Квартира с садом (доп. тип для совместимости с импортом)
+                'apartment',
+                'house',
+                'penthouse',
+                'studio',
+                'duplex',
+                'villa',
+                'townhouse',
+                'loft',
+                'commercial',
+                'office',
+                'warehouse',
+                'land',
+                'garden_apartment'
             ],
             message: 'Invalid property type'
         }
@@ -522,6 +522,15 @@ propertySchema.statics.getStats = function () {
             }
         }
     ]);
+};
+
+// Static method for deactivating expired listings
+propertySchema.statics.deactivateExpired = async function () {
+    const now = new Date();
+    return this.updateMany(
+        { expiresAt: { $lt: now }, status: 'active' },
+        { $set: { status: 'inactive' } }
+    );
 };
 
 const Property = mongoose.model('Property', propertySchema);

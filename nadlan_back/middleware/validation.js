@@ -267,13 +267,13 @@ const propertySearchSchema = Joi.object({
     status: Joi.string().valid(...statusValues).optional()
 });
 
-// Экспортируемые middleware
+// export middleware
 export const validateRegister = createValidator(registerSchema);
 export const validateLogin = createValidator(loginSchema);
 export const validateProfileUpdate = createValidator(profileSchema);
 export const validateForgotPassword = createValidator(forgotPasswordSchema);
 export const validateResetPassword = [
-    // token в params
+    // token in params
     (req, res, next) => {
         const token = req.params.token;
         if (!token || token.length === 0) {
