@@ -1,4 +1,4 @@
-# Nadlan — Real Estate Platform https://borisnadlan.netlify.app/login
+# Nadlan — Real Estate Platform https://borisnadlan.netlify.app
 
 Full-featured real estate application for searching, publishing and managing property listings, with user accounts, favorites, admin panel and cloud image storage integration.
 
