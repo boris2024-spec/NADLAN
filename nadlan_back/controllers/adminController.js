@@ -1,5 +1,6 @@
 import { User, Property } from '../models/index.js';
 import { deleteFromCloudinary } from '../middleware/upload.js';
+import * as XLSX from 'xlsx';
 
 // GET /api/admin/users
 export const listUsers = async (req, res) => {
@@ -138,6 +139,39 @@ export const deleteUser = async (req, res) => {
     }
 };
 
+// GET /api/admin/users/export
+export const exportUsersExcel = async (req, res) => {
+    try {
+        const users = await User.find({})
+            .select('firstName lastName email phone role isActive isVerified createdAt');
+
+        const rows = users.map((u) => ({
+            ID: u._id.toString(),
+            FirstName: u.firstName || '',
+            LastName: u.lastName || '',
+            Email: u.email || '',
+            Phone: u.phone || '',
+            Role: u.role || '',
+            IsActive: u.isActive ? 'כן' : 'לא',
+            IsVerified: u.isVerified ? 'כן' : 'לא',
+            CreatedAt: u.createdAt ? new Date(u.createdAt).toISOString() : '',
+        }));
+
+        const worksheet = XLSX.utils.json_to_sheet(rows);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Users');
+
+        const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+
+        res.setHeader('Content-Disposition', 'attachment; filename="users.xlsx"');
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.send(buffer);
+    } catch (error) {
+        console.error('Admin exportUsersExcel error:', error);
+        res.status(500).json({ success: false, message: 'שגיאת שרת פנימית' });
+    }
+};
+
 // GET /api/admin/properties
 export const listProperties = async (req, res) => {
     try {
@@ -219,6 +253,42 @@ export const listProperties = async (req, res) => {
         });
     } catch (error) {
         console.error('Admin listProperties error:', error);
+        res.status(500).json({ success: false, message: 'שגיאת שרת פנימית' });
+    }
+};
+
+// GET /api/admin/properties/export
+export const exportPropertiesExcel = async (req, res) => {
+    try {
+        const properties = await Property.find({})
+            .select('title propertyType transactionType price location status favorites views createdAt updatedAt');
+
+        const rows = properties.map((p) => ({
+            ID: p._id.toString(),
+            Title: p.title || '',
+            City: p.location?.city || '',
+            Address: p.location?.address || '',
+            Price: p.price?.amount ?? '',
+            Status: p.status || '',
+            TransactionType: p.transactionType || '',
+            PropertyType: p.propertyType || '',
+            Views: p.views ?? 0,
+            Favorites: Array.isArray(p.favorites) ? p.favorites.length : '',
+            CreatedAt: p.createdAt ? new Date(p.createdAt).toISOString() : '',
+            UpdatedAt: p.updatedAt ? new Date(p.updatedAt).toISOString() : '',
+        }));
+
+        const worksheet = XLSX.utils.json_to_sheet(rows);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Properties');
+
+        const buffer = XLSX.write(workbook, { type: 'buffer', bookType: 'xlsx' });
+
+        res.setHeader('Content-Disposition', 'attachment; filename="properties.xlsx"');
+        res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        res.send(buffer);
+    } catch (error) {
+        console.error('Admin exportPropertiesExcel error:', error);
         res.status(500).json({ success: false, message: 'שגיאת שרת פנימית' });
     }
 };

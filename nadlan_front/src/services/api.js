@@ -208,6 +208,10 @@ export const adminAPI = {
         });
         return api.get(`/admin/properties?${params.toString()}`);
     },
+    exportPropertiesExcel: () =>
+        api.get('/admin/properties/export', { responseType: 'blob' }),
+    exportUsersExcel: () =>
+        api.get('/admin/users/export', { responseType: 'blob' }),
     updatePropertyStatus: (id, status) => api.patch(`/admin/properties/${id}/status`, { status }),
     deleteProperty: (id) => api.delete(`/admin/properties/${id}`),
     updateProperty: (id, payload) => api.patch(`/admin/properties/${id}`, payload),

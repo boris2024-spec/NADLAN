@@ -467,7 +467,55 @@ export default function AdminPage() {
                             <Button variant={activeTab === 'users' ? 'primary' : 'outline'} onClick={() => setActiveTab('users')}>
                                 <Users className="w-4 h-4 ml-2 rtl:ml-0 rtl:mr-2" /> משתמשים
                             </Button>
+
+                            
                         </div>
+                        {activeTab === 'properties' && (
+                            <Button
+                                className="bg-green-600 hover:bg-green-700 text-white"
+                                onClick={async () => {
+                                    try {
+                                        const response = await adminAPI.exportPropertiesExcel();
+                                        const url = window.URL.createObjectURL(new Blob([response.data]));
+                                        const link = document.createElement('a');
+                                        link.href = url;
+                                        link.setAttribute('download', 'properties.xlsx');
+                                        document.body.appendChild(link);
+                                        link.click();
+                                        link.parentNode.removeChild(link);
+                                    } catch (e) {
+                                        toast.error('שגיאה בהורדת הקובץ');
+                                    }
+                                }}
+                            >
+                                <span className="block sm:hidden">ב- Excel</span>
+                                <span className="hidden sm:block">הורדת נתונים ב-Excel</span>
+                            </Button>
+
+                        )}
+
+                        {activeTab === 'users' && (
+                            <Button
+                                className="bg-green-600 hover:bg-green-700 text-white"
+                                onClick={async () => {
+                                    try {
+                                        const response = await adminAPI.exportUsersExcel();
+                                        const url = window.URL.createObjectURL(new Blob([response.data]));
+                                        const link = document.createElement('a');
+                                        link.href = url;
+                                        link.setAttribute('download', 'users.xlsx');
+                                        document.body.appendChild(link);
+                                        link.click();
+                                        link.parentNode.removeChild(link);
+                                    } catch (e) {
+                                        toast.error('שגיאה בהורדת הקובץ');
+                                    }
+                                }}
+                            >
+                                <span className="block sm:hidden">ב- Excel</span>
+                                <span className="hidden sm:block">הורדת משתמשים ב-Excel</span>
+                            </Button>
+                        )}
                     </div>
 
                     {activeTab === 'properties' ? (
@@ -647,7 +695,7 @@ export default function AdminPage() {
                                 </div>
                             )}
 
-                        
+
                         </div>
                     ) : (
                         <div className="space-y-4">

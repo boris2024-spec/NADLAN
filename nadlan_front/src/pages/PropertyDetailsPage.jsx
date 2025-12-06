@@ -7,6 +7,11 @@ import DeckIcon from '@mui/icons-material/Deck';
 import PoolIcon from '@mui/icons-material/Pool';
 import BalconyIcon from '@mui/icons-material/Balcony';
 import PersonIcon from '@mui/icons-material/Person';
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Navigation, Pagination } from 'swiper/modules';
+import 'swiper/css';
+import 'swiper/css/navigation';
+import 'swiper/css/pagination';
 
 import {
     MapPin,
@@ -45,6 +50,7 @@ function PropertyDetailsPage() {
     const [property, setProperty] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [isFullscreen, setIsFullscreen] = useState(false);
 
     // Load real property by id
     useEffect(() => {
@@ -119,12 +125,12 @@ function PropertyDetailsPage() {
 
     const formatPrice = (p) => {
         if (!p?.amount) return '—';
-        // אם זה מכירה, לא מציגים תקופה. אם זה השכרה, לוקחים מ-periodMap
+        // If it's a sale, do not show the period. If it's a rental, take from periodMap
         const period = property?.transactionType === 'sale' ? undefined : p.period;
         return formatPriceUtil(p.amount, p.currency || 'ILS', { period });
     };
 
-    // Полный адрес из Mongo (приоритетные поля) с откатом на составление из street/houseNumber/city
+    // Full address from Mongo (priority fields) with fallback to composition from street/houseNumber/city
     const fullAddress = useMemo(() => {
         const loc = property?.location;
         if (!loc) return '';
@@ -146,6 +152,17 @@ function PropertyDetailsPage() {
         }
         return fullAddress;
     }, [fullAddress, property]);
+
+    useEffect(() => {
+        if (!isFullscreen) return;
+        const onKeyDown = (e) => {
+            if (e.key === 'Escape') {
+                setIsFullscreen(false);
+            }
+        };
+        window.addEventListener('keydown', onKeyDown);
+        return () => window.removeEventListener('keydown', onKeyDown);
+    }, [isFullscreen]);
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-dark-50 transition-colors">
@@ -183,45 +200,45 @@ function PropertyDetailsPage() {
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                         {/* Main Content */}
                         <div className="lg:col-span-2 space-y-6">
-                            {/* Image Gallery */}
+                            {/* Image Gallery with Swiper */}
                             <Card className="overflow-hidden">
                                 <div className="relative">
                                     {images.length > 0 ? (
-                                        <img
-                                            src={images[currentImageIndex]}
-                                            alt={property.title}
-                                            className="w-full h-96 object-cover"
-                                        />
+                                        <Swiper
+                                            modules={[Navigation, Pagination]}
+                                            navigation
+                                            pagination={{ clickable: true }}
+                                            onSlideChange={(swiper) => setCurrentImageIndex(swiper.activeIndex)}
+                                            initialSlide={currentImageIndex}
+                                            className="w-full h-96 main-swiper"
+                                        >
+                                            {images.map((image, index) => (
+                                                <SwiperSlide key={index}>
+                                                    <img
+                                                        src={image}
+                                                        alt={property.title}
+                                                        className="w-full h-96 object-cover cursor-pointer"
+                                                        onClick={() => {
+                                                            // Sync index and open fullscreen mode
+                                                            setCurrentImageIndex(index);
+                                                            setIsFullscreen(true);
+                                                        }}
+                                                    />
+                                                </SwiperSlide>
+                                            ))}
+                                        </Swiper>
                                     ) : (
                                         <div className="w-full h-96 bg-gray-100 dark:bg-dark-200 flex items-center justify-center">
                                             <Building className="w-10 h-10 text-gray-400" />
                                         </div>
                                     )}
 
-                                    {/* Image Navigation */}
-                                    {images.length > 1 && (
-                                        <>
-                                            <button
-                                                onClick={prevImage}
-                                                className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-white dark:bg-dark-100/80 backdrop-blur-sm p-2 rounded-full hover:bg-white dark:bg-dark-100"
-                                            >
-                                                <ChevronLeft className="w-5 h-5" />
-                                            </button>
-                                            <button
-                                                onClick={nextImage}
-                                                className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-white dark:bg-dark-100/80 backdrop-blur-sm p-2 rounded-full hover:bg-white dark:bg-dark-100"
-                                            >
-                                                <ChevronRight className="w-5 h-5" />
-                                            </button>
-                                        </>
-                                    )}
-
                                     {/* Action Buttons */}
-                                    <div className="absolute top-4 right-4 flex space-x-2 rtl:space-x-reverse">
+                                    <div className="absolute top-4 right-4 flex space-x-2 rtl:space-x-reverse z-20">
                                         <LikeButton propertyId={id} size={20} />
                                         <button
                                             onClick={handleShare}
-                                            className="p-2 bg-white dark:bg-dark-100/80 dark:bg-dark-100/80 backdrop-blur-sm rounded-full hover:bg-white dark:hover:bg-dark-100"
+                                            className="p-2 bg-white dark:bg-dark-100/80 backdrop-blur-sm rounded-full hover:bg-white dark:hover:bg-dark-100"
                                         >
                                             <Share2 className="w-5 h-5 text-gray-700 dark:text-gray-300" />
                                         </button>
@@ -229,7 +246,7 @@ function PropertyDetailsPage() {
 
                                     {/* Image Counter */}
                                     {images.length > 0 && (
-                                        <div className="absolute bottom-4 right-4 bg-black/50 dark:bg-black/70 text-white px-3 py-1 rounded-full text-sm">
+                                        <div className="absolute bottom-4 right-4 bg-black/50 dark:bg-black/70 text-white px-3 py-1 rounded-full text-sm z-20">
                                             {currentImageIndex + 1} / {images.length}
                                         </div>
                                     )}
@@ -242,7 +259,11 @@ function PropertyDetailsPage() {
                                             {images.map((image, index) => (
                                                 <button
                                                     key={index}
-                                                    onClick={() => setCurrentImageIndex(index)}
+                                                    onClick={() => {
+                                                        setCurrentImageIndex(index);
+                                                        const swiperEl = document.querySelector('.main-swiper')?.swiper;
+                                                        if (swiperEl) swiperEl.slideTo(index);
+                                                    }}
                                                     className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 ${index === currentImageIndex
                                                         ? 'border-blue-500 dark:border-blue-400'
                                                         : 'border-gray-200 dark:border-dark-300 hover:border-gray-300 dark:hover:border-dark-400'
@@ -259,6 +280,47 @@ function PropertyDetailsPage() {
                                     )}
                                 </div>
                             </Card>
+
+                            {/* Fullscreen overlay */}
+                            {isFullscreen && images.length > 0 && (
+                                <div
+                                    className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center"
+                                    onClick={() => setIsFullscreen(false)} // click on the background closes
+                                >
+                                    {/* Container that does NOT close when clicking inside the image */}
+                                    <div
+                                        className="relative w-full h-full"
+                                        onClick={(e) => e.stopPropagation()}
+                                    >
+                                        <button
+                                            onClick={() => setIsFullscreen(false)}
+                                            className="absolute top-4 right-4 z-50 text-white text-2xl bg-black/60 rounded-full w-10 h-10 flex items-center justify-center"
+                                        >
+                                            ✕
+                                        </button>
+                                        <Swiper
+                                            modules={[Navigation, Pagination]}
+                                            navigation
+                                            pagination={{ clickable: true }}
+                                            initialSlide={currentImageIndex}
+                                            onSlideChange={(swiper) => setCurrentImageIndex(swiper.activeIndex)}
+                                            className="w-full h-full"
+                                        >
+                                            {images.map((image, index) => (
+                                                <SwiperSlide key={index}>
+                                                    <div className="w-full h-full flex items-center justify-center">
+                                                        <img
+                                                            src={image}
+                                                            alt={property.title}
+                                                            className="max-w-full max-h-full object-contain"
+                                                        />
+                                                    </div>
+                                                </SwiperSlide>
+                                            ))}
+                                        </Swiper>
+                                    </div>
+                                </div>
+                            )}
 
                             {/* Property Info */}
                             <Card className="p-6">
