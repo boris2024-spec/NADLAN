@@ -30,48 +30,48 @@ Full-featured real estate application for searching, publishing and managing pro
 
 ```mermaid
 sequenceDiagram
-    participant User
-    participant Frontend
-    participant Backend
-    participant MongoDB
-    participant Email
+  participant User
+  participant Frontend
+  participant Backend
+  participant MongoDB
+  participant Email
 
-    User->>Frontend: Register
-    Frontend->>Backend: POST /api/auth/register
-    Backend->>MongoDB: Create user
-    Backend->>Email: Send verification
-    Backend-->>Frontend: Success response
+  User->>Frontend: Register
+  Frontend->>Backend: POST /api/auth/register
+  Backend->>MongoDB: Create user
+  Backend->>Email: Send verification
+  Backend-->>Frontend: Success response
     
-    User->>Email: Click verification link
-    Email->>Backend: GET /api/auth/verify-email/:token
-    Backend->>MongoDB: Verify user
-    Backend-->>User: Redirect to login
+  User->>Email: Click verification link
+  Email->>Backend: GET /api/auth/verify-email/:token
+  Backend->>MongoDB: Verify user
+  Backend-->>User: Redirect to login
     
-    User->>Frontend: Login
-    Frontend->>Backend: POST /api/auth/login
-    Backend->>MongoDB: Check credentials
-    Backend-->>Frontend: Access + Refresh tokens
-    Frontend->>Frontend: Store tokens
+  User->>Frontend: Login
+  Frontend->>Backend: POST /api/auth/login
+  Backend->>MongoDB: Check credentials
+  Backend-->>Frontend: Access + Refresh tokens
+  Frontend->>Frontend: Store tokens
 ```
-
+</details>
 ### Property Creation Flow
 
 ```mermaid
 sequenceDiagram
-    participant User
-    participant Frontend
-    participant Backend
-    participant Cloudinary
-    participant MongoDB
+  participant User
+  participant Frontend
+  participant Backend
+  participant Cloudinary
+  participant MongoDB
 
-    User->>Frontend: Fill property form
-    User->>Frontend: Upload images
-    Frontend->>Cloudinary: Upload images
-    Cloudinary-->>Frontend: Image URLs
-    Frontend->>Backend: POST /api/properties
-    Backend->>MongoDB: Create property
-    Backend-->>Frontend: Property created
-    Frontend->>User: Success notification
+  User->>Frontend: Fill property form
+  User->>Frontend: Upload images
+  Frontend->>Cloudinary: Upload images
+  Cloudinary-->>Frontend: Image URLs
+  Frontend->>Backend: POST /api/properties
+  Backend->>MongoDB: Create property
+  Backend-->>Frontend: Property created
+  Frontend->>User: Success notification
 ```
 
 </details>

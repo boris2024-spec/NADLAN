@@ -90,10 +90,10 @@
 
 ---
 
-## 🏗️ Architecture
+## 🏗️ Архитектура
 
 <details>
-<summary><b>📐 Click to view system architecture diagram</b></summary>
+<summary><b>📐 Нажмите, чтобы посмотреть диаграмму архитектуры системы</b></summary>
 
 ```mermaid
 graph TB
@@ -140,120 +140,120 @@ graph TB
     style Services fill:#e8f5e9
 ```
 
-### 📁 Project Structure
+### 📁 Структура проекта
 
 ```
 NADLAN/
-├── 🔧 nadlan_back/          # Backend (Node.js + Express)
-│   ├── config/              # Configuration files
-│   ├── controllers/         # Business logic
-│   ├── middleware/          # Auth, validation, upload
-│   ├── models/              # MongoDB schemas
-│   ├── routes/              # API endpoints
-│   ├── utils/               # Helpers & services
-│   └── server.js            # Entry point
+├── 🔧 nadlan_back/          # Бэкенд (Node.js + Express)
+│   ├── config/              # Конфигурационные файлы
+│   ├── controllers/         # Бизнес-логика
+│   ├── middleware/          # Авторизация, валидация, загрузка
+│   ├── models/              # Схемы MongoDB
+│   ├── routes/              # API-маршруты
+│   ├── utils/               # Вспомогательные функции и сервисы
+│   └── server.js            # Точка входа
 │
-└── 🎨 nadlan_front/         # Frontend (React + Vite)
-    ├── src/
-    │   ├── components/      # Reusable components
-    │   ├── context/         # React Context
-    │   ├── hooks/           # Custom hooks
-    │   ├── pages/           # Route pages
-    │   ├── services/        # API services
-    │   └── utils/           # Helpers
-    └── vite.config.js       # Vite configuration
+└── 🎨 nadlan_front/         # Фронтенд (React + Vite)
+  ├── src/
+  │   ├── components/      # Переиспользуемые компоненты
+  │   ├── context/         # React Context
+  │   ├── hooks/           # Кастомные хуки
+  │   ├── pages/           # Страницы/роуты
+  │   ├── services/        # API-сервисы
+  │   └── utils/           # Вспомогательные функции
+  └── vite.config.js       # Конфигурация Vite
 ```
 
 </details>
 
 ---
 
-## 🔧 Backend (`nadlan_back`)
+## 🔧 Бэкенд (`nadlan_back`)
 
 <details open>
-<summary><b>📦 Tech Stack</b></summary>
+<summary><b>📦 Технологический стек</b></summary>
 
-| Technology | Purpose |
+| Технология | Назначение |
 |------------|---------|
-| ![Node.js](https://img.shields.io/badge/Node.js-339933?style=flat&logo=node.js&logoColor=white) | Runtime environment |
-| ![Express](https://img.shields.io/badge/Express-000000?style=flat&logo=express&logoColor=white) | Web framework |
-| ![MongoDB](https://img.shields.io/badge/MongoDB-47A248?style=flat&logo=mongodb&logoColor=white) | Database |
-| ![JWT](https://img.shields.io/badge/JWT-000000?style=flat&logo=json-web-tokens&logoColor=white) | Authentication |
+| ![Node.js](https://img.shields.io/badge/Node.js-339933?style=flat&logo=node.js&logoColor=white) | Среда выполнения |
+| ![Express](https://img.shields.io/badge/Express-000000?style=flat&logo=express&logoColor=white) | Веб‑фреймворк |
+| ![MongoDB](https://img.shields.io/badge/MongoDB-47A248?style=flat&logo=mongodb&logoColor=white) | База данных |
+| ![JWT](https://img.shields.io/badge/JWT-000000?style=flat&logo=json-web-tokens&logoColor=white) | Аутентификация |
 | ![Passport](https://img.shields.io/badge/Passport-34E27A?style=flat&logo=passport&logoColor=white) | OAuth (Google) |
-| ![Cloudinary](https://img.shields.io/badge/Cloudinary-3448C5?style=flat&logo=cloudinary&logoColor=white) | Image storage |
-| ![Nodemailer](https://img.shields.io/badge/Nodemailer-0F9DCE?style=flat) | Email service |
+| ![Cloudinary](https://img.shields.io/badge/Cloudinary-3448C5?style=flat&logo=cloudinary&logoColor=white) | Хранение изображений |
+| ![Nodemailer](https://img.shields.io/badge/Nodemailer-0F9DCE?style=flat) | Почтовый сервис |
 
 </details>
 
 <details>
-<summary><b>🛣️ API Routes Overview</b></summary>
+<summary><b>🛣️ Обзор API‑маршрутов</b></summary>
 
-### 🔐 Authentication (`/api/auth`)
+### 🔐 Аутентификация (`/api/auth`)
 ```
-POST   /register              - Register new user
-POST   /login                 - Login with credentials
-POST   /logout                - Logout user
-POST   /refresh-token         - Refresh access token
-GET    /verify-email/:token   - Verify email address
-POST   /resend-verification   - Resend verification email
-POST   /forgot-password       - Request password reset
-POST   /reset-password/:token - Reset password
-GET    /profile               - Get user profile
-PUT    /profile               - Update user profile
-DELETE /profile               - Delete user account
-GET    /profile/stats         - User statistics
-GET    /google                - Google OAuth login
-GET    /google/callback       - Google OAuth callback
-```
-
-### 🏠 Properties (`/api/properties`)
-```
-GET    /                      - Search properties (with filters)
-GET    /stats                 - Property statistics
-GET    /mine                  - User's own listings
-GET    /:id                   - Property details
-GET    /:id/similar           - Similar properties
-POST   /                      - Create new property
-POST   /draft                 - Save draft
-PUT    /:id                   - Update property
-DELETE /:id                   - Delete property
-POST   /upload-images         - Upload property images
-
-⭐ Favorites
-GET    /user/favorites        - Get favorites list
-POST   /:id/favorites         - Add to favorites
-DELETE /:id/favorites         - Remove from favorites
-
-💬 Reviews & Contacts
-POST   /:id/reviews           - Add review
-POST   /:id/contacts          - Send contact request
+POST   /register              - Регистрация нового пользователя
+POST   /login                 - Вход по логину/паролю
+POST   /logout                - Выход из системы
+POST   /refresh-token         - Обновление access‑токена
+GET    /verify-email/:token   - Подтверждение email‑адреса
+POST   /resend-verification   - Повторная отправка письма подтверждения
+POST   /forgot-password       - Запрос на смену пароля
+POST   /reset-password/:token - Сброс пароля
+GET    /profile               - Получить профиль пользователя
+PUT    /profile               - Обновить профиль пользователя
+DELETE /profile               - Удалить аккаунт
+GET    /profile/stats         - Статистика пользователя
+GET    /google                - Вход через Google OAuth
+GET    /google/callback       - Callback Google OAuth
 ```
 
-### 🛡️ Admin (`/api/admin`)
+### 🏠 Объекты недвижимости (`/api/properties`)
 ```
-GET    /users                 - List all users
-GET    /users/:id             - Get user details
-PUT    /users/:id             - Update user
-DELETE /users/:id             - Delete user
-GET    /properties            - List all properties
-PUT    /properties/:id        - Update property
-DELETE /properties/:id        - Delete property
+GET    /                      - Поиск объектов (c фильтрами)
+GET    /stats                 - Статистика по объектам
+GET    /mine                  - Объявления текущего пользователя
+GET    /:id                   - Детальная страница объекта
+GET    /:id/similar           - Похожие объекты
+POST   /                      - Создать новый объект
+POST   /draft                 - Сохранить черновик
+PUT    /:id                   - Обновить объект
+DELETE /:id                   - Удалить объект
+POST   /upload-images         - Загрузить изображения объекта
+
+⭐ Избранное
+GET    /user/favorites        - Получить список избранного
+POST   /:id/favorites         - Добавить в избранное
+DELETE /:id/favorites         - Удалить из избранного
+
+💬 Отзывы и обращения
+POST   /:id/reviews           - Добавить отзыв
+POST   /:id/contacts          - Отправить запрос на контакт
 ```
 
-### 📧 Other Routes
+### 🛡️ Админ‑раздел (`/api/admin`)
 ```
-POST   /api/contact           - Contact form
-POST   /api/consulting        - Consulting request
-POST   /api/upload            - File upload
-GET    /api/health            - Health check
+GET    /users                 - Список всех пользователей
+GET    /users/:id             - Получить данные пользователя
+PUT    /users/:id             - Обновить пользователя
+DELETE /users/:id             - Удалить пользователя
+GET    /properties            - Список всех объектов
+PUT    /properties/:id        - Обновить объект
+DELETE /properties/:id        - Удалить объект
+```
+
+### 📧 Прочие маршруты
+```
+POST   /api/contact           - Форма обратной связи
+POST   /api/consulting        - Заявка на консультацию
+POST   /api/upload            - Загрузка файлов
+GET    /api/health            - Проверка состояния сервера
 ```
 
 </details>
 
 <details>
-<summary><b>📊 Data Models</b></summary>
+<summary><b>📊 Модели данных</b></summary>
 
-### 👤 User Model
+### 👤 Модель пользователя (User)
 ```javascript
 {
   email: String (unique, required),
@@ -276,7 +276,7 @@ GET    /api/health            - Health check
 }
 ```
 
-### 🏠 Property Model
+### 🏠 Модель объекта недвижимости (Property)
 ```javascript
 {
   title: String (required),
@@ -319,33 +319,33 @@ GET    /api/health            - Health check
 </details>
 
 <details>
-<summary><b>🔐 Security Features</b></summary>
+<summary><b>🔐 Механизмы безопасности</b></summary>
 
-- 🛡️ **Helmet.js** - HTTP headers security
-- 🚦 **Rate Limiting** - DDoS protection
-- 🔒 **JWT Tokens** - Secure authentication
-- 🔑 **Password Hashing** - bcrypt encryption
-- 📧 **Email Verification** - Account validation
-- 🌐 **CORS** - Controlled origins
-- 🔍 **Input Validation** - Joi schemas
-- 📝 **Logging** - Winston + Morgan
-- 🚨 **Error Handling** - Centralized middleware
+- 🛡️ **Helmet.js** — защита HTTP‑заголовков
+- 🚦 **Rate Limiting** — защита от DDoS и подборов пароля
+- 🔒 **JWT Tokens** — безопасная аутентификация
+- 🔑 **Хеширование паролей** — шифрование через bcrypt
+- 📧 **Подтверждение email** — валидация аккаунтов
+- 🌐 **CORS** — контроль разрешённых источников
+- 🔍 **Валидация входных данных** — схемы Joi
+- 📝 **Логирование** — Winston + Morgan
+- 🚨 **Обработка ошибок** — централизованный middleware
 
 </details>
 
 <details>
-<summary><b>⚙️ Environment Variables</b></summary>
+<summary><b>⚙️ Переменные окружения</b></summary>
 
 ```bash
-# Server
+# Сервер
 NODE_ENV=development
 PORT=3000
 
-# Database
+# База данных
 MONGODB_URI=mongodb://localhost:27017/nadlan
 MONGODB_URI_PROD=mongodb+srv://...
 
-# Session
+# Сессии
 SESSION_SECRET=your-session-secret
 
 # JWT
@@ -354,10 +354,10 @@ JWT_REFRESH_SECRET=your-refresh-secret
 JWT_ACCESS_EXPIRES=15m
 JWT_REFRESH_EXPIRES=7d
 
-# Client
+# Клиент
 CLIENT_ORIGIN=http://localhost:5173
 
-# Rate Limiting
+# Ограничение запросов
 RATE_LIMIT_WINDOW_MS=900000
 RATE_LIMIT_MAX_REQUESTS=100
 
@@ -383,132 +383,132 @@ GOOGLE_CALLBACK_URL=http://localhost:3000/api/auth/google/callback
 
 ---
 
-## 🎨 Frontend (`nadlan_front`)
+## 🎨 Фронтенд (`nadlan_front`)
 
 <details open>
-<summary><b>⚡ Tech Stack</b></summary>
+<summary><b>⚡ Технологический стек</b></summary>
 
-| Technology | Purpose |
+| Технология | Назначение |
 |------------|---------|
-| ![React](https://img.shields.io/badge/React_18-61DAFB?style=flat&logo=react&logoColor=black) | UI Library |
-| ![Vite](https://img.shields.io/badge/Vite-646CFF?style=flat&logo=vite&logoColor=white) | Build tool |
-| ![React Router](https://img.shields.io/badge/React_Router-CA4245?style=flat&logo=react-router&logoColor=white) | Routing |
-| ![React Query](https://img.shields.io/badge/React_Query-FF4154?style=flat&logo=react-query&logoColor=white) | Data fetching |
-| ![MUI](https://img.shields.io/badge/Material_UI-007FFF?style=flat&logo=mui&logoColor=white) | Component library |
-| ![Tailwind](https://img.shields.io/badge/Tailwind_CSS-06B6D4?style=flat&logo=tailwind-css&logoColor=white) | Utility CSS |
-| ![Axios](https://img.shields.io/badge/Axios-5A29E4?style=flat&logo=axios&logoColor=white) | HTTP client |
-| ![React Hook Form](https://img.shields.io/badge/React_Hook_Form-EC5990?style=flat&logo=react-hook-form&logoColor=white) | Form management |
+| ![React](https://img.shields.io/badge/React_18-61DAFB?style=flat&logo=react&logoColor=black) | UI‑библиотека |
+| ![Vite](https://img.shields.io/badge/Vite-646CFF?style=flat&logo=vite&logoColor=white) | Инструмент сборки |
+| ![React Router](https://img.shields.io/badge/React_Router-CA4245?style=flat&logo=react-router&logoColor=white) | Маршрутизация |
+| ![React Query](https://img.shields.io/badge/React_Query-FF4154?style=flat&logo=react-query&logoColor=white) | Получение и кеширование данных |
+| ![MUI](https://img.shields.io/badge/Material_UI-007FFF?style=flat&logo=mui&logoColor=white) | Библиотека компонентов |
+| ![Tailwind](https://img.shields.io/badge/Tailwind_CSS-06B6D4?style=flat&logo=tailwind-css&logoColor=white) | Utility‑CSS |
+| ![Axios](https://img.shields.io/badge/Axios-5A29E4?style=flat&logo=axios&logoColor=white) | HTTP‑клиент |
+| ![React Hook Form](https://img.shields.io/badge/React_Hook_Form-EC5990?style=flat&logo=react-hook-form&logoColor=white) | Управление формами |
 
 </details>
 
 <details>
-<summary><b>📄 Pages & Routes</b></summary>
+<summary><b>📄 Страницы и маршруты</b></summary>
 
-### 🏠 Public Pages
-- `/` - Home page with search
-- `/properties` - Property catalog
-- `/properties/:id` - Property details
-- `/about` - About platform
-- `/contact` - Contact form
-- `/consulting` - Consulting services
-- `/help` - Help center
-- `/faq` - Frequently asked questions
+### 🏠 Публичные страницы
+- `/` — главная страница с поиском
+- `/properties` — каталог объектов
+- `/properties/:id` — страница объекта
+- `/about` — о платформе
+- `/contact` — форма обратной связи
+- `/consulting` — консультационные услуги
+- `/help` — центр помощи
+- `/faq` — часто задаваемые вопросы
 
-### 🔐 Auth Pages
-- `/login` - User login
-- `/register` - User registration
-- `/forgot-password` - Password recovery
-- `/reset-password/:token` - Password reset
-- `/verify-email/:token` - Email verification
-- `/auth/success` - OAuth success
-- `/auth/error` - OAuth error
+### 🔐 Страницы аутентификации
+- `/login` — вход пользователя
+- `/register` — регистрация пользователя
+- `/forgot-password` — восстановление пароля
+- `/reset-password/:token` — сброс пароля
+- `/verify-email/:token` — подтверждение email
+- `/auth/success` — успешный вход через OAuth
+- `/auth/error` — ошибка аутентификации OAuth
 
-### 👤 User Pages (Protected)
-- `/profile` - User profile
-- `/my-listings` - User's properties
-- `/favorites` - Favorite properties
-- `/create-property` - Create new listing
+### 👤 Пользовательские страницы (защищённые)
+- `/profile` — профиль пользователя
+- `/my-listings` — мои объявления
+- `/favorites` — избранные объекты
+- `/create-property` — создание нового объявления
 
-### 🛡️ Admin Pages (Admin Only)
-- `/admin` - Admin dashboard
+### 🛡️ Админ‑страницы (только для админа)
+- `/admin` — панель администратора
 
-### ℹ️ Legal & Info Pages
-- `/privacy` - Privacy policy
-- `/terms` - Terms of service
-- `/cookies` - Cookie policy
-- `/report` - Report problem
-- `/support` - Support chat
+### ℹ️ Юридическая информация и сервисные страницы
+- `/privacy` — политика конфиденциальности
+- `/terms` — условия использования
+- `/cookies` — политика cookie
+- `/report` — сообщить о проблеме
+- `/support` — страница поддержки/чата
 
 </details>
 
 <details>
-<summary><b>🧩 Key Components</b></summary>
+<summary><b>🧩 Ключевые компоненты</b></summary>
 
 ### Layout
-- `Layout` - Main layout wrapper
-- `Header` - Navigation & auth status
-- `Footer` - Footer with links
+- `Layout` — основной layout‑контейнер
+- `Header` — шапка, навигация и статус авторизации
+- `Footer` — подвал с навигацией и ссылками
 
-### UI Components
-- `Button` - Custom button styles
-- `Card` - Property card display
-- `Badge` - Status badges
-- `Input` - Form inputs
-- `Modal` - Dialog modals
-- `Loader` - Loading states
-- `Toast` - Notifications
+### UI‑компоненты
+- `Button` — стилизованные кнопки
+- `Card` — карточка объекта недвижимости
+- `Badge` — бейджи статусов
+- `Input` — элементы ввода форм
+- `Modal` — модальные окна
+- `Loader` — индикаторы загрузки
+- `Toast` — уведомления
 
-### Property Components
-- `PropertyCard` - Property preview
-- `PropertyGrid` - Grid layout
-- `PropertyFilters` - Search filters
-- `PropertyForm` - Create/edit form
-- `ImageUploader` - Image upload
-- `CityAutocomplete` - City search
+### Компоненты объектов
+- `PropertyCard` — превью объекта
+- `PropertyGrid` — сетка объектов
+- `PropertyFilters` — панель фильтров
+- `PropertyForm` — форма создания/редактирования объявления
+- `ImageUploader` — загрузка изображений
+- `CityAutocomplete` — выбор города с автодополнением
 
-### Feature Components
-- `AuthForm` - Login/register
-- `UserMenu` - User dropdown
-- `FavoriteButton` - Add to favorites
-- `ReviewForm` - Submit review
-- `ContactForm` - Contact owner
-- `CookieBanner` - Cookie consent
+### Функциональные компоненты
+- `AuthForm` — формы логина/регистрации
+- `UserMenu` — меню пользователя
+- `FavoriteButton` — кнопка добавления в избранное
+- `ReviewForm` — форма отзыва
+- `ContactForm` — форма связи с владельцем
+- `CookieBanner` — баннер согласия на cookie
 
 </details>
 
 <details>
-<summary><b>🎣 Custom Hooks</b></summary>
+<summary><b>🎣 Пользовательские хуки</b></summary>
 
 ```javascript
-// Authentication
-useAuth()              // Auth context & methods
-useUser()              // Current user data
+// Аутентификация
+useAuth()              // Контекст и методы авторизации
+useUser()              // Данные текущего пользователя
 
-// Properties
-useProperties()        // Fetch properties list
-useProperty(id)        // Fetch single property
-useCreateProperty()    // Create new property
-useUpdateProperty()    // Update property
-useDeleteProperty()    // Delete property
+// Объекты недвижимости
+useProperties()        // Получение списка объектов
+useProperty(id)        // Получение одного объекта
+useCreateProperty()    // Создание нового объекта
+useUpdateProperty()    // Обновление объекта
+useDeleteProperty()    // Удаление объекта
 
-// Favorites
-useFavorites()         // User's favorites
-useToggleFavorite()    // Add/remove favorite
+// Избранное
+useFavorites()         // Список избранных объектов
+useToggleFavorite()    // Добавление/удаление из избранного
 
-// Theme
-useTheme()             // Theme context (dark/light)
+// Тема
+useTheme()             // Контекст темы (тёмная/светлая)
 
-// Validation
-usePropertyValidation() // Property form validation
+// Валидация
+usePropertyValidation() // Валидация формы объекта
 ```
 
 </details>
 
 <details>
-<summary><b>⚙️ Environment Variables</b></summary>
+<summary><b>⚙️ Переменные окружения</b></summary>
 
 ```bash
-# API Configuration
+# Настройки API
 VITE_API_BASE_URL=http://localhost:3000/api
 
 # Google OAuth
@@ -518,7 +518,7 @@ VITE_GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
 VITE_CLOUDINARY_CLOUD_NAME=your-cloud-name
 VITE_CLOUDINARY_UPLOAD_PRESET=your-upload-preset
 
-# Optional
+# Необязательные
 VITE_ENABLE_ANALYTICS=false
 VITE_MAP_API_KEY=your-map-api-key
 ```
@@ -526,21 +526,21 @@ VITE_MAP_API_KEY=your-map-api-key
 </details>
 
 <details>
-<summary><b>🎨 Theme & Styling</b></summary>
+<summary><b>🎨 Тема и стили</b></summary>
 
-### Theme System
-- 🌓 Dark/Light mode toggle
-- 💾 Persistent theme preference
-- 🎨 Custom color palette
-- 📱 Responsive breakpoints
+### Система тем
+- 🌓 Переключатель тёмной/светлой темы
+- 💾 Сохранение выбранной темы
+- 🎨 Кастомная цветовая палитра
+- 📱 Адаптивные брейкпоинты
 
-### Styling Approach
-- **Tailwind CSS** - Utility classes for layout
-- **Material UI** - Pre-built components
-- **CSS Modules** - Component-specific styles
-- **Custom CSS** - Global styles & animations
+### Подход к стилизации
+- **Tailwind CSS** — utility‑классы для вёрстки
+- **Material UI** — готовые компоненты
+- **CSS Modules** — стили на уровне компонентов
+- **Custom CSS** — глобальные стили и анимации
 
-### Color Palette
+### Цветовая палитра
 ```css
 /* Primary Colors */
 --primary: #2563eb
@@ -558,12 +558,12 @@ VITE_MAP_API_KEY=your-map-api-key
 
 ---
 
-## ⚙️ Installation
+## ⚙️ Установка
 
 <details open>
-<summary><b>📋 Prerequisites</b></summary>
+<summary><b>📋 Предварительные требования</b></summary>
 
-Before you begin, ensure you have the following installed:
+Перед началом убедитесь, что у вас установлено:
 
 - ![Node.js](https://img.shields.io/badge/Node.js-18+_LTS-339933?style=flat&logo=node.js&logoColor=white)
 - ![npm](https://img.shields.io/badge/npm-Latest-CB3837?style=flat&logo=npm&logoColor=white)
@@ -572,10 +572,10 @@ Before you begin, ensure you have the following installed:
 
 </details>
 
-### 🚀 Quick Start
+### 🚀 Быстрый старт
 
 <details>
-<summary><b>1️⃣ Clone Repository</b></summary>
+<summary><b>1️⃣ Клонирование репозитория</b></summary>
 
 ```bash
 git clone https://github.com/boris2024-spec/NADLAN.git
@@ -585,83 +585,83 @@ cd NADLAN
 </details>
 
 <details>
-<summary><b>2️⃣ Backend Setup</b></summary>
+<summary><b>2️⃣ Настройка бэкенда</b></summary>
 
 ```bash
-# Navigate to backend directory
+# Перейдите в директорию бэкенда
 cd nadlan_back
 
-# Install dependencies
+# Установите зависимости
 npm install
 
-# Create environment file
+# Создайте файл окружения
 cp .env.example .env
 
-# Edit .env with your configuration
-# Required: MongoDB URI, JWT secrets, SMTP credentials, Cloudinary keys
+# Заполните .env своими значениями
+# Обязательно: MongoDB URI, JWT‑секреты, SMTP‑доступ, ключи Cloudinary
 
-# Start development server
+# Запустите сервер разработки
 npm run dev
 
-# Or production mode
+# Или в режиме продакшена
 npm start
 ```
 
-**Backend runs on:** `http://localhost:3000`
+**Бэкенд по умолчанию доступен по адресу:** `http://localhost:3000`
 
-**Health check:** `http://localhost:3000/api/health`
+**Проверка состояния:** `http://localhost:3000/api/health`
 
 </details>
 
 <details>
-<summary><b>3️⃣ Frontend Setup</b></summary>
+<summary><b>3️⃣ Настройка фронтенда</b></summary>
 
-Open a **new terminal** window:
+Откройте **новое окно терминала**:
 
 ```bash
-# Navigate to frontend directory
+# Перейдите в директорию фронтенда
 cd nadlan_front
 
-# Install dependencies
+# Установите зависимости
 npm install
 
-# Create environment file
+# Создайте файл окружения
 cp .env.example .env
 
-# Edit .env with backend API URL
+# Пропишите URL бэкенда в .env
 # VITE_API_BASE_URL=http://localhost:3000/api
 
-# Start development server
+# Запустите сервер разработки
 npm run dev
 ```
 
-**Frontend runs on:** `http://localhost:5173`
+**Фронтенд по умолчанию доступен по адресу:** `http://localhost:5173`
 
 </details>
 
 <details>
-<summary><b>4️⃣ Database Setup (Optional)</b></summary>
+<summary><b>4️⃣ Подготовка базы данных (опционально)</b></summary>
 
 ```bash
-# Navigate to backend scripts
+# Перейдите в директорию со скриптами бэкенда
 cd nadlan_back/scripts
 
-# Seed sample properties
+# Наполнить базу тестовыми объектами
 node seed-properties.mjs
 
-# Add test contacts
+# Добавить тестовые контакты
 node add-test-contacts.mjs
 
-# View seeded data
+# Просмотреть добавленные контакты
 node view-contacts.mjs
 ```
 
 </details>
 
-### 🐳 Docker Setup (Coming Soon)
+### 🐳 Docker‑окружение (в разработке)
 
 ```bash
-# Run entire stack with Docker Compose
+# Запустить весь стек через Docker Compose
 docker-compose up -d
 
 # Backend: http://localhost:3000
@@ -671,12 +671,12 @@ docker-compose up -d
 
 ---
 
-## 📚 Documentation
+## 📚 Документация
 
 <details>
-<summary><b>🔍 API Documentation</b></summary>
+<summary><b>🔍 Документация по API</b></summary>
 
-### Authentication Flow
+### Сценарий аутентификации
 
 ```mermaid
 sequenceDiagram
@@ -686,25 +686,25 @@ sequenceDiagram
     participant MongoDB
     participant Email
 
-    User->>Frontend: Register
+    User->>Frontend: Регистрация
     Frontend->>Backend: POST /api/auth/register
-    Backend->>MongoDB: Create user
-    Backend->>Email: Send verification
-    Backend-->>Frontend: Success response
+    Backend->>MongoDB: Создать пользователя
+    Backend->>Email: Отправить письмо подтверждения
+    Backend-->>Frontend: Успешный ответ
     
-    User->>Email: Click verification link
+    User->>Email: Переход по ссылке подтверждения
     Email->>Backend: GET /api/auth/verify-email/:token
-    Backend->>MongoDB: Verify user
-    Backend-->>User: Redirect to login
+    Backend->>MongoDB: Верифицировать пользователя
+    Backend-->>User: Редирект на страницу входа
     
-    User->>Frontend: Login
+    User->>Frontend: Вход
     Frontend->>Backend: POST /api/auth/login
-    Backend->>MongoDB: Check credentials
-    Backend-->>Frontend: Access + Refresh tokens
-    Frontend->>Frontend: Store tokens
+    Backend->>MongoDB: Проверка учётных данных
+    Backend-->>Frontend: Access + Refresh токены
+    Frontend->>Frontend: Сохранение токенов
 ```
 
-### Property Creation Flow
+### Сценарий создания объекта
 
 ```mermaid
 sequenceDiagram
@@ -714,186 +714,186 @@ sequenceDiagram
     participant Cloudinary
     participant MongoDB
 
-    User->>Frontend: Fill property form
-    User->>Frontend: Upload images
-    Frontend->>Cloudinary: Upload images
-    Cloudinary-->>Frontend: Image URLs
+    User->>Frontend: Заполнение формы объекта
+    User->>Frontend: Загрузка изображений
+    Frontend->>Cloudinary: Загрузка изображений
+    Cloudinary-->>Frontend: URL‑адреса изображений
     Frontend->>Backend: POST /api/properties
-    Backend->>MongoDB: Create property
-    Backend-->>Frontend: Property created
-    Frontend->>User: Success notification
+    Backend->>MongoDB: Создать объект
+    Backend-->>Frontend: Объект создан
+    Frontend->>User: Уведомление об успехе
 ```
 
 </details>
 
 <details>
-<summary><b>🛠️ Development Scripts</b></summary>
+<summary><b>🛠️ Скрипты для разработки</b></summary>
 
-### Backend Scripts
+### Скрипты бэкенда
 
-| Command | Description |
+| Команда | Описание |
 |---------|-------------|
-| `npm start` | Start production server |
-| `npm run dev` | Start development server (nodemon) |
-| `npm test` | Run tests |
-| `npm run lint` | Lint code |
+| `npm start` | Запуск сервера в продакшене |
+| `npm run dev` | Запуск сервера разработки (nodemon) |
+| `npm test` | Запуск тестов |
+| `npm run lint` | Запуск линтера |
 
-### Frontend Scripts
+### Скрипты фронтенда
 
-| Command | Description |
+| Команда | Описание |
 |---------|-------------|
-| `npm run dev` | Start dev server |
-| `npm run build` | Build for production |
-| `npm run preview` | Preview production build |
-| `npm run lint` | Lint code |
+| `npm run dev` | Запуск dev‑сервера |
+| `npm run build` | Сборка для продакшена |
+| `npm run preview` | Предпросмотр production‑сборки |
+| `npm run lint` | Запуск линтера |
 
-### Utility Scripts (Backend)
+### Вспомогательные скрипты (бэкенд)
 
 ```bash
-# Database operations
-node scripts/seed-properties.mjs       # Add sample properties
-node scripts/clear-favorites.mjs       # Clear all favorites
-node scripts/reset-all-favorites.mjs   # Reset favorites system
-node scripts/migrate-address-fields.mjs # Migrate address structure
+# Операции с базой данных
+node scripts/seed-properties.mjs        # Добавить тестовые объекты
+node scripts/clear-favorites.mjs        # Очистить все избранные
+node scripts/reset-all-favorites.mjs    # Сбросить систему избранного
+node scripts/migrate-address-fields.mjs # Миграция структуры адреса
 
-# Testing
-node scripts/test-smtp.js              # Test email service
-node scripts/debug-favorites.mjs       # Debug favorites
-node scripts/view-contacts.mjs         # View contact requests
+# Тестирование
+node scripts/test-smtp.js               # Проверить почтовый сервис
+node scripts/debug-favorites.mjs        # Отладка избранного
+node scripts/view-contacts.mjs          # Просмотр заявок на контакт
 
-# Quick actions
-node scripts/quick-create-property.mjs # Quickly create a property
+# Быстрые действия
+node scripts/quick-create-property.mjs  # Быстро создать объект
 ```
 
 </details>
 
 <details>
-<summary><b>🧪 Testing</b></summary>
+<summary><b>🧪 Тестирование</b></summary>
 
 ```bash
-# Backend tests
+# Тесты бэкенда
 cd nadlan_back
 npm test
 
-# Frontend tests
+# Тесты фронтенда
 cd nadlan_front
 npm test
 
-# E2E tests (coming soon)
+# E2E‑тесты (в разработке)
 npm run test:e2e
 ```
 
 </details>
 
 <details>
-<summary><b>🚀 Deployment</b></summary>
+<summary><b>🚀 Деплой</b></summary>
 
-### Backend Deployment (Railway/Heroku/VPS)
+### Деплой бэкенда (Railway/Heroku/VPS)
 
 ```bash
-# Set environment variables on your platform
-# Build and deploy
+# Настройте переменные окружения на вашей платформе
+# Соберите и задеплойте приложение
 npm run build
 npm start
 ```
 
-### Frontend Deployment (Netlify)
+### Деплой фронтенда (Netlify)
 
 ```bash
-# Build production bundle
+# Соберите production‑бандл
 npm run build
 
-# Deploy to Netlify
-# Configured via netlify.toml
+# Задеплойте на Netlify
+# Конфигурация задаётся через netlify.toml
 ```
 
-### Environment Checklist
+### Чек‑лист окружения
 
-- ✅ Set `NODE_ENV=production`
-- ✅ Configure MongoDB production URI
-- ✅ Set secure JWT secrets
-- ✅ Configure SMTP for emails
-- ✅ Set Cloudinary credentials
-- ✅ Update CORS origins
-- ✅ Enable SSL/HTTPS
-- ✅ Set up monitoring/logging
-
-</details>
-
----
-
-## 🤝 Contributing
-
-We welcome contributions! Here's how you can help:
-
-<details>
-<summary><b>💡 Ways to Contribute</b></summary>
-
-- 🐛 Report bugs
-- 💡 Suggest new features
-- 📖 Improve documentation
-- 🔧 Submit pull requests
-- ⭐ Star the repository
-- 🔄 Share the project
-
-</details>
-
-<details>
-<summary><b>📝 Development Guidelines</b></summary>
-
-1. **Fork** the repository
-2. **Create** a feature branch (`git checkout -b feature/AmazingFeature`)
-3. **Commit** your changes (`git commit -m 'Add some AmazingFeature'`)
-4. **Push** to the branch (`git push origin feature/AmazingFeature`)
-5. **Open** a Pull Request
-
-### Code Style
-
-- Follow existing code patterns
-- Use meaningful variable names
-- Add comments for complex logic
-- Write descriptive commit messages
-- Update documentation as needed
+- ✅ Установлен `NODE_ENV=production`
+- ✅ Настроен production‑URI MongoDB
+- ✅ Указаны надёжные JWT‑секреты
+- ✅ Настроен SMTP для отправки почты
+- ✅ Добавлены креденшелы Cloudinary
+- ✅ Обновлены CORS‑домены
+- ✅ Включён SSL/HTTPS
+- ✅ Настроен мониторинг и логирование
 
 </details>
 
 ---
 
-## 📞 Support & Contact
+## 🤝 Вклад в проект
+
+Мы рады любым контрибуциям! Вот как вы можете помочь:
+
+<details>
+<summary><b>💡 Как можно помочь</b></summary>
+
+- 🐛 Сообщать об ошибках
+- 💡 Предлагать новые функции
+- 📖 Улучшать документацию
+- 🔧 Отправлять pull‑request’ы
+- ⭐ Ставить звёздочку репозиторию
+- 🔄 Делиться проектом
+
+</details>
+
+<details>
+<summary><b>📝 Рекомендации по разработке</b></summary>
+
+1. **Сделайте fork** репозитория
+2. **Создайте** ветку с фичей (`git checkout -b feature/AmazingFeature`)
+3. **Закоммитьте** изменения (`git commit -m 'Add some AmazingFeature'`)
+4. **Отправьте** ветку на GitHub (`git push origin feature/AmazingFeature`)
+5. **Откройте** Pull Request
+
+### Стиль кода
+
+- Следуйте существующим паттернам проекта
+- Используйте понятные имена переменных и функций
+- Добавляйте комментарии к сложной логике
+- Пишите осмысленные сообщения коммитов
+- Обновляйте документацию при изменениях поведения
+
+</details>
+
+---
+
+## 📞 Поддержка и контакты
 
 <div align="center">
 
-### Need Help?
+### Нужна помощь?
 
-[![Documentation](https://img.shields.io/badge/📚_Documentation-Read_Docs-blue?style=for-the-badge)](./README.md)
-[![Issues](https://img.shields.io/badge/🐛_Report_Bug-GitHub_Issues-red?style=for-the-badge)](https://github.com/boris2024-spec/NADLAN/issues)
-[![Discussions](https://img.shields.io/badge/💬_Discussions-GitHub_Discussions-green?style=for-the-badge)](https://github.com/boris2024-spec/NADLAN/discussions)
+[![Documentation](https://img.shields.io/badge/📚_Documentation-Открыть_документацию-blue?style=for-the-badge)](./README.md)
+[![Issues](https://img.shields.io/badge/🐛_Report_Bug-Сообщить_об_ошибке-red?style=for-the-badge)](https://github.com/boris2024-spec/NADLAN/issues)
+[![Discussions](https://img.shields.io/badge/💬_Discussions-Обсуждения-green?style=for-the-badge)](https://github.com/boris2024-spec/NADLAN/discussions)
 
 </div>
 
 ---
 
-## 📜 License
+## 📜 Лицензия
 
-This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
+Проект распространяется под лицензией **MIT License** — подробности см. в файле [LICENSE](LICENSE).
 
 ---
 
-## 🌟 Acknowledgments
+## 🌟 Благодарности
 
 <details>
-<summary><b>Built With Amazing Technologies</b></summary>
+<summary><b>Проект создан с помощью отличных технологий</b></summary>
 
-- [React](https://react.dev/) - UI Library
-- [Node.js](https://nodejs.org/) - Runtime
-- [Express](https://expressjs.com/) - Web Framework
-- [MongoDB](https://www.mongodb.com/) - Database
-- [Cloudinary](https://cloudinary.com/) - Media Management
-- [Material-UI](https://mui.com/) - Component Library
-- [Tailwind CSS](https://tailwindcss.com/) - Utility CSS
-- [Vite](https://vitejs.dev/) - Build Tool
+- [React](https://react.dev/) — UI‑библиотека
+- [Node.js](https://nodejs.org/) — среда выполнения
+- [Express](https://expressjs.com/) — веб‑фреймворк
+- [MongoDB](https://www.mongodb.com/) — база данных
+- [Cloudinary](https://cloudinary.com/) — управление медиафайлами
+- [Material-UI](https://mui.com/) — библиотека компонентов
+- [Tailwind CSS](https://tailwindcss.com/) — utility‑CSS
+- [Vite](https://vitejs.dev/) — инструмент сборки
 
-And many other amazing open-source projects! 🙏
+И многие другие замечательные open‑source‑проекты! 🙏
 
 </details>
 
@@ -901,15 +901,15 @@ And many other amazing open-source projects! 🙏
 
 <div align="center">
 
-### ⭐ Star Us on GitHub!
+### ⭐ Отметьте нас на GitHub!
 
-If you find this project useful, please consider giving it a star ⭐
+Если проект оказался для вас полезным, поставьте ему звёздочку ⭐
 
 [![Star History Chart](https://img.shields.io/github/stars/boris2024-spec/NADLAN?style=social)](https://github.com/boris2024-spec/NADLAN/stargazers)
 
-Made with ❤️ by the Nadlan Team
+Сделано с ❤️ командой Nadlan
 
-[🔝 Back to Top](#-nadlan--real-estate-platform)
+[🔝 Наверх](#-nadlan--платформа-для-недвижимости)
 
 </div>
 
