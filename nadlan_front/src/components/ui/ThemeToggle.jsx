@@ -13,9 +13,9 @@ function ThemeToggle() {
             title={isDarkMode ? 'החלף למצב יום' : 'החלף למצב לילה'}
         >
             <div className="relative w-5 h-5">
-                <Moon className={`absolute inset-0 w-5 h-5 text-blue-400 transition-all duration-300 ${isDarkMode ? 'opacity-0 rotate-90 scale-75' : 'opacity-100 rotate-0 scale-100'
+                <Sun className={`absolute inset-0 w-5 h-5 text-yellow-600 transition-all duration-300 ${isDarkMode ? 'opacity-0 rotate-90 scale-75' : 'opacity-100 rotate-0 scale-100'
                     }`} />
-                <Sun className={`absolute inset-0 w-5 h-5 text-yellow-500 transition-all duration-300 ${isDarkMode ? 'opacity-100 rotate-0 scale-100' : 'opacity-0 -rotate-90 scale-75'
+                <Moon className={`absolute inset-0 w-5 h-5 text-blue-600 transition-all duration-300 ${isDarkMode ? 'opacity-100 rotate-0 scale-100' : 'opacity-0 -rotate-90 scale-75'
                     }`} />
             </div>
         </button>

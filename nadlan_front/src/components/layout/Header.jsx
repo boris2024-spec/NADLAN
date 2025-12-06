@@ -66,7 +66,7 @@ function Header() {
                     </Tooltip>
 
                     {/* Desktop Navigation */}
-                    <nav className="hidden md:flex items-center space-x-8 rtl:space-x-reverse">
+                    <nav className="hidden xl:flex items-center space-x-8 rtl:space-x-reverse">
                         {navigation.map((item) => {
                             const Icon = item.icon;
                             return (
@@ -93,7 +93,7 @@ function Header() {
                     </nav>
 
                     {/* Desktop User Menu */}
-                    <div className="hidden md:flex items-center space-x-4 rtl:space-x-reverse">
+                    <div className="hidden xl:flex items-center space-x-4 rtl:space-x-reverse">
                         <ThemeToggle />
 
                         {isAuthenticated ? (
@@ -166,7 +166,7 @@ function Header() {
                     </div>
 
                     {/* Mobile menu and theme toggle */}
-                    <div className="md:hidden flex items-center space-x-2 rtl:space-x-reverse">
+                    <div className="xl:hidden flex items-center space-x-2 rtl:space-x-reverse">
                         <ThemeToggle />
                         <Tooltip text={isMenuOpen ? "סגור תפריט" : "פתח תפריט"} position="bottom">
                             <button
@@ -185,7 +185,7 @@ function Header() {
 
                 {/* Mobile Navigation */}
                 {isMenuOpen && (
-                    <div className="md:hidden py-4 border-t border-gray-200 dark:border-dark-300">
+                    <div className="xl:hidden py-4 border-t border-gray-200 dark:border-dark-300">
                         <div className="space-y-2">
                             {navigation.map((item) => {
                                 const Icon = item.icon;
