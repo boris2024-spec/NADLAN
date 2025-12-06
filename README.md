@@ -3,8 +3,8 @@
 # 🏠 Nadlan — Real Estate Platform
 
 [![Live Demo](https://img.shields.io/badge/🌐_Live_Demo-borisnadlan.netlify.app-00C7B7?style=for-the-badge)](https://borisnadlan.netlify.app)
-[![Status](https://img.shields.io/badge/Status-In_Development-orange?style=for-the-badge)]()
-[![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)]()
+[![Status](https://img.shields.io/badge/Status-In_Development-orange?style=for-the-badge)](http://localhost:5173/privacy-policy)
+[![License](https://img.shields.io/badge/License-MIT-blue?style=for-the-badge)](http://localhost:5173/terms-of-service)
 
 **Full-featured real estate application for searching, publishing and managing property listings**
 
