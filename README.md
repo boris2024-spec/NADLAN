@@ -18,7 +18,74 @@ Full-featured real estate application for searching, publishing and managing pro
 >
 > If a certain feature is temporarily unavailable, it is part of the ongoing development phase and will be implemented in upcoming updates.
 
-## Project Architecture
+## 🏗️Project Architecture
+
+```text
+NADLAN /
+├─ nadlan_back/                  # Backend (Node.js, Express, MongoDB)
+│  ├─ server.js                  # Main Express server, routes mounting
+│  ├─ debug-server.js            # Dev/debug server entry
+│  ├─ config/
+│  │  └─ passport.js             # Passport + Google OAuth configuration
+│  ├─ controllers/               # Business logic for API endpoints
+│  │  ├─ adminController.js
+│  │  ├─ authController.js
+│  │  ├─ contactController.js
+│  │  ├─ propertyController.js
+│  │  └─ uploadController.js
+│  ├─ middleware/                # Cross-cutting middleware
+│  │  ├─ auth.js                 # JWT / roles guards
+│  │  ├─ error.js                # Global error handler
+│  │  ├─ upload.js               # Multer + Cloudinary upload pipeline
+│  │  └─ validation.js           # Joi validation schemas
+│  ├─ models/                    # Mongoose models
+│  │  ├─ index.js
+│  │  ├─ Property.js
+│  │  └─ User.js
+│  ├─ routes/                    # Express routers
+│  │  ├─ admin.js
+│  │  ├─ auth.js
+│  │  ├─ cloudinary.js
+│  │  ├─ consulting.js
+│  │  ├─ contact.js
+│  │  ├─ properties.js
+│  │  └─ upload.js
+│  ├─ utils/
+│  │  ├─ emailService.js         # Nodemailer integration
+│  │  └─ logger.js               # Winston + morgan logger
+│  ├─ public/                    # Static assets served by backend
+│  ├─ scripts/                   # Maintenance / seed / debug scripts
+│  └─ logs/                      # Application logs
+
+├─ nadlan_front/                 # Frontend (React, Vite)
+│  ├─ index.html                 # Vite HTML template
+│  ├─ src/
+│  │  ├─ main.jsx                # App bootstrap, ReactDOM.createRoot
+│  │  ├─ App.jsx                 # Router, providers, layout shell
+│  │  ├─ assets/                 # Images, icons, etc.
+│  │  ├─ components/
+│  │  │  ├─ PrivateRoute.jsx     # Route guard for protected pages
+│  │  │  ├─ layout/              # Layout components (Header, Footer, Layout)
+│  │  │  └─ ui/                  # Shared UI (Button, Card, Badge, etc.)
+│  │  ├─ context/
+│  │  │  ├─ AuthContext.jsx      # Auth state + API calls
+│  │  │  └─ ThemeContext.jsx     # Theme (light/dark) provider
+│  │  ├─ hooks/
+│  │  │  └─ usePropertyValidation.js
+│  │  ├─ pages/                  # Route-level pages (Home, Catalog, Auth, etc.)
+│  │  ├─ services/
+│  │  │  ├─ api.js               # Axios API client
+│  │  │  └─ citiesApi.js         # Cities/Geo helper API
+│  │  ├─ utils/
+│  │  │  └─ helpers.js
+│  │  └─ validation/             # Joi/Zod schemas for forms
+│  └─ public/                    # Static assets for Vite
+
+├─ netlify.toml                  # Global Netlify configuration
+├─ README.md / README_EN.md / README_RU.md
+└─ package.json                  # Root project metadata / scripts
+```
+
 
 
 ## 📚 Documentation
@@ -56,6 +123,7 @@ sequenceDiagram
 </details>
 
 <details>
+
 ### Property Creation Flow
 
 ```mermaid
