@@ -54,6 +54,8 @@ sequenceDiagram
   Frontend->>Frontend: Store tokens
 ```
 </details>
+
+<details>
 ### Property Creation Flow
 
 ```mermaid
