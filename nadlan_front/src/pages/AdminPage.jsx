@@ -488,7 +488,7 @@ export default function AdminPage() {
                                     }
                                 }}
                             >
-                                <span className="block sm:hidden">ב- Excel</span>
+                                <span className="block sm:hidden">Excel</span>
                                 <span className="hidden sm:block">הורדת נתונים ב-Excel</span>
                             </Button>
 
@@ -512,7 +512,7 @@ export default function AdminPage() {
                                     }
                                 }}
                             >
-                                <span className="block sm:hidden">ב- Excel</span>
+                                <span className="block sm:hidden">Excel</span>
                                 <span className="hidden sm:block">הורדת משתמשים ב-Excel</span>
                             </Button>
                         )}
