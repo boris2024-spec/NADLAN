@@ -107,14 +107,14 @@ function ConsultingPage() {
         setLoading(true);
 
         try {
-            // Используем адрес backend из переменной окружения
+            // Using fetch to send form data to backend
             const response = await fetch(`${API_URL}/send-consulting-email`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(formData)
             });
             if (!response.ok) {
-                // Пытаемся получить текст ошибки с сервера
+                // Trying to get error text from server
                 let errorMsg = 'שגיאה בשליחת הבקשה';
                 try {
                     const data = await response.json();
@@ -181,7 +181,7 @@ function ConsultingPage() {
                                 return (
                                     <Card
                                         key={type.value}
-                                        className="p-6 hover:shadow-lg transition-shadow cursor-pointer border-2 border-transparent hover:border-primary-500"
+                                        className="p-6 hover:shadow-lg transition-shadow border-2 border-transparent hover:border-primary-500"
                                     >
                                         <div className="flex items-start gap-4">
                                             <div className="p-3 bg-primary-100 dark:bg-primary-900 rounded-lg">
@@ -358,7 +358,7 @@ function ConsultingPage() {
                     </div>
 
                     {/* Info Section */}
-                    <div className="mt-12 grid md:grid-cols-3 gap-6 text-center">
+                    <div className="mt-12 grid md:grid-cols-3 gap-6 text-center ">
                         <div className="p-6 bg-white dark:bg-dark-50 rounded-lg shadow-sm border border-gray-200 dark:border-dark-300">
                             <Calendar className="h-8 w-8 mx-auto mb-3 text-primary-600" />
                             <h3 className="font-semibold mb-2 text-gray-900 dark:text-gray-100">זמינות גבוהה</h3>
