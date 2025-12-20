@@ -359,7 +359,7 @@ function ConsultingPage() {
 
                     {/* Info Section */}
                     <div className="mt-12 grid md:grid-cols-3 gap-6 text-center ">
-                        <div className="p-6 bg-white dark:bg-dark-50 rounded-lg shadow-sm border border-gray-200 dark:border-dark-300">
+                        <div className="p-6 bg-white dark:bg-dark-50 rounded-lg shadow-sm border border-gray-200 dark:border-dark-300 hover:shadow-lg transition-shadow dark:hover:shadow-dark-100 border-1 border-transparent hover:border-primary-500 dark:hover:border-primary-400">
                             <Calendar className="h-8 w-8 mx-auto mb-3 text-primary-600" />
                             <h3 className="font-semibold mb-2 text-gray-900 dark:text-gray-100">זמינות גבוהה</h3>
                             <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -367,7 +367,7 @@ function ConsultingPage() {
                                 08:00 - 20:00
                             </p>
                         </div>
-                        <div className="p-6 bg-white dark:bg-dark-50 rounded-lg shadow-sm border border-gray-200 dark:border-dark-300">
+                        <div className="p-6 bg-white dark:bg-dark-50 rounded-lg shadow-sm border border-gray-200 dark:border-dark-300 hover:shadow-lg transition-shadow dark:hover:shadow-dark-100 border-1 border-transparent hover:border-primary-500 dark:hover:border-primary-400">
                             <Users className="h-8 w-8 mx-auto mb-3 text-primary-600" />
                             <h3 className="font-semibold mb-2 text-gray-900 dark:text-gray-100">צוות מומחים</h3>
                             <p className="text-sm text-gray-600 dark:text-gray-400">
@@ -375,7 +375,7 @@ function ConsultingPage() {
                                 בתחום הנדל"ן
                             </p>
                         </div>
-                        <div className="p-6 bg-white dark:bg-dark-50 rounded-lg shadow-sm border border-gray-200 dark:border-dark-300">
+                        <div className="p-6 bg-white dark:bg-dark-50 rounded-lg shadow-sm border border-gray-200 dark:border-dark-300 hover:shadow-lg transition-shadow dark:hover:shadow-dark-100 border-1 border-transparent hover:border-primary-500 dark:hover:border-primary-400">
                             <Clock className="h-8 w-8 mx-auto mb-3 text-primary-600" />
                             <h3 className="font-semibold mb-2 text-gray-900 dark:text-gray-100">מענה מהיר</h3>
                             <p className="text-sm text-gray-600 dark:text-gray-400">
