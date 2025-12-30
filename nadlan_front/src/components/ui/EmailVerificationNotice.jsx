@@ -74,9 +74,9 @@ const EmailVerificationNotice = ({ userEmail, onClose }) => {
                     <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg p-3 mb-6">
                         <div className="flex items-start gap-2">
                             <AlertCircle className="w-5 h-5 text-yellow-600 dark:text-yellow-400 mt-0.5 flex-shrink-0" />
-                            <div className="text-sm text-yellow-800 dark:text-yellow-200 text-right">
+                            <div className="text-sm text-yellow-800 dark:text-yellow-200 text-left">
                                 <p className="font-medium mb-1">טיפים חשובים:</p>
-                                <ul className="text-xs space-y-1">
+                                <ul className="text-xs space-y-1 text-left">
                                     <li>• בדוק את תיקיית הספאם</li>
                                     <li>• הקישור תקף למשך 24 שעות</li>
                                     <li>• ללא אימוד לא תוכל לגשת לכל התכונות</li>

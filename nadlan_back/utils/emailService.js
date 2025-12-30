@@ -30,7 +30,7 @@ class EmailService {
         };
 
         if (process.env.NODE_ENV !== 'production') {
-            options.logger = true;
+            options.logger = false; // disable logging to console
             options.debug = true;
         }
 
