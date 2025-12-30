@@ -218,9 +218,14 @@ function ProfilePage() {
 
         try {
             setAvatarUploading(true);
-            await uploadAPI.uploadAvatar(file);
+            const response = await uploadAPI.uploadAvatar(file);
+
+            // Update user avatar in context
+            if (response.data?.data?.avatar) {
+                await updateProfile({ avatar: response.data.data.avatar });
+            }
+
             toast.success('התמונה עודכנה בהצלחה');
-            // TODO: update user in context
         } catch (error) {
             const errorInfo = handleApiError(error);
             toast.error(errorInfo.message);
@@ -322,6 +327,29 @@ function ProfilePage() {
                                         }`}>
                                         {user?.isVerified ? 'מאומת' : 'לא מאומת'}
                                     </div>
+
+                                    {/* Verification Button */}
+                                    {!user?.isVerified && (
+                                        <div className="mt-3">
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="w-full flex items-center justify-center"
+                                                onClick={async () => {
+                                                    try {
+                                                        await authAPI.requestVerification(user.email);
+                                                        toast.success('בקשת אימות נשלחה למייל שלך');
+                                                    } catch (error) {
+                                                        const errorInfo = handleApiError(error);
+                                                        toast.error(errorInfo.message);
+                                                    }
+                                                }}
+                                            >
+                                                <Mail className="w-4 h-4 ml-2" />
+                                                שלח קישור אימות
+                                            </Button>
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Delete Profile Button */}
@@ -503,7 +531,7 @@ function ProfilePage() {
                                                 placeholder="מספר טלפון"
                                             />
                                         ) : (
-                                            <p className="py-2 px-3 bg-gray-50 dark:bg-dark-100 rounded-lg">
+                                            <p className="py-2 px-3 bg-gray-50 dark:bg-dark-100 rounded-lg ">
                                                 {formData.phone || user?.phone || 'לא מוגדר'}
                                             </p>
                                         )}

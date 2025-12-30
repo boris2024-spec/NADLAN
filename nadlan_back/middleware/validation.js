@@ -20,7 +20,7 @@ const createValidator = (schema, { source = 'body', stripUnknown = true, allowUn
             }));
             return res.status(400).json({
                 success: false,
-                message: 'Ошибки валидации',
+                message: 'שגיאות באימות הנתונים',
                 errors
             });
         }

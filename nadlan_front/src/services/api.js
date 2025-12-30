@@ -106,6 +106,9 @@ export const authAPI = {
     // verificate email
     verifyEmail: (token) => api.get(`/auth/verify-email/${token}`),
 
+    // resend verification email
+    requestVerification: (email) => api.post('/auth/resend-verification', { email }),
+
     // forgot password
     forgotPassword: (email) => api.post('/auth/forgot-password', { email }),
 
