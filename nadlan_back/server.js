@@ -12,7 +12,7 @@ import { requestIdMiddleware, errorLogger as errorLoggerMiddleware, errorHandler
 import morgan from 'morgan';
 import { httpLogger, errorLogger, securityLogger, morganStream } from './utils/logger.js';
 
-// Загружаем переменные окружения
+// Load environment variables
 dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
@@ -21,7 +21,7 @@ const __dirname = dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware безопасности
+// Security middleware
 app.use(helmet({
     contentSecurityPolicy: {
         directives: {
@@ -37,15 +37,15 @@ app.use(helmet({
 
 // Rate limiting
 const limiter = rateLimit({
-    windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 минут
-    max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100, // лимит каждого IP
-    message: 'Слишком много запросов с этого IP, попробуйте позже.',
+    windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutes
+    max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100, // limit per IP
+    message: 'Too many requests from this IP, please try again later.',
     standardHeaders: true,
     legacyHeaders: false,
 });
 app.use(limiter);
 
-// CORS настройки с кастомной ошибкой
+// CORS settings with custom error
 const allowedOrigins = (process.env.CLIENT_ORIGIN || process.env.FRONTEND_URL || '')
     .split(',')
     .map(s => s.trim())
@@ -53,7 +53,7 @@ const allowedOrigins = (process.env.CLIENT_ORIGIN || process.env.FRONTEND_URL ||
 
 const corsOptions = {
     origin(origin, callback) {
-        if (!origin) return callback(null, true); // запросы без Origin разрешаем
+        if (!origin) return callback(null, true); // requests without Origin are allowed
         if (allowedOrigins.includes(origin)) {
             securityLogger.info(`CORS allowed: ${origin}`);
             return callback(null, true);
@@ -71,10 +71,10 @@ app.options('*', cors(corsOptions));
 // request id & timing
 app.use(requestIdMiddleware);
 
-// HTTP логирование с morgan
+// HTTP logging with morgan
 app.use(morgan('combined', { stream: morganStream }));
 
-// Middleware для парсинга JSON
+// Middleware for parsing JSON
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
@@ -86,7 +86,8 @@ app.use(session({
     cookie: {
         secure: process.env.NODE_ENV === 'production',
         sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
-        maxAge: 24 * 60 * 60 * 1000 // 24 часа
+        maxAge: 24 * 60 * 60 * 1000, // 24 hours
+        httpOnly: true
     }
 }));
 
@@ -94,11 +95,11 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
-// Раздача статических файлов из папки public
-// Доступ к заглушке: http://localhost:3000/assets/imeges/hause.png
+// Serving static files from the public folder
+// Access placeholder: http://localhost:3000/assets/images/house.png
 app.use('/assets', express.static(join(__dirname, 'public')));
 
-// Подключение к MongoDB
+// Connecting to MongoDB
 const connectDB = async () => {
     try {
         const mongoURI = process.env.NODE_ENV === 'production'
@@ -106,10 +107,10 @@ const connectDB = async () => {
             : process.env.MONGODB_URI;
 
         await mongoose.connect(mongoURI);
-        console.log('✅ MongoDB подключена успешно');
+        console.log('✅ MongoDB connected successfully');
         httpLogger.info('MongoDB connected successfully');
     } catch (error) {
-        console.error('❌ Ошибка подключения к MongoDB:', error.message);
+        console.error('❌ MongoDB connection failed:', error.message);
         errorLogger.error('MongoDB connection failed', { error: error.message, stack: error.stack });
         process.exit(1);
     }
@@ -149,7 +150,7 @@ app.get('/api/health', async (req, res) => {
     });
 });
 
-// Импорт роутов
+// Importing routes
 import authRoutes from './routes/auth.js';
 import propertyRoutes from './routes/properties.js';
 import uploadRoutes from './routes/upload.js';
@@ -159,7 +160,7 @@ import contactRoutes from './routes/contact.js';
 import consultingRoutes from './routes/consulting.js';
 // import userRoutes from './routes/users.js';
 
-// Использование роутов
+// Using routes
 app.use('/api/auth', authRoutes);
 app.use('/api/properties', propertyRoutes);
 app.use('/api/upload', uploadRoutes);
@@ -169,11 +170,11 @@ app.use('/api/contact', contactRoutes);
 app.use('/api', consultingRoutes);
 // app.use('/api/users', userRoutes);
 
-// 404 и ошибки (порядок важен)
+// 404 and errors (order matters)
 app.use('*', notFoundHandler);
 app.use(errorLoggerMiddleware);
 app.use((err, req, res, next) => {
-    // Логируем все ошибки в errorLogger
+    // Log all errors in errorLogger
     errorLogger.error('Application error', {
         error: err.message,
         stack: err.stack,
@@ -186,7 +187,7 @@ app.use((err, req, res, next) => {
 });
 app.use(errorHandler);
 
-// Запуск сервера
+// Starting the server
 const findAvailablePort = async (startPort, maxTries = 10) => {
     let port = startPort;
     for (let i = 0; i < maxTries; i++) {
@@ -195,14 +196,14 @@ const findAvailablePort = async (startPort, maxTries = 10) => {
                 testServer.close(() => resolve(true));
             }).on('error', err => {
                 if (err.code === 'EADDRINUSE') return resolve(false);
-                console.error('Ошибка проверки порта', port, err);
+                console.error('Port check error', port, err);
                 resolve(false);
             });
         });
         if (available) return port;
-        port++; // пробуем следующий
+        port++; // trying next one
     }
-    throw new Error(`Не найден свободный порт начиная с ${startPort}`);
+    throw new Error(`No available port found starting from ${startPort}`);
 };
 
 const startServer = async () => {
@@ -211,14 +212,14 @@ const startServer = async () => {
         const selectedPort = await findAvailablePort(parseInt(PORT));
         app.listen(selectedPort, () => {
             const startupMessage = `Server started on port ${selectedPort} in ${process.env.NODE_ENV || 'development'} mode`;
-            console.log(`🚀 Сервер запущен на порту ${selectedPort}`);
-            console.log(`🌍 Среда: ${process.env.NODE_ENV || 'development'}`);
-            console.log(`📡 API доступен по адресу: http://localhost:${selectedPort}/api`);
+            console.log(`🚀 Server started on port ${selectedPort}`);
+            console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+            console.log(`📡 API available at: http://localhost:${selectedPort}/api`);
             httpLogger.info(startupMessage);
             securityLogger.info(`Server started with allowed origins: ${allowedOrigins.join(', ')}`);
         });
     } catch (error) {
-        console.error('❌ Не удалось запустить сервер:', error);
+        console.error('❌ Failed to start server:', error);
         errorLogger.error('Failed to start server', { error: error.message, stack: error.stack });
         process.exit(1);
     }
@@ -228,14 +229,14 @@ startServer();
 
 // Graceful shutdown
 process.on('SIGTERM', async () => {
-    console.log('🔄 SIGTERM получен, начинаю graceful shutdown...');
+    console.log('🔄 SIGTERM received, starting graceful shutdown...');
     httpLogger.info('SIGTERM received, starting graceful shutdown');
     await mongoose.connection.close();
     process.exit(0);
 });
 
 process.on('SIGINT', async () => {
-    console.log('🔄 SIGINT получен, начинаю graceful shutdown...');
+    console.log('🔄 SIGINT received, starting graceful shutdown...');
     httpLogger.info('SIGINT received, starting graceful shutdown');
     await mongoose.connection.close();
     process.exit(0);
