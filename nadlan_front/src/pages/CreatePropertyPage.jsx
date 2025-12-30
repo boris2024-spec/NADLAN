@@ -374,10 +374,28 @@ function CreatePropertyPage() {
     };
 
     const removeImage = (index) => {
-        setFormData(prev => ({
-            ...prev,
-            images: prev.images.filter((_, i) => i !== index)
-        }));
+        setFormData(prev => {
+            const newImages = prev.images.filter((_, i) => i !== index);
+
+            // If we removed the main image and there are other images left,
+            // set the first remaining image as main
+            if (newImages.length > 0) {
+                const hasMain = newImages.some(img => img.isMain === true);
+                if (!hasMain) {
+                    newImages[0].isMain = true;
+                }
+            }
+
+            // Update order for remaining images
+            newImages.forEach((img, i) => {
+                img.order = i;
+            });
+
+            return {
+                ...prev,
+                images: newImages
+            };
+        });
     };
 
     const setMainImage = (index) => {
@@ -471,6 +489,7 @@ function CreatePropertyPage() {
                     const validImages = data.images.filter(img => img && img.publicId && img.url);
                     if (validImages.length > 0) {
                         payload.images = validImages;
+                        console.log('[saveDraft] Images being sent:', validImages);
                     }
                 }
 
@@ -650,6 +669,7 @@ function CreatePropertyPage() {
                 const validImages = formData.images.filter(img => img && img.publicId && img.url);
                 if (validImages.length > 0) {
                     propertyData.images = validImages;
+                    console.log('[handleSubmit] Images being sent:', propertyData.images);
                 }
             }
 

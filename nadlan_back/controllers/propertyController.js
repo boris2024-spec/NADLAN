@@ -304,11 +304,28 @@ export const createProperty = async (req, res) => {
         // Sanitize images: remove items without required fields (publicId/url)
         if (Array.isArray(propertyData.images)) {
             const originalCount = propertyData.images.length;
-            propertyData.images = propertyData.images.filter(img => img && img.url && img.publicId);
+            propertyData.images = propertyData.images
+                .filter(img => img && img.url && img.publicId)
+                .map((img, index) => ({
+                    url: img.url,
+                    publicId: img.publicId,
+                    alt: img.alt || `תמונה ${index + 1}`,
+                    isMain: img.isMain !== undefined ? img.isMain : false,
+                    order: img.order !== undefined ? img.order : index
+                }));
             const filteredCount = propertyData.images.length;
-            if (filteredCount === 0) {
+
+            // Ensure at least one image is marked as main
+            if (filteredCount > 0) {
+                const hasMain = propertyData.images.some(img => img.isMain === true);
+                if (!hasMain) {
+                    propertyData.images[0].isMain = true;
+                    console.log('[createProperty] No main image found, setting first image as main');
+                }
+            } else {
                 delete propertyData.images; // do not save empty array
             }
+
             if (originalCount !== filteredCount) {
                 console.log(`[createProperty] Filtered images without publicId/url: ${originalCount - filteredCount} removed`);
             }
@@ -437,10 +454,25 @@ export const saveDraft = async (req, res) => {
         // Sanitize images: remove items without required fields (publicId/url)
         if (Array.isArray(propertyData.images)) {
             const originalCount = propertyData.images.length;
-            propertyData.images = propertyData.images.filter(img => img && img.url && img.publicId);
+            propertyData.images = propertyData.images
+                .filter(img => img && img.url && img.publicId)
+                .map((img, index) => ({
+                    url: img.url,
+                    publicId: img.publicId,
+                    alt: img.alt || `תמונה ${index + 1}`,
+                    isMain: img.isMain !== undefined ? img.isMain : false,
+                    order: img.order !== undefined ? img.order : index
+                }));
             const filteredCount = propertyData.images.length;
 
-            if (filteredCount === 0) {
+            // Ensure at least one image is marked as main
+            if (filteredCount > 0) {
+                const hasMain = propertyData.images.some(img => img.isMain === true);
+                if (!hasMain) {
+                    propertyData.images[0].isMain = true;
+                    console.log('[saveDraft] No main image found, setting first image as main');
+                }
+            } else {
                 delete propertyData.images; // do not save empty array
             }
 
@@ -536,6 +568,36 @@ export const updateProperty = async (req, res) => {
             const sanitized = sanitizePublicContacts(req.body.publicContacts);
             if (sanitized) updatePayload.publicContacts = sanitized;
             else updatePayload.publicContacts = [];
+        }
+
+        // Sanitize images on update: preserve all fields including isMain, order, alt
+        if (Array.isArray(updatePayload.images)) {
+            const originalCount = updatePayload.images.length;
+            updatePayload.images = updatePayload.images
+                .filter(img => img && img.url && img.publicId)
+                .map((img, index) => ({
+                    url: img.url,
+                    publicId: img.publicId,
+                    alt: img.alt || `תמונה ${index + 1}`,
+                    isMain: img.isMain !== undefined ? img.isMain : false,
+                    order: img.order !== undefined ? img.order : index
+                }));
+            const filteredCount = updatePayload.images.length;
+
+            // Ensure at least one image is marked as main
+            if (filteredCount > 0) {
+                const hasMain = updatePayload.images.some(img => img.isMain === true);
+                if (!hasMain) {
+                    updatePayload.images[0].isMain = true;
+                    console.log('[updateProperty] No main image found, setting first image as main');
+                }
+            } else {
+                updatePayload.images = []; // empty array to remove all images
+            }
+
+            if (originalCount !== filteredCount) {
+                console.log(`[updateProperty] Filtered images without publicId/url: ${originalCount - filteredCount} removed`);
+            }
         }
 
         const updatedProperty = await Property.findByIdAndUpdate(
