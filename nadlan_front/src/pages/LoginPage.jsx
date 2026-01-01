@@ -11,7 +11,7 @@ function LoginPage() {
     });
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState('');
+    const [errors, setErrors] = useState([]);
 
     const { login } = useAuth();
     const navigate = useNavigate();
@@ -22,35 +22,38 @@ function LoginPage() {
             ...prev,
             [name]: value
         }));
-        if (error) setError('');
+        if (errors.length > 0) setErrors([]);
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setIsLoading(true);
-        setError('');
+        setErrors([]);
 
         try {
             const result = await login(formData);
             if (result.success) {
                 navigate('/');
-            } else if (result.error?.message === 'החשבון מושבת') {
-                setError('החשבון שלך אינו פעיל. פנה לתמיכה או לאדמין לצורך הפעלה מחדש.');
-            } else if (
-                result.error?.message?.toLowerCase().includes('inactive')
-            ) {
-                setError('החשבון שלך אינו פעיל. פנה לתמיכה או לאדמין לצורך הפעלה מחדש.');
-            } else if (
-                result.error?.message?.toLowerCase().includes('invalid') ||
-                result.error?.message?.toLowerCase().includes('wrong') ||
-                result.error?.message?.toLowerCase().includes('incorrect')
-            ) {
-                setError('כתובת המייל או הסיסמה שגויים');
             } else {
-                setError(result.error?.message || 'שגיאה בכניסה למערכת');
+                // Если есть массив ошибок с сервера, используем его
+                if (result.error?.errors && Array.isArray(result.error.errors)) {
+                    setErrors(result.error.errors);
+                } else if (result.error?.message === 'החשבון מושבת') {
+                    setErrors([{ message: 'החשבון שלך אינו פעיל. פנה לתמיכה או לאדמין לצורך הפעלה מחדש.' }]);
+                } else if (result.error?.message?.toLowerCase().includes('inactive')) {
+                    setErrors([{ message: 'החשבון שלך אינו פעיל. פנה לתמיכה או לאדמין לצורך הפעלה מחדש.' }]);
+                } else if (
+                    result.error?.message?.toLowerCase().includes('invalid') ||
+                    result.error?.message?.toLowerCase().includes('wrong') ||
+                    result.error?.message?.toLowerCase().includes('incorrect')
+                ) {
+                    setErrors([{ message: 'כתובת המייל או הסיסמה שגויים' }]);
+                } else {
+                    setErrors([{ message: result.error?.message || 'שגיאה בכניסה למערכת' }]);
+                }
             }
         } catch (err) {
-            setError(err.message || 'שגיאה בכניסה למערכת');
+            setErrors([{ message: err.message || 'שגיאה בכניסה למערכת' }]);
         } finally {
             setIsLoading(false);
         }
@@ -72,11 +75,13 @@ function LoginPage() {
                 {/* Login Form */}
                 <Card className="p-8 shadow-lg">
                     <form onSubmit={handleSubmit} className="space-y-6">
-                        {error && (
+                        {errors.length > 0 && (
                             <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-                                <p className="text-sm text-red-600 dark:text-red-400 text-center">
-                                    {error}
-                                </p>
+                                {errors.map((err, idx) => (
+                                    <p key={idx} className="text-sm text-red-600 dark:text-red-400 text-center mb-1 last:mb-0">
+                                        {err.message || err.msg}
+                                    </p>
+                                ))}
                             </div>
                         )}
 

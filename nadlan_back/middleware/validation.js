@@ -38,32 +38,51 @@ const statusValues = ['active', 'pending', 'sold', 'rented', 'inactive', 'draft'
 // Schemas
 const registerSchema = Joi.object({
     firstName: Joi.string().min(2).max(50).pattern(nameRegex).required().messages({
+        'string.empty': 'השם הוא שדה חובה',
+        'any.required': 'השם הוא שדה חובה',
         'string.min': 'השם חייב להכיל בין 2 ל-50 תווים',
         'string.max': 'השם חייב להכיל בין 2 ל-50 תווים',
         'string.pattern.base': 'השם יכול להכיל רק אותיות ורווחים'
     }),
     lastName: Joi.string().min(2).max(50).pattern(nameRegex).required().messages({
+        'string.empty': 'שם המשפחה הוא שדה חובה',
+        'any.required': 'שם המשפחה הוא שדה חובה',
         'string.min': 'שם המשפחה חייב להכיל בין 2 ל-50 תווים',
         'string.max': 'שם המשפחה חייב להכיל בין 2 ל-50 תווים',
         'string.pattern.base': 'שם המשפחה יכול להכיל רק אותיות ורווחים'
     }),
-    email: Joi.string().email().required().messages({ 'string.email': 'כתובת אימייל לא תקינה' }),
+    email: Joi.string().email().required().messages({
+        'string.email': 'כתובת אימייל לא תקינה',
+        'string.empty': 'אימייל הוא שדה חובה',
+        'any.required': 'אימייל הוא שדה חובה'
+    }),
     password: Joi.string()
         .min(6)
         .pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{6,}$/)
         .messages({
+            'string.empty': 'הסיסמה היא שדה חובה',
+            'any.required': 'הסיסמה היא שדה חובה',
             'string.min': 'הסיסמה חייבת להכיל לפחות 6 תווים',
             'string.pattern.base': 'הסיסמה חייבת להכיל לפחות אות קטנה, אות גדולה, מספר וסימן מיוחד'
         })
         .when('googleId', { not: Joi.any().exist(), then: Joi.required(), otherwise: Joi.forbidden() }),
     googleId: Joi.string().optional(),
-    phone: Joi.string().pattern(/^[\+]?[0-9][\d]{0,15}$/).optional().messages({ 'string.pattern.base': 'מספר טלפון לא תקין' }),
+    phone: Joi.string().pattern(/^[\+]?[0-9][\d]{0,15}$/).allow('').optional().messages({
+        'string.pattern.base': 'מספר טלפון לא תקין'
+    }),
     role: Joi.string().valid('user', 'agent').default('user').messages({ 'any.only': 'התפקיד יכול להיות רק user או agent' })
 });
 
 const loginSchema = Joi.object({
-    email: Joi.string().email().required().messages({ 'string.email': 'Invalid email address' }),
-    password: Joi.string().min(1).required().messages({ 'string.empty': 'Password is required' })
+    email: Joi.string().email().required().messages({
+        'string.email': 'כתובת אימייל לא תקינה',
+        'string.empty': 'אימייל הוא שדה חובה',
+        'any.required': 'אימייל הוא שדה חובה'
+    }),
+    password: Joi.string().min(1).required().messages({
+        'string.empty': 'הסיסמה היא שדה חובה',
+        'any.required': 'הסיסמה היא שדה חובה'
+    })
 });
 
 const profileSchema = Joi.object({
@@ -90,15 +109,21 @@ const profileSchema = Joi.object({
 });
 
 const forgotPasswordSchema = Joi.object({
-    email: Joi.string().email().required().messages({ 'string.email': 'Invalid email address' })
+    email: Joi.string().email().required().messages({
+        'string.email': 'כתובת אימייל לא תקינה',
+        'string.empty': 'אימייל הוא שדה חובה',
+        'any.required': 'אימייל הוא שדה חובה'
+    })
 });
 
 const resetPasswordSchema = Joi.object({
     password: Joi.string().min(6).pattern(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
         .required()
         .messages({
-            'string.min': 'Password must be at least 6 characters long',
-            'string.pattern.base': 'Password must contain at least one lowercase letter, one uppercase letter, and one number'
+            'string.empty': 'הסיסמה היא שדה חובה',
+            'any.required': 'הסיסמה היא שדה חובה',
+            'string.min': 'הסיסמה חייבת להכיל לפחות 6 תווים',
+            'string.pattern.base': 'הסיסמה חייבת להכיל לפחות אות קטנה, אות גדולה ומספר'
         })
 });
 

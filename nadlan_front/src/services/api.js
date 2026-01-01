@@ -301,27 +301,32 @@ export const handleApiError = (error) => {
             case 401:
                 return {
                     message: data.message || 'כתובת המייל או הסיסמה שגויים',
+                    errors: data.errors || [],
                     type: 'auth'
                 };
             case 403:
                 return {
                     message: 'גישה אסורה',
+                    errors: data.errors || [],
                     type: 'auth'
                 };
             case 404:
                 return {
                     message: 'המשאב לא נמצא',
+                    errors: data.errors || [],
                     type: 'notFound'
                 };
             case 429:
                 return {
                     message: 'יותר מדי בקשות. נסה שוב מאוחר יותר',
+                    errors: data.errors || [],
                     type: 'rateLimit'
                 };
             case 500:
             default:
                 return {
                     message: 'שגיאת שרת פנימית',
+                    errors: data?.errors || [],
                     type: 'server'
                 };
         }
@@ -329,12 +334,14 @@ export const handleApiError = (error) => {
         // Request was sent but no response was received
         return {
             message: 'השרת אינו זמין. בדוק את חיבור האינטרנט',
+            errors: [],
             type: 'network'
         };
     } else {
         // Something went wrong while setting up the request
         return {
             message: error.message || 'שגיאה לא ידועה',
+            errors: [],
             type: 'unknown'
         };
     }

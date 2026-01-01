@@ -7,18 +7,18 @@ const ForgotPasswordPage = () => {
     const [email, setEmail] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [isSuccess, setIsSuccess] = useState(false);
-    const [error, setError] = useState('');
+    const [errors, setErrors] = useState([]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
         if (!email) {
-            setError('אנא הזן כתובת אימייל');
+            setErrors([{ message: 'אנא הזן כתובת אימייל' }]);
             return;
         }
 
         setIsLoading(true);
-        setError('');
+        setErrors([]);
 
         try {
             const response = await api.post('/auth/forgot-password', { email });
@@ -27,10 +27,14 @@ const ForgotPasswordPage = () => {
                 setIsSuccess(true);
             }
         } catch (error) {
-            setError(
-                error.response?.data?.message ||
-                'שגיאה בשליחת אימייל. אנא נסה שוב מאוחר יותר'
-            );
+            if (error.response?.data?.errors && Array.isArray(error.response.data.errors)) {
+                setErrors(error.response.data.errors);
+            } else {
+                setErrors([{
+                    message: error.response?.data?.message ||
+                        'שגיאה בשליחת אימייל. אנא נסה שוב מאוחר יותר'
+                }]);
+            }
         } finally {
             setIsLoading(false);
         }
@@ -73,7 +77,7 @@ const ForgotPasswordPage = () => {
                                 </div>
                             </div>
                             <div className="space-y-3"
-                            style={{ gap: '0px', display: 'flex', flexDirection: 'column' }}
+                                style={{ gap: '0px', display: 'flex', flexDirection: 'column' }}
                             >
                                 <Button
                                     onClick={() => {
@@ -114,11 +118,13 @@ const ForgotPasswordPage = () => {
 
                 <Card className="p-8">
                     <form onSubmit={handleSubmit} className="space-y-6">
-                        {error && (
+                        {errors.length > 0 && (
                             <div className="bg-red-50 dark:bg-red-900 border border-red-200 dark:border-red-700 rounded-md p-4">
-                                <div className="text-sm text-red-800 dark:text-red-200">
-                                    {error}
-                                </div>
+                                {errors.map((err, idx) => (
+                                    <div key={idx} className="text-sm text-red-800 dark:text-red-200 mb-1 last:mb-0">
+                                        {err.message || err.msg}
+                                    </div>
+                                ))}
                             </div>
                         )}
 
@@ -130,7 +136,7 @@ const ForgotPasswordPage = () => {
                                 value={email}
                                 onChange={(e) => {
                                     setEmail(e.target.value);
-                                    if (error) setError('');
+                                    if (errors.length > 0) setErrors([]);
                                 }}
                                 required
                             />

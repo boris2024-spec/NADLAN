@@ -17,7 +17,7 @@ function RegisterPage() {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
-    const [error, setError] = useState('');
+    const [errors, setErrors] = useState([]);
 
     const { register } = useAuth();
     const navigate = useNavigate();
@@ -28,22 +28,22 @@ function RegisterPage() {
             ...prev,
             [name]: value
         }));
-        if (error) setError('');
+        if (errors.length > 0) setErrors([]);
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setIsLoading(true);
-        setError('');
+        setErrors([]);
 
         if (formData.password !== formData.confirmPassword) {
-            setError('הסיסמאות אינן תואמות');
+            setErrors([{ message: 'הסיסמאות אינן תואמות' }]);
             setIsLoading(false);
             return;
         }
 
         if (formData.password.length < 6) {
-            setError('הסיסמה חייבת להכיל לפחות 6 תווים');
+            setErrors([{ message: 'הסיסמה חייבת להכיל לפחות 6 תווים' }]);
             setIsLoading(false);
             return;
         }
@@ -53,10 +53,15 @@ function RegisterPage() {
             if (result.success) {
                 navigate('/');
             } else {
-                setError(result.error?.message || 'שגיאה בהרשמה למערכת');
+                // Если есть массив ошибок с сервера, используем его
+                if (result.error?.errors && Array.isArray(result.error.errors)) {
+                    setErrors(result.error.errors);
+                } else {
+                    setErrors([{ message: result.error?.message || 'שגיאה בהרשמה למערכת' }]);
+                }
             }
         } catch (err) {
-            setError(err.message || 'שגיאה בהרשמה למערכת');
+            setErrors([{ message: err.message || 'שגיאה בהרשמה למערכת' }]);
         } finally {
             setIsLoading(false);
         }
@@ -78,11 +83,13 @@ function RegisterPage() {
                 {/* Register Form */}
                 <Card className="p-8 shadow-lg">
                     <form onSubmit={handleSubmit} className="space-y-6">
-                        {error && (
+                        {errors.length > 0 && (
                             <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-                                <p className="text-sm text-red-600 dark:text-red-400 text-center">
-                                    {error}
-                                </p>
+                                {errors.map((err, idx) => (
+                                    <p key={idx} className="text-sm text-red-600 dark:text-red-400 text-center mb-1 last:mb-0">
+                                        {err.message || err.msg}
+                                    </p>
+                                ))}
                             </div>
                         )}
 
@@ -175,7 +182,7 @@ function RegisterPage() {
                                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-dark-100 text-gray-900 dark:text-gray-100"
                             >
                                 <option value="user">משתמש</option>
-                                
+
                                 <option value="agent">סוכן נדל"ן</option>
                             </select>
                         </div>
