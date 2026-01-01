@@ -53,7 +53,7 @@ const imageFileFilter = (req, file, cb) => {
     if (allowedTypes.includes(file.mimetype)) {
         cb(null, true);
     } else {
-        cb(new Error('Неподдерживаемый тип файла. Разрешены только JPEG, PNG и WebP'), false);
+        cb(new Error('Unsupported file type. Only JPEG, PNG, and WebP are allowed'), false);
     }
 };
 
@@ -119,7 +119,7 @@ export const deleteFromCloudinary = async (publicId) => {
         const result = await cloudinary.uploader.destroy(publicId);
         return result;
     } catch (error) {
-        console.error('Ошибка удаления файла из Cloudinary:', error);
+        console.error('Error deleting file from Cloudinary:', error);
         throw error;
     }
 };
