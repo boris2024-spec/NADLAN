@@ -300,8 +300,18 @@ export default function AdminPage() {
         mutationFn: async (id) => {
             await adminAPI.deleteUser(id);
         },
-        onSuccess: () => {
+        onSuccess: (_data, id) => {
             toast.success('המשתמש נמחק');
+            qc.setQueryData(
+                ['admin', 'users', { page: userPage, limit: userLimit, role: userRole, isActive: userActive, search: userSearch }],
+                (oldData) => {
+                    if (!oldData || !oldData.users) return oldData;
+                    return {
+                        ...oldData,
+                        users: oldData.users.filter(u => u._id !== id)
+                    };
+                }
+            );
             qc.invalidateQueries({ queryKey: ['admin', 'users'] });
         },
         onError: (e) => toast.error(handleApiError(e).message)
@@ -468,7 +478,7 @@ export default function AdminPage() {
                                 <Users className="w-4 h-4 ml-2 rtl:ml-0 rtl:mr-2" /> משתמשים
                             </Button>
 
-                            
+
                         </div>
                         {activeTab === 'properties' && (
                             <Button

@@ -1,17 +1,3 @@
-// Delete own profile
-const deleteProfile = async () => {
-    try {
-        await authAPI.deleteProfile();
-        tokenManager.clearTokens();
-        dispatch({ type: AUTH_ACTIONS.LOGOUT });
-        toast.success('החשבון נמחק בהצלחה');
-        return { success: true };
-    } catch (error) {
-        const errorInfo = handleApiError(error);
-        toast.error(errorInfo.message);
-        return { success: false, error: errorInfo };
-    }
-};
 import React, { createContext, useContext, useReducer, useEffect, useState } from 'react';
 import { authAPI, tokenManager, handleApiError } from '../services/api';
 import toast from 'react-hot-toast';
@@ -194,6 +180,21 @@ export function AuthProvider({ children }) {
             // Clear tokens and state anyway
             tokenManager.clearTokens();
             dispatch({ type: AUTH_ACTIONS.LOGOUT });
+        }
+    };
+
+    // Delete own profile
+    const deleteProfile = async () => {
+        try {
+            await authAPI.deleteProfile();
+            tokenManager.clearTokens();
+            dispatch({ type: AUTH_ACTIONS.LOGOUT });
+            toast.success('החשבון נמחק בהצלחה');
+            return { success: true };
+        } catch (error) {
+            const errorInfo = handleApiError(error);
+            toast.error(errorInfo.message);
+            return { success: false, error: errorInfo };
         }
     };
 
