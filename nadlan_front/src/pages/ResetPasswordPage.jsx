@@ -64,7 +64,7 @@ const ResetPasswordPage = () => {
 
             if (response.data.success) {
                 setIsSuccess(true);
-                // Автоматический переход на страницу входа через 3 секунды
+                // Auto redirect to login page after 3 seconds
                 setTimeout(() => {
                     navigate('/login', {
                         state: { message: 'הסיסמה אופסה בהצלחה. אנא התחבר עם הסיסמה החדשה' }

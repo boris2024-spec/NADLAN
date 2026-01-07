@@ -35,7 +35,7 @@ function LoginPage() {
             if (result.success) {
                 navigate('/');
             } else {
-                // Если есть массив ошибок с сервера, используем его
+                // If there is an array of errors from the server, use it
                 if (result.error?.errors && Array.isArray(result.error.errors)) {
                     setErrors(result.error.errors);
                 } else if (result.error?.message === 'החשבון מושבת') {

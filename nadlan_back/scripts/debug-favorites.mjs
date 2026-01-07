@@ -9,7 +9,7 @@ async function debugFavorites() {
         await mongoose.connect(process.env.MONGODB_URI);
         console.log('Connected to MongoDB');
 
-        // Найти всех пользователей и показать их favorites
+        // Find all users and show their favorites
         const users = await User.find({}).select('firstName lastName email favorites');
 
         console.log('\n=== Users with favorites ===\n');
@@ -20,8 +20,8 @@ async function debugFavorites() {
             console.log('');
         }
 
-        // Опционально: очистить favorites для конкретного пользователя
-        // Раскомментируйте следующие строки и замените email
+        // Optional: clear favorites for specific user
+        // Uncomment the following lines and replace email
         /*
         const userEmail = 'your-email@example.com';
         const userToClean = await User.findOne({ email: userEmail });

@@ -5,44 +5,44 @@ import { dirname, join } from 'path';
 import Property from '../models/Property.js';
 import User from '../models/User.js';
 
-// Загружаем переменные окружения
+// Load environment variables
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 dotenv.config({ path: join(__dirname, '../.env') });
 
 async function addTestContacts() {
     try {
-        // Подключаемся к MongoDB
+        // Connect to MongoDB
         const mongoURI = process.env.MONGODB_URI;
         if (!mongoURI) {
-            throw new Error('MONGODB_URI не найден в .env файле');
+            throw new Error('MONGODB_URI not found in .env file');
         }
 
-        console.log('🔄 Подключение к MongoDB...');
+        console.log('🔄 Connecting to MongoDB...');
         await mongoose.connect(mongoURI);
-        console.log('✅ MongoDB подключена');
+        console.log('✅ MongoDB connected');
 
-        // Находим активные объявления
+        // Find active properties
         const properties = await Property.find({ status: 'active' }).limit(10);
 
         if (properties.length === 0) {
-            console.log('❌ Не найдено активных объявлений');
+            console.log('❌ No active properties found');
             process.exit(1);
         }
 
-        console.log(`✅ Найдено ${properties.length} активных объявлений`);
+        console.log(`✅ Found ${properties.length} active properties`);
 
-        // Находим тестовых пользователей
+        // Find test users
         const users = await User.find({ role: { $in: ['user', 'buyer'] } }).limit(3);
 
         if (users.length === 0) {
-            console.log('⚠️  Не найдено пользователей для добавления контактов');
-            console.log('💡 Создаем тестового пользователя...');
+            console.log('⚠️  No users found to add contacts');
+            console.log('💡 Creating test user...');
 
-            // Создаем тестового пользователя если его нет
+            // Create test user if none exists
             const testUser = new User({
-                firstName: 'Тест',
-                lastName: 'Покупатель',
+                firstName: 'Test',
+                lastName: 'Buyer',
                 email: 'test.buyer@example.com',
                 password: 'Test123!@#',
                 role: 'buyer',
@@ -51,26 +51,26 @@ async function addTestContacts() {
             });
             await testUser.save();
             users.push(testUser);
-            console.log('✅ Тестовый пользователь создан');
+            console.log('✅ Test user created');
         }
 
-        console.log(`✅ Найдено ${users.length} пользователей`);
+        console.log(`✅ Found ${users.length} users`);
 
-        // Типы контактов
+        // Contact types
         const contactTypes = ['call', 'email', 'whatsapp', 'viewing'];
         const contactMessages = [
-            'Заинтересован в просмотре',
-            'Хочу получить больше информации',
-            'Можно ли посмотреть эту недвижимость?',
-            'Прошу связаться со мной',
-            'Интересует данное предложение'
+            'Interested in viewing',
+            'Would like more information',
+            'Can I view this property?',
+            'Please contact me',
+            'Interested in this listing'
         ];
 
         let totalContactsAdded = 0;
 
-        // Добавляем контакты к каждому объявлению
+        // Add contacts to each property
         for (const property of properties) {
-            // Добавляем 2-4 контакта на объявление
+            // Add 2-4 contacts per property
             const contactsCount = Math.floor(Math.random() * 3) + 2;
 
             for (let i = 0; i < contactsCount; i++) {
@@ -78,30 +78,30 @@ async function addTestContacts() {
                 const randomType = contactTypes[Math.floor(Math.random() * contactTypes.length)];
                 const randomMessage = contactMessages[Math.floor(Math.random() * contactMessages.length)];
 
-                // Создаем контакт с разным статусом
+                // Create contact with different status
                 const statuses = ['pending', 'contacted', 'scheduled', 'completed'];
                 const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
 
-                // Добавляем контакт напрямую в массив
+                // Add contact directly to array
                 property.contacts.push({
                     user: randomUser._id,
                     type: randomType,
                     message: randomMessage,
                     status: randomStatus,
-                    contactedAt: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000) // случайная дата в последние 7 дней
+                    contactedAt: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000) // random date within last 7 days
                 });
 
                 totalContactsAdded++;
             }
 
-            // Сохраняем объявление с новыми контактами
+            // Save property with new contacts
             await property.save();
-            console.log(`   ✅ Добавлено ${contactsCount} контактов к "${property.title}"`);
+            console.log(`   ✅ Added ${contactsCount} contacts to "${property.title}"`);
         }
 
-        console.log(`\n📊 Всего добавлено контактов: ${totalContactsAdded}`);
+        console.log(`\n📊 Total contacts added: ${totalContactsAdded}`);
 
-        // Показываем статистику по типам контактов
+        // Show statistics by contact types
         const allProperties = await Property.find({ 'contacts.0': { $exists: true } });
         const contactTypeStats = {};
         const contactStatusStats = {};
@@ -113,24 +113,24 @@ async function addTestContacts() {
             });
         });
 
-        console.log('\n📈 Статистика по типам контактов:');
+        console.log('\n📈 Statistics by contact type:');
         Object.entries(contactTypeStats).forEach(([type, count]) => {
             console.log(`   ${type}: ${count}`);
         });
 
-        console.log('\n📈 Статистика по статусам контактов:');
+        console.log('\n📈 Statistics by contact status:');
         Object.entries(contactStatusStats).forEach(([status, count]) => {
             console.log(`   ${status}: ${count}`);
         });
 
     } catch (error) {
-        console.error('❌ Ошибка при добавлении контактов:', error.message);
+        console.error('❌ Error adding contacts:', error.message);
         console.error(error);
     } finally {
         await mongoose.connection.close();
-        console.log('\n👋 Отключение от MongoDB');
+        console.log('\n👋 Disconnecting from MongoDB');
     }
 }
 
-// Запускаем скрипт
+// Run the script
 addTestContacts();

@@ -3,16 +3,16 @@ import { searchStreets } from '../../services/citiesApi';
 import { MapPin, ChevronDown, AlertCircle } from 'lucide-react';
 
 /**
- * Компонент автодополнения для выбора улицы
+ * Street autocomplete component
  * @param {Object} props
- * @param {string} props.value - Текущее значение
- * @param {Function} props.onChange - Callback при изменении значения
- * @param {string} props.cityName - Название города для фильтрации улиц
+ * @param {string} props.value - Current value
+ * @param {Function} props.onChange - Callback on value change
+ * @param {string} props.cityName - City name for filtering streets
  * @param {string} props.placeholder - Placeholder
- * @param {string} props.className - Дополнительные классы
- * @param {boolean} props.required - Обязательное поле
- * @param {boolean} props.error - Есть ли ошибка валидации
- * @param {boolean} props.disabled - Отключить поле
+ * @param {string} props.className - Additional classes
+ * @param {boolean} props.required - Required field
+ * @param {boolean} props.error - Is there a validation error
+ * @param {boolean} props.disabled - Disable field
  */
 const StreetAutocomplete = ({
     value,
@@ -32,7 +32,7 @@ const StreetAutocomplete = ({
     const wrapperRef = useRef(null);
     const inputRef = useRef(null);
 
-    // Закрытие при клике вне компонента
+    // Close on click outside component
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (wrapperRef.current && !wrapperRef.current.contains(event.target)) {
@@ -44,17 +44,17 @@ const StreetAutocomplete = ({
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
-    // Обновление локального значения при изменении prop
+    // Update local value when prop changes
     useEffect(() => {
         setInputValue(value || '');
     }, [value]);
 
-    // Проверка выбора города
+    // Check city selection
     useEffect(() => {
         setShowCityWarning(!cityName || cityName.trim() === '');
     }, [cityName]);
 
-    // Поиск улиц при вводе
+    // Search streets on input
     useEffect(() => {
         const searchTimer = setTimeout(async () => {
             if (!cityName || cityName.trim() === '') {
@@ -134,7 +134,7 @@ const StreetAutocomplete = ({
                 />
             </div>
 
-            {/* Предупреждение о необходимости выбора города */}
+            {/* City selection warning */}
             {showCityWarning && (
                 <div className="flex items-center mt-2 text-amber-600 dark:text-amber-400 text-xs">
                     <AlertCircle className="w-3 h-3 ml-1" />
@@ -142,7 +142,7 @@ const StreetAutocomplete = ({
                 </div>
             )}
 
-            {/* Список подсказок */}
+            {/* Suggestions list */}
             {isOpen && cityName && (
                 <div className="absolute z-50 w-full mt-1 bg-white dark:bg-dark-100 border border-gray-300 dark:border-gray-600 rounded-lg shadow-lg max-h-60 overflow-auto">
                     {isLoading ? (

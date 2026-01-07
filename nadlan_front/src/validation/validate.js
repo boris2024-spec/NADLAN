@@ -1,6 +1,6 @@
 import Joi from 'joi';
 
-// Предобработка данных: преобразование пустых строк в undefined для числовых полей
+// Preprocess data: convert empty strings to undefined for numeric fields
 function preprocessData(data) {
     if (!data || typeof data !== 'object') return data;
 

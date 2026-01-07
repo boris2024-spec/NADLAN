@@ -2,14 +2,14 @@ import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
 /**
- * Объединение классов с поддержкой Tailwind CSS
+ * Merge classes with Tailwind CSS support
  */
 export function cn(...inputs) {
     return twMerge(clsx(inputs));
 }
 
 /**
- * Форматирование цены
+ * Format price
  */
 export function formatPrice(amount, currency = 'ILS', options = {}) {
     const { locale = 'he-IL', period } = options;
@@ -36,14 +36,14 @@ export function formatPrice(amount, currency = 'ILS', options = {}) {
 }
 
 /**
- * Форматирование площади
+ * Format area
  */
 export function formatArea(area, unit = 'מ״ר') {
     return `${area.toLocaleString('he-IL')} ${unit}`;
 }
 
 /**
- * Форматирование количества комнат
+ * Format number of rooms
  */
 export function formatRooms(rooms) {
     if (!rooms || rooms === 0) return '';
@@ -51,7 +51,7 @@ export function formatRooms(rooms) {
 }
 
 /**
- * Перевод типов недвижимости
+ * Property types translation
  */
 export const PROPERTY_TYPES = {
     apartment: 'דירה',
@@ -69,7 +69,7 @@ export const PROPERTY_TYPES = {
 };
 
 /**
- * Перевод типов сделок
+ * Transaction types translation
  */
 export const TRANSACTION_TYPES = {
     sale: 'מכירה',
@@ -77,7 +77,7 @@ export const TRANSACTION_TYPES = {
 };
 
 /**
- * Перевод статусов
+ * Status translation
  */
 export const PROPERTY_STATUS = {
     active: 'פעיל',
@@ -89,7 +89,7 @@ export const PROPERTY_STATUS = {
 };
 
 /**
- * Перевод состояния недвижимости
+ * Property condition translation
  */
 export const PROPERTY_CONDITIONS = {
     new: 'חדש',
@@ -100,7 +100,7 @@ export const PROPERTY_CONDITIONS = {
 };
 
 /**
- * Проверка валидности email
+ * Email validation check
  */
 export function isValidEmail(email) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -108,7 +108,7 @@ export function isValidEmail(email) {
 }
 
 /**
- * Проверка валидности номера телефона
+ * Phone number validation check
  */
 export function isValidPhone(phone) {
     const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
@@ -116,21 +116,21 @@ export function isValidPhone(phone) {
 }
 
 /**
- * Генерация случайного ID
+ * Generate random ID
  */
 export function generateId() {
     return Math.random().toString(36).substr(2, 9);
 }
 
 /**
- * Задержка выполнения
+ * Execution delay
  */
 export function delay(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 /**
- * Debounce функция
+ * Debounce function
  */
 export function debounce(func, delay) {
     let timeoutId;
@@ -141,7 +141,7 @@ export function debounce(func, delay) {
 }
 
 /**
- * Throttle функция
+ * Throttle function
  */
 export function throttle(func, limit) {
     let inThrottle;
@@ -155,7 +155,7 @@ export function throttle(func, limit) {
 }
 
 /**
- * Форматирование даты
+ * Format date
  */
 export function formatDate(date, options = {}) {
     const { locale = 'he-IL', dateStyle = 'medium' } = options;
@@ -164,7 +164,7 @@ export function formatDate(date, options = {}) {
 }
 
 /**
- * Форматирование относительного времени
+ * Format relative time
  */
 export function formatRelativeTime(date) {
     const now = new Date();
@@ -191,7 +191,7 @@ export function formatRelativeTime(date) {
 }
 
 /**
- * Преобразование объекта в query string
+ * Convert object to query string
  */
 export function objectToQueryString(obj) {
     return Object.entries(obj)
@@ -201,7 +201,7 @@ export function objectToQueryString(obj) {
 }
 
 /**
- * Преобразование query string в объект
+ * Convert query string to object
  */
 export function queryStringToObject(queryString) {
     const params = new URLSearchParams(queryString);
@@ -215,14 +215,14 @@ export function queryStringToObject(queryString) {
 }
 
 /**
- * Капитализация первой буквы
+ * Capitalize first letter
  */
 export function capitalize(str) {
     return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
 /**
- * Обрезка текста с добавлением "..."
+ * Truncate text with "..."
  */
 export function truncateText(text, length = 100) {
     if (text.length <= length) return text;
@@ -230,21 +230,21 @@ export function truncateText(text, length = 100) {
 }
 
 /**
- * Проверка, является ли объект пустым
+ * Check if object is empty
  */
 export function isEmpty(obj) {
     return Object.keys(obj).length === 0;
 }
 
 /**
- * Глубокое клонирование объекта
+ * Deep clone object
  */
 export function deepClone(obj) {
     return JSON.parse(JSON.stringify(obj));
 }
 
 /**
- * Удаление дубликатов из массива
+ * Remove duplicates from array
  */
 export function removeDuplicates(array, key) {
     if (key) {
@@ -256,7 +256,7 @@ export function removeDuplicates(array, key) {
 }
 
 /**
- * Группировка массива по ключу
+ * Group array by key
  */
 export function groupBy(array, key) {
     return array.reduce((groups, item) => {
@@ -268,7 +268,7 @@ export function groupBy(array, key) {
 }
 
 /**
- * Сортировка массива объектов
+ * Sort array of objects
  */
 export function sortBy(array, key, direction = 'asc') {
     return array.sort((a, b) => {

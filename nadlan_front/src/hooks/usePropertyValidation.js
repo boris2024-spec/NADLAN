@@ -31,13 +31,13 @@ export const usePropertyValidation = (formData) => {
             }
         });
 
-        // Дополнительная проверка для шага 4 - контактная информация
+        // Additional check for step 4 - contact information
         if (step === 4) {
             const contacts = data.publicContacts || [];
             if (contacts.length === 0) {
                 stepErrors['publicContacts'] = 'חובה להוסיף לפחות איש קשר אחד';
             } else {
-                // Проверяем что у каждого контакта есть тип и значение
+                // Check that each contact has type and value
                 contacts.forEach((contact, idx) => {
                     if (!contact.type || contact.type === '') {
                         stepErrors[`publicContacts[${idx}].type`] = 'חובה לבחור סוג איש קשר';
@@ -45,7 +45,7 @@ export const usePropertyValidation = (formData) => {
                     if (!contact.value || contact.value.trim() === '') {
                         stepErrors[`publicContacts[${idx}].value`] = 'חובה להזין ערך לאיש קשר';
                     } else {
-                        // Валидация формата в зависимости от типа
+                        // Format validation depending on type
                         const value = contact.value.trim();
                         if (contact.type === 'email') {
                             const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -53,7 +53,7 @@ export const usePropertyValidation = (formData) => {
                                 stepErrors[`publicContacts[${idx}].value`] = 'כתובת אימייל לא תקינה';
                             }
                         } else if (contact.type === 'phone' || contact.type === 'whatsapp') {
-                            // Разрешаем различные форматы телефона
+                            // Allow various phone formats
                             const phoneRegex = /^[\d\s\-+()]+$/;
                             if (!phoneRegex.test(value) || value.replace(/\D/g, '').length < 9) {
                                 stepErrors[`publicContacts[${idx}].value`] = 'מספר טלפון לא תקין (לפחות 9 ספרות)';

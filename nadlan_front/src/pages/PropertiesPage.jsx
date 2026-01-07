@@ -148,7 +148,7 @@ function PropertiesPage() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [searchTerm, filters, committedPriceRange, currentPage, sort]);
 
-    // Сервер уже применяет фильтры; оставляем список как есть
+    // Server already applies filters; keep the list as is
     const filteredProperties = properties;
 
     const handleFilterChange = (key, value) => {

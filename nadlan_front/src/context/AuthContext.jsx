@@ -1,4 +1,4 @@
-// Удаление собственного профиля
+// Delete own profile
 const deleteProfile = async () => {
     try {
         await authAPI.deleteProfile();
@@ -17,7 +17,7 @@ import { authAPI, tokenManager, handleApiError } from '../services/api';
 import toast from 'react-hot-toast';
 import EmailVerificationNotice from '../components/ui/EmailVerificationNotice';
 
-// Начальное состояние
+// Initial state
 const initialState = {
     user: null,
     isAuthenticated: false,
@@ -80,15 +80,15 @@ function authReducer(state, action) {
     }
 }
 
-// יצירת הקונטקסט
+// Create context
 const AuthContext = createContext(null);
 
-// קומפוננטת Provider
+// Provider component
 export function AuthProvider({ children }) {
     const [state, dispatch] = useReducer(authReducer, initialState);
     const [showEmailVerification, setShowEmailVerification] = useState(false);
 
-    // בדיקת אימות בעת טעינת האפליקציה
+    // Check authentication on app load
     useEffect(() => {
         const initAuth = async () => {
             const token = tokenManager.getAccessToken();
@@ -113,7 +113,7 @@ export function AuthProvider({ children }) {
         initAuth();
     }, []);
 
-    // פונקציית התחברות
+    // Login function
     const login = async (credentials) => {
         try {
             dispatch({ type: AUTH_ACTIONS.SET_LOADING, payload: true });
@@ -124,7 +124,7 @@ export function AuthProvider({ children }) {
             console.log('AuthContext - Login user:', user);
             console.log('AuthContext - Login favorites:', user.favorites);
 
-            // שמירת הטוקנים
+            // Save tokens
             tokenManager.setAccessToken(tokens.accessToken);
             tokenManager.setRefreshToken(tokens.refreshToken);
 
@@ -142,7 +142,7 @@ export function AuthProvider({ children }) {
         }
     };
 
-    // פונקציית הרשמה
+    // Register function
     const register = async (userData) => {
         try {
             dispatch({ type: AUTH_ACTIONS.SET_LOADING, payload: true });
@@ -150,13 +150,13 @@ export function AuthProvider({ children }) {
             const response = await authAPI.register(userData);
             const { user, tokens } = response.data.data;
 
-            // שמירת הטוקנים
+            // Save tokens
             tokenManager.setAccessToken(tokens.accessToken);
             tokenManager.setRefreshToken(tokens.refreshToken);
 
             dispatch({ type: AUTH_ACTIONS.SET_USER, payload: user });
 
-            // הצגת הודעת אימות אם האימייל לא מאומת
+            // Show verification notice if email is not verified
             if (!user.isVerified) {
                 setShowEmailVerification(true);
                 toast.success('ההרשמה הצליחה! נא לאמת את כתובת האימייל שלך.');
@@ -175,7 +175,7 @@ export function AuthProvider({ children }) {
         }
     };
 
-    // פונקציית יציאה
+    // Logout function
     const logout = async () => {
         try {
             const refreshToken = tokenManager.getRefreshToken();
@@ -191,13 +191,13 @@ export function AuthProvider({ children }) {
 
         } catch (error) {
             console.error('שגיאה ביציאה:', error);
-            // Все равно очищаем токены и состояние
+            // Clear tokens and state anyway
             tokenManager.clearTokens();
             dispatch({ type: AUTH_ACTIONS.LOGOUT });
         }
     };
 
-    // Функция обновления профиля
+    // Update profile function
     const updateProfile = async (profileData) => {
         try {
             const response = await authAPI.updateProfile(profileData);
@@ -216,12 +216,12 @@ export function AuthProvider({ children }) {
         }
     };
 
-    // Обновление состояния пользователя локально (без запроса)
+    // Update user state locally (without request)
     const updateUserState = (patch) => {
         dispatch({ type: AUTH_ACTIONS.UPDATE_USER, payload: patch });
     };
 
-    // Принудительно подтянуть профиль с сервера
+    // Force refresh profile from server
     const refreshProfile = async () => {
         try {
             const response = await authAPI.getProfile();
@@ -233,37 +233,37 @@ export function AuthProvider({ children }) {
         }
     };
 
-    // Функция сброса ошибки
+    // Clear error function
     const clearError = () => {
         dispatch({ type: AUTH_ACTIONS.SET_ERROR, payload: null });
     };
 
-    // Проверка роли пользователя
+    // Check user role
     const hasRole = (role) => {
         return state.user?.role === role;
     };
 
-    // Проверка разрешений
+    // Check permissions
     const hasPermission = (permission) => {
         if (!state.user) return false;
 
         const userRole = state.user.role;
 
-        // Администратор имеет все разрешения
+        // Admin has all permissions
         if (userRole === 'admin') return true;
 
-        // Определяем разрешения для разных ролей
+        // Define permissions for different roles
         const rolePermissions = {
             user: ['view_properties', 'create_property_request', 'manage_favorites'],
             agent: ['view_properties', 'create_property', 'manage_own_properties', 'manage_favorites'],
-            admin: ['*'] // Все разрешения
+            admin: ['*'] // All permissions
         };
 
         const permissions = rolePermissions[userRole] || [];
         return permissions.includes('*') || permissions.includes(permission);
     };
 
-    // Значение контекста
+    // Context value
     const value = {
         ...state,
         login,
@@ -291,7 +291,7 @@ export function AuthProvider({ children }) {
     );
 }
 
-// Hook для использования контекста аутентификации
+// Hook for using authentication context
 export function useAuth() {
     const context = useContext(AuthContext);
 
@@ -302,13 +302,13 @@ export function useAuth() {
     return context;
 }
 
-// Hook для проверки аутентификации
+// Hook for checking authentication
 export function useRequireAuth() {
     const auth = useAuth();
 
     useEffect(() => {
         if (!auth.isLoading && !auth.isAuthenticated) {
-            // Перенаправляем на страницу входа
+            // Redirect to login page
             window.location.href = '/login';
         }
     }, [auth.isAuthenticated, auth.isLoading]);
@@ -316,7 +316,7 @@ export function useRequireAuth() {
     return auth;
 }
 
-// Hook для проверки роли
+// Hook for checking role
 export function useRequireRole(requiredRole) {
     const auth = useRequireAuth();
 

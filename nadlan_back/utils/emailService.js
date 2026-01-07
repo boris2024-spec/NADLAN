@@ -7,7 +7,7 @@ class EmailService {
     }
 
     initTransporter() {
-        // Унифицированные настройки SMTP (Gmail STARTTLS на 587 или SMTPS на 465)
+        // Unified SMTP settings (Gmail STARTTLS on 587 or SMTPS on 465)
         const host = process.env.SMTP_HOST || 'smtp.gmail.com';
         const port = Number(process.env.SMTP_PORT || 587);
         const user = process.env.SMTP_USER;
@@ -20,12 +20,12 @@ class EmailService {
             port,
             secure,
             auth: { user, pass },
-            // Для 587 включаем STARTTLS
+            // Enable STARTTLS for 587
             requireTLS: !secure,
             pool: true,
             maxConnections: 5,
             maxMessages: 100,
-            // Игнорировать self-signed сертификаты только в разработке
+            // Ignore self-signed certificates only in development
             ...(process.env.NODE_ENV !== 'production' && { tls: { rejectUnauthorized: false } })
         };
 
@@ -36,7 +36,7 @@ class EmailService {
 
         this.transporter = nodemailer.createTransport(options);
 
-        // Моментальная проверка доступности SMTP — логируем, но не падаем
+        // Instant SMTP availability check - log but don't fail
         this.transporter.verify()
             .then(() => console.log('SMTP verify OK:', { host, port, user, secure }))
             .catch(err => console.error('SMTP verify FAILED:', {
@@ -57,7 +57,7 @@ class EmailService {
     }
 
     getFromAddress() {
-        // Для Gmail From должен совпадать с аутентифицированным пользователем
+        // For Gmail, From must match the authenticated user
         const user = process.env.SMTP_USER;
         const configured = process.env.FROM_EMAIL || user;
         const host = (this?.transporter?.options?.host || '').toLowerCase();
@@ -85,7 +85,7 @@ class EmailService {
 
             console.log('Email sent successfully:', result.messageId);
 
-            // במצב פיתוח, מציג קישור לצפייה במייל
+            // In development mode, display preview link
             if (process.env.NODE_ENV !== 'production') {
                 console.log('Preview URL:', nodemailer.getTestMessageUrl(result));
             }
@@ -99,7 +99,7 @@ class EmailService {
                 message: error.message,
                 response: error.response
             });
-            // Пробрасываем оригинальную ошибку, чтобы контроллер залогировал и ответил корректно
+            // Throw original error so controller can log and respond correctly
             throw error;
         }
     }
@@ -143,7 +143,7 @@ class EmailService {
             const mailOptions = {
                 from: `"Nadlan Platform" <${this.getFromAddress()}>`,
                 to: userEmail,
-                subject: 'ברוכים הבאים ל-Nadlan!',
+                subject: 'Welcome to Nadlan!',
                 html: this.getWelcomeEmailTemplate(userName),
                 text: `שלום ${userName},\n\nברוכים הבאים לפלטפורמת Nadlan!\n\nכעת תוכל לגלות מגוון רחב של נכסי נדל"ן, לשמור על מועדפים ולקבל התראות על הזדמנויות חדשות.\n\nתחילת דרך נעימה!\n\nבברכה,\nצוות Nadlan`
             };
@@ -160,7 +160,7 @@ class EmailService {
                 message: error.message,
                 response: error.response
             });
-            // לא זורק שגיאה כי זה לא קריטי
+            // Don't throw error as it's not critical
             return null;
         }
     }
@@ -710,7 +710,7 @@ class EmailService {
         `;
     }
 
-    // בדיקת חיבור לשרת המייל
+    // Check connection to mail server
     async verifyConnection() {
         try {
             await this.transporter.verify();
@@ -728,7 +728,7 @@ class EmailService {
     }
 }
 
-// יצירת instance יחיד
+// Create singleton instance
 const emailService = new EmailService();
 
 export default emailService;

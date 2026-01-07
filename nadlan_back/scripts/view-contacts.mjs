@@ -5,7 +5,7 @@ import { dirname, join } from 'path';
 import Property from '../models/Property.js';
 import User from '../models/User.js';
 
-// Загружаем переменные окружения
+// Load environment variables
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 dotenv.config({ path: join(__dirname, '../.env') });
@@ -14,14 +14,14 @@ async function viewContacts() {
     try {
         const mongoURI = process.env.MONGODB_URI;
         if (!mongoURI) {
-            throw new Error('MONGODB_URI не найден в .env файле');
+            throw new Error('MONGODB_URI not found in .env file');
         }
 
-        console.log('🔄 Подключение к MongoDB...');
+        console.log('🔄 Connecting to MongoDB...');
         await mongoose.connect(mongoURI);
-        console.log('✅ MongoDB подключена\n');
+        console.log('✅ MongoDB connected\n');
 
-        // Получаем объявления с контактами
+        // Get properties with contacts
         const properties = await Property.find({
             'contacts.0': { $exists: true }
         })
@@ -30,29 +30,29 @@ async function viewContacts() {
             .select('title contacts');
 
         if (properties.length === 0) {
-            console.log('❌ Не найдено объявлений с контактами');
+            console.log('❌ No properties with contacts found');
             process.exit(0);
         }
 
-        console.log(`📋 Найдено ${properties.length} объявлений с контактами:\n`);
+        console.log(`📋 Found ${properties.length} properties with contacts:\n`);
 
         properties.forEach((property, index) => {
             console.log(`${index + 1}. "${property.title}"`);
             console.log(`   ID: ${property._id}`);
-            console.log(`   Контакты (${property.contacts.length}):`);
+            console.log(`   Contacts (${property.contacts.length}):`);
 
             property.contacts.forEach((contact, cIndex) => {
                 const user = contact.user;
-                console.log(`      ${cIndex + 1}. Тип: ${contact.type}`);
-                console.log(`         Пользователь: ${user?.firstName} ${user?.lastName} (${user?.email})`);
-                console.log(`         Сообщение: ${contact.message || 'Нет сообщения'}`);
-                console.log(`         Статус: ${contact.status}`);
-                console.log(`         Дата: ${contact.contactedAt.toLocaleString('ru-RU')}`);
+                console.log(`      ${cIndex + 1}. Type: ${contact.type}`);
+                console.log(`         User: ${user?.firstName} ${user?.lastName} (${user?.email})`);
+                console.log(`         Message: ${contact.message || 'No message'}`);
+                console.log(`         Status: ${contact.status}`);
+                console.log(`         Date: ${contact.contactedAt.toLocaleString('en-US')}`);
             });
             console.log('');
         });
 
-        // Общая статистика
+        // Overall statistics
         const totalProperties = await Property.countDocuments({ 'contacts.0': { $exists: true } });
         const allContacts = await Property.aggregate([
             { $match: { 'contacts.0': { $exists: true } } },
@@ -60,15 +60,15 @@ async function viewContacts() {
             { $group: { _id: null, total: { $sum: '$contactsCount' } } }
         ]);
 
-        console.log('📊 Общая статистика:');
-        console.log(`   Объявлений с контактами: ${totalProperties}`);
-        console.log(`   Всего контактов: ${allContacts[0]?.total || 0}`);
+        console.log('📊 Overall statistics:');
+        console.log(`   Properties with contacts: ${totalProperties}`);
+        console.log(`   Total contacts: ${allContacts[0]?.total || 0}`);
 
     } catch (error) {
-        console.error('❌ Ошибка:', error.message);
+        console.error('❌ Error:', error.message);
     } finally {
         await mongoose.connection.close();
-        console.log('\n👋 Отключение от MongoDB');
+        console.log('\n👋 Disconnecting from MongoDB');
     }
 }
 

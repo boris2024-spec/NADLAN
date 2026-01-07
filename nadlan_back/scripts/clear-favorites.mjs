@@ -15,7 +15,7 @@ async function clearUserFavorites() {
         await mongoose.connect(process.env.MONGODB_URI);
         console.log('✅ Connected to MongoDB\n');
 
-        // Показать всех пользователей
+        // Show all users
         const users = await User.find({}).select('firstName lastName email favorites');
 
         console.log('=== Available Users ===\n');
@@ -26,11 +26,11 @@ async function clearUserFavorites() {
         rl.question('\nEnter user email to clear favorites (or "all" to clear all): ', async (answer) => {
             try {
                 if (answer.toLowerCase() === 'all') {
-                    // Очистить у всех
+                    // Clear for all users
                     await User.updateMany({}, { $set: { favorites: [] } });
                     console.log('\n✅ All favorites cleared for all users!');
                 } else {
-                    // Очистить у конкретного пользователя
+                    // Clear for specific user
                     const user = await User.findOne({ email: answer.trim() });
                     if (!user) {
                         console.log('\n❌ User not found!');

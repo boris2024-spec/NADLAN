@@ -1,28 +1,28 @@
 /**
- * Сервис для работы с API data.gov.il
- * Получение списка израильских городов и улиц
+ * Service for working with data.gov.il API
+ * Getting list of Israeli cities and streets
  */
 
 const API_BASE_URL = 'https://data.gov.il/api/3/action/datastore_search';
 const CITIES_RESOURCE_ID = '5c78e9fa-c2e2-4771-93ff-7f400a12f7ba';
-const STREETS_RESOURCE_ID = '9ad3862c-8391-4b2f-84a4-2d4c68625f4b'; // API для улиц (обновленный)
+const STREETS_RESOURCE_ID = '9ad3862c-8391-4b2f-84a4-2d4c68625f4b'; // Streets API (updated)
 
-// Кэш для городов
+// Cities cache
 let citiesCache = null;
 let cacheTimestamp = null;
-const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 часа
+const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
 
-// Кэш для улиц по городам
+// Streets cache by cities
 let streetsCache = {};
 let streetsCacheTimestamp = {};
 
 /**
- * Получить список всех городов Израиля
- * @returns {Promise<Array>} Массив городов
+ * Get list of all Israeli cities
+ * @returns {Promise<Array>} Array of cities
  */
 export const getAllCities = async () => {
     try {
-        // Проверяем кэш
+        // Check cache
         if (citiesCache && cacheTimestamp && (Date.now() - cacheTimestamp < CACHE_DURATION)) {
             return citiesCache;
         }
@@ -44,12 +44,12 @@ export const getAllCities = async () => {
         const data = await response.json();
 
         if (data.success && data.result && data.result.records) {
-            // Извлекаем уникальные названия городов
+            // Extract unique city names
             const cities = data.result.records
                 .map(record => record['שם_ישוב'] || record.name)
                 .filter(city => city && city.trim() !== '')
-                .filter((city, index, self) => self.indexOf(city) === index) // уникальные
-                .sort((a, b) => a.localeCompare(b, 'he')); // сортировка на иврите
+                .filter((city, index, self) => self.indexOf(city) === index) // unique
+                .sort((a, b) => a.localeCompare(b, 'he')); // Hebrew sorting
 
             citiesCache = cities;
             cacheTimestamp = Date.now();
@@ -60,15 +60,15 @@ export const getAllCities = async () => {
         return [];
     } catch (error) {
         console.error('Ошибка при получении списка городов:', error);
-        // Возвращаем список популярных городов в качестве запасного варианта
+        // Return list of popular cities as fallback
         return getFallbackCities();
     }
 };
 
 /**
- * Поиск городов по запросу
- * @param {string} query - Строка поиска
- * @returns {Promise<Array>} Массив подходящих городов
+ * Search cities by query
+ * @param {string} query - Search string
+ * @returns {Promise<Array>} Array of matching cities
  */
 export const searchCities = async (query) => {
     try {
@@ -79,10 +79,10 @@ export const searchCities = async (query) => {
         const allCities = await getAllCities();
         const normalizedQuery = query.trim().toLowerCase();
 
-        // Фильтруем города по запросу
+        // Filter cities by query
         return allCities.filter(city =>
             city.toLowerCase().includes(normalizedQuery)
-        ).slice(0, 10); // Ограничиваем до 10 результатов
+        ).slice(0, 10); // Limit to 10 results
     } catch (error) {
         console.error('Ошибка при поиске городов:', error);
         return [];
@@ -90,9 +90,9 @@ export const searchCities = async (query) => {
 };
 
 /**
- * Получить город по точному названию
- * @param {string} cityName - Название города
- * @returns {Promise<Object|null>} Информация о городе
+ * Get city by exact name
+ * @param {string} cityName - City name
+ * @returns {Promise<Object|null>} City information
  */
 export const getCityByName = async (cityName) => {
     try {
@@ -128,8 +128,8 @@ export const getCityByName = async (cityName) => {
 };
 
 /**
- * Запасной список популярных городов Израиля
- * @returns {Array} Массив названий городов
+ * Fallback list of popular Israeli cities
+ * @returns {Array} Array of city names
  */
 const getFallbackCities = () => {
     return [
@@ -201,9 +201,9 @@ const getFallbackCities = () => {
 };
 
 /**
- * Получить список всех улиц в определенном городе
- * @param {string} cityName - Название города
- * @returns {Promise<Array>} Массив названий улиц
+ * Get list of all streets in a specific city
+ * @param {string} cityName - City name
+ * @returns {Promise<Array>} Array of street names
  */
 export const getStreetsByCity = async (cityName) => {
     try {
@@ -211,7 +211,7 @@ export const getStreetsByCity = async (cityName) => {
             return [];
         }
 
-        // Проверяем кэш для этого города
+        // Check cache for this city
         const cacheKey = cityName.toLowerCase();
         if (
             streetsCache[cacheKey] &&
@@ -238,14 +238,14 @@ export const getStreetsByCity = async (cityName) => {
         const data = await response.json();
 
         if (data.success && data.result && data.result.records) {
-            // Извлекаем уникальные названия улиц
+            // Extract unique street names
             const streets = data.result.records
                 .map(record => record['שם_רחוב'])
                 .filter(street => street && street.trim() !== '')
-                .filter((street, index, self) => self.indexOf(street) === index) // уникальные
-                .sort((a, b) => a.localeCompare(b, 'he')); // сортировка на иврите
+                .filter((street, index, self) => self.indexOf(street) === index) // unique
+                .sort((a, b) => a.localeCompare(b, 'he')); // Hebrew sorting
 
-            // Кэшируем результат
+            // Cache result
             streetsCache[cacheKey] = streets;
             streetsCacheTimestamp[cacheKey] = Date.now();
 
@@ -260,10 +260,10 @@ export const getStreetsByCity = async (cityName) => {
 };
 
 /**
- * Поиск улиц по запросу в определенном городе
- * @param {string} cityName - Название города
- * @param {string} query - Строка поиска улицы
- * @returns {Promise<Array>} Массив подходящих улиц
+ * Search streets by query in a specific city
+ * @param {string} cityName - City name
+ * @param {string} query - Street search string
+ * @returns {Promise<Array>} Array of matching streets
  */
 export const searchStreets = async (cityName, query) => {
     try {
@@ -274,10 +274,10 @@ export const searchStreets = async (cityName, query) => {
         const allStreets = await getStreetsByCity(cityName);
         const normalizedQuery = query.trim().toLowerCase();
 
-        // Фильтруем улицы по запросу
+        // Filter streets by query
         return allStreets.filter(street =>
             street.toLowerCase().includes(normalizedQuery)
-        ).slice(0, 15); // Ограничиваем до 15 результатов
+        ).slice(0, 15); // Limit to 15 results
     } catch (error) {
         console.error('Ошибка при поиске улиц:', error);
         return [];
@@ -285,10 +285,10 @@ export const searchStreets = async (cityName, query) => {
 };
 
 /**
- * Получить информацию об адресе (улица + город)
- * @param {string} cityName - Название города
- * @param {string} streetName - Название улицы
- * @returns {Promise<Object|null>} Информация об адресе
+ * Get address information (street + city)
+ * @param {string} cityName - City name
+ * @param {string} streetName - Street name
+ * @returns {Promise<Object|null>} Address information
  */
 export const getAddressInfo = async (cityName, streetName) => {
     try {
@@ -324,7 +324,7 @@ export const getAddressInfo = async (cityName, streetName) => {
 };
 
 /**
- * Очистить кэш улиц (например, при смене города)
+ * Clear streets cache (e.g. when changing city)
  */
 export const clearStreetsCache = () => {
     streetsCache = {};

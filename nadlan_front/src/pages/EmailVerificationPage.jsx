@@ -24,7 +24,7 @@ const EmailVerificationPage = () => {
                 setStatus('success');
                 setMessage(response.data.message || 'האימייל אומת בהצלחה!');
 
-                // Автоматический переход на главную страницу через 3 секунды
+                // Auto redirect to home page after 3 seconds
                 setTimeout(() => {
                     navigate('/', { replace: true });
                 }, 3000);

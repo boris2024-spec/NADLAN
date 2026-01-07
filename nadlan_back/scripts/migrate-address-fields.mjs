@@ -1,6 +1,6 @@
 /**
- * Миграция для разделения поля address на street и houseNumber
- * Запустить: node scripts/migrate-address-fields.mjs
+ * Migration to split address field into street and houseNumber
+ * Run: node scripts/migrate-address-fields.mjs
  */
 
 import mongoose from 'mongoose';
@@ -11,34 +11,34 @@ import { dirname, join } from 'path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Загружаем переменные окружения
+// Load environment variables
 dotenv.config({ path: join(__dirname, '../.env') });
 
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/nadlan';
 
 async function migrateAddressFields() {
     try {
-        console.log('🔄 Подключение к MongoDB...');
+        console.log('🔄 Connecting to MongoDB...');
         await mongoose.connect(MONGODB_URI);
-        console.log('✅ Подключено к MongoDB');
+        console.log('✅ Connected to MongoDB');
 
         const Property = mongoose.model('Property', new mongoose.Schema({}, { strict: false }));
 
-        // Найти все объекты недвижимости
+        // Find all properties
         const properties = await Property.find({});
-        console.log(`\n📊 Найдено объектов: ${properties.length}`);
+        console.log(`\n📊 Found properties: ${properties.length}`);
 
         let updated = 0;
         let skipped = 0;
 
         for (const property of properties) {
-            // Пропускаем, если уже есть street
+            // Skip if street already exists
             if (property.location && property.location.street) {
                 skipped++;
                 continue;
             }
 
-            // Пропускаем, если нет address
+            // Skip if no address
             if (!property.location || !property.location.address) {
                 skipped++;
                 continue;
@@ -47,22 +47,22 @@ async function migrateAddressFields() {
             const address = property.location.address.trim();
             const parts = address.split(/\s+/);
 
-            // Простая логика разделения:
-            // Если последняя часть выглядит как номер дома (число или число+буква на иврите)
+            // Simple splitting logic:
+            // If the last part looks like a house number (number or number + Hebrew letter)
             if (parts.length > 1) {
                 const lastPart = parts[parts.length - 1];
 
-                // Проверяем, является ли последняя часть номером дома
+                // Check if the last part is a house number
                 if (/^\d+[א-ת]?$/.test(lastPart)) {
                     property.location.street = parts.slice(0, -1).join(' ');
                     property.location.houseNumber = lastPart;
                 } else {
-                    // Если не похоже на номер, весь адрес считаем улицей
+                    // If it doesn't look like a number, consider entire address as street
                     property.location.street = address;
                     property.location.houseNumber = '';
                 }
             } else {
-                // Если адрес из одного слова, считаем его улицей
+                // If address is one word, consider it as street
                 property.location.street = address;
                 property.location.houseNumber = '';
             }
@@ -71,24 +71,24 @@ async function migrateAddressFields() {
             updated++;
 
             if (updated % 10 === 0) {
-                console.log(`✅ Обработано: ${updated}`);
+                console.log(`✅ Processed: ${updated}`);
             }
         }
 
-        console.log('\n📈 Статистика миграции:');
-        console.log(`   Всего объектов: ${properties.length}`);
-        console.log(`   Обновлено: ${updated}`);
-        console.log(`   Пропущено: ${skipped}`);
-        console.log('\n✅ Миграция завершена успешно!');
+        console.log('\n📈 Migration statistics:');
+        console.log(`   Total properties: ${properties.length}`);
+        console.log(`   Updated: ${updated}`);
+        console.log(`   Skipped: ${skipped}`);
+        console.log('\n✅ Migration completed successfully!');
 
     } catch (error) {
-        console.error('❌ Ошибка миграции:', error);
+        console.error('❌ Migration error:', error);
         process.exit(1);
     } finally {
         await mongoose.disconnect();
-        console.log('👋 Отключено от MongoDB');
+        console.log('👋 Disconnected from MongoDB');
     }
 }
 
-// Запуск миграции
+// Run migration
 migrateAddressFields();
