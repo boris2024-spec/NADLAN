@@ -4,11 +4,12 @@ import { Card, Button, LikeButton, Spinner } from '../components/ui';
 import { propertiesAPI, handleApiError } from '../services/api';
 import { formatPrice } from '../utils/helpers';
 import { MapPin, Bed, Bath, Square, Search } from 'lucide-react';
-import { useRequireAuth } from '../context/AuthContext';
+import { useRequireAuth, useAuth } from '../context/AuthContext';
 
 function FavoritesPage() {
     const navigate = useNavigate();
     const auth = useRequireAuth();
+    const { updateUserState } = useAuth();
     const [loading, setLoading] = useState(true);
     const [items, setItems] = useState([]);
 
@@ -19,7 +20,10 @@ function FavoritesPage() {
                 setLoading(true);
                 const res = await propertiesAPI.getFavorites(1, 100);
                 const list = res.data?.data?.properties || [];
-                if (mounted) setItems(list);
+                if (mounted) {
+                    setItems(list);
+                    updateUserState({ favorites: list.map(p => p._id || p.id) });
+                }
             } catch (err) {
                 const info = handleApiError(err);
                 console.error('Failed to load favorites:', info);

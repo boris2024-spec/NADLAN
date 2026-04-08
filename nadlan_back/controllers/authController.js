@@ -509,6 +509,20 @@ export const resetPassword = async (req, res) => {
 // Get user profile
 export const getProfile = async (req, res) => {
     try {
+        // Clean up deleted property IDs from favorites
+        if (req.user.favorites?.length) {
+            const existingIds = await Property.find(
+                { _id: { $in: req.user.favorites } },
+                { _id: 1 }
+            ).lean();
+            const validSet = new Set(existingIds.map(p => p._id.toString()));
+            const cleaned = req.user.favorites.filter(id => validSet.has(id.toString()));
+            if (cleaned.length !== req.user.favorites.length) {
+                req.user.favorites = cleaned;
+                await req.user.save();
+            }
+        }
+
         res.json({
             success: true,
             data: {

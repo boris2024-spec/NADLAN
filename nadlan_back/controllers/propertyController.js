@@ -756,20 +756,26 @@ export const getFavorites = async (req, res) => {
             populate: {
                 path: 'agent',
                 select: 'firstName lastName avatar'
-            },
-            options: {
-                limit: parseInt(limit),
-                skip: (parseInt(page) - 1) * parseInt(limit)
             }
         });
 
-        const totalFavorites = req.user.favorites.length;
+        // Filter out null entries (deleted properties) and clean up the DB record
+        const validFavorites = user.favorites.filter(Boolean);
+        if (validFavorites.length !== user.favorites.length) {
+            req.user.favorites = validFavorites.map(p => p._id);
+            await req.user.save();
+        }
+
+        const allValid = validFavorites;
+        const skip = (parseInt(page) - 1) * parseInt(limit);
+        const paginated = allValid.slice(skip, skip + parseInt(limit));
+        const totalFavorites = allValid.length;
         const totalPages = Math.ceil(totalFavorites / limit);
 
         res.json({
             success: true,
             data: {
-                properties: user.favorites,
+                properties: paginated,
                 pagination: {
                     currentPage: parseInt(page),
                     totalPages,
