@@ -48,7 +48,7 @@ router.get('/google/callback',
         passport.authenticate('google', { session: false }, (err, user, info) => {
             if (err) {
                 console.error('[Google OAuth] Strategy error:', err);
-                const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+                const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173' || 'https://borisnadlan.netlify.app/';
                 return res.redirect(`${frontendUrl}/auth/error?message=שגיאה באימות Google`);
             }
             if (!user) {
