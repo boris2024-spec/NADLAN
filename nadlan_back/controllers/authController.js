@@ -657,8 +657,8 @@ export const googleAuth = async (req, res) => {
             user = new User({
                 googleId,
                 email,
-                firstName,
-                lastName,
+                firstName: firstName || 'User',
+                lastName: (lastName && lastName.length >= 2) ? lastName : (firstName || 'User'),
                 avatar: avatar ? { url: avatar } : undefined,
                 isVerified: true, // Google users are automatically verified
                 role: 'user'

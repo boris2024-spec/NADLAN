@@ -23,8 +23,6 @@ if (googleConfig.clientID && googleConfig.clientSecret) {
     // Configure Google OAuth Strategy
     passport.use(new GoogleStrategy(googleConfig, async (accessToken, refreshToken, profile, done) => {
         try {
-            console.log('Google Profile:', profile);
-
             // Extract user data from Google profile
             const userData = {
                 googleId: profile.id,
