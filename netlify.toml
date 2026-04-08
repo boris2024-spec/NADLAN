@@ -1,17 +1,15 @@
 [build]
   # Репозиторий монорепо — билдим фронт из подпапки
   base = "nadlan_front"
-  # Netlify автоматически выполнит `npm install` перед билдом, поэтому здесь достаточно запустить сборку
-  command = "npm run build"
+  command = "npm ci && npm run build"
   # publish указывается ОТНОСИТЕЛЬНО base
   publish = "dist"
 
 [build.environment]
   # фиксируем Node.js версию
   NODE_VERSION = "20"
-  # РЕКОМЕНДАЦИЯ: задайте это в UI Netlify (Site settings → Environment variables)
-  # VITE_API_URL = "https://<your-backend-domain>/api"
-  # VITE_API_TIMEOUT = "10000"
+  VITE_API_URL = "https://nadlan-f5dw.onrender.com/api"
+  VITE_API_TIMEOUT = "15000"
 
 # Для SPA-роутинга (React Router / Vite)
 [[redirects]]
