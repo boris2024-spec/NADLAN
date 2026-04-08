@@ -15,7 +15,8 @@ import {
     googleAuth,
     googleAuthFailure,
     createAdmin,
-    deleteProfile
+    deleteProfile,
+    exchangeCode,
 } from '../controllers/authController.js';
 import {
     validateRegister,
@@ -51,6 +52,7 @@ router.get('/google/callback',
 );
 
 router.get('/google/failure', googleAuthFailure);
+router.post('/exchange-code', exchangeCode);
 
 // Защищенные роуты
 router.post('/logout', authenticateToken, logout);

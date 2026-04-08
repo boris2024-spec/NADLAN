@@ -50,6 +50,39 @@ import { User } from '../models/index.js';
 import { generateTokens, verifyRefreshToken } from '../middleware/auth.js';
 import emailService from '../utils/emailService.js';
 
+// Временное хранилище одноразовых кодов для OAuth (код → токены, TTL 60 сек)
+const oauthCodeStore = new Map();
+const OAUTH_CODE_TTL_MS = 60_000;
+
+function createOAuthCode(accessToken, refreshToken) {
+    const code = crypto.randomBytes(32).toString('hex');
+    oauthCodeStore.set(code, {
+        accessToken,
+        refreshToken,
+        expiresAt: Date.now() + OAUTH_CODE_TTL_MS,
+    });
+    // Автоочистка по истечении TTL
+    setTimeout(() => oauthCodeStore.delete(code), OAUTH_CODE_TTL_MS);
+    return code;
+}
+
+export const exchangeCode = (req, res) => {
+    const { code } = req.body;
+    if (!code) {
+        return res.status(400).json({ success: false, message: 'Код не передан' });
+    }
+    const entry = oauthCodeStore.get(code);
+    if (!entry || Date.now() > entry.expiresAt) {
+        oauthCodeStore.delete(code);
+        return res.status(400).json({ success: false, message: 'Код недействителен или устарел' });
+    }
+    oauthCodeStore.delete(code);
+    return res.json({
+        success: true,
+        data: { accessToken: entry.accessToken, refreshToken: entry.refreshToken },
+    });
+};
+
 // User registration
 export const register = async (req, res) => {
     try {
@@ -415,9 +448,9 @@ export const forgotPassword = async (req, res) => {
 
         const user = await User.findOne({ email });
         if (!user) {
-            return res.status(404).json({
-                success: false,
-                message: 'משתמש עם אימייל זה לא נמצא'
+            return res.json({
+                success: true,
+                message: 'אם האימייל רשום במערכת, הוראות לאיפוס הסיסמה יישלחו אליו'
             });
         }
 
@@ -652,9 +685,10 @@ export const googleAuth = async (req, res) => {
         user.lastLogin = new Date();
         await user.save();
 
-        // redirect to frontend with tokens
+        // redirect to frontend with one-time code (tokens never appear in URL)
         const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
-        res.redirect(`${frontendUrl}/auth/success?token=${accessToken}&refresh=${refreshToken}`);
+        const code = createOAuthCode(accessToken, refreshToken);
+        res.redirect(`${frontendUrl}/auth/success?code=${code}`);
 
     } catch (error) {
         console.error('Google Auth Error:', error);
