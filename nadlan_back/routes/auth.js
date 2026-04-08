@@ -40,14 +40,26 @@ router.post('/reset-password/:token', validateResetPassword, resetPassword);
 
 // Google OAuth routes
 router.get('/google',
-    passport.authenticate('google', { scope: ['profile', 'email'] })
+    passport.authenticate('google', { scope: ['profile', 'email'], session: false })
 );
 
 router.get('/google/callback',
-    passport.authenticate('google', {
-        failureRedirect: '/api/auth/google/failure',
-        session: false
-    }),
+    (req, res, next) => {
+        passport.authenticate('google', { session: false }, (err, user, info) => {
+            if (err) {
+                console.error('[Google OAuth] Strategy error:', err);
+                const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+                return res.redirect(`${frontendUrl}/auth/error?message=שגיאה באימות Google`);
+            }
+            if (!user) {
+                console.error('[Google OAuth] No user returned. Info:', info);
+                const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+                return res.redirect(`${frontendUrl}/auth/error?message=אימות Google נכשל`);
+            }
+            req.user = user;
+            next();
+        })(req, res, next);
+    },
     googleAuth
 );
 

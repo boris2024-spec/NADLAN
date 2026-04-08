@@ -9,7 +9,11 @@ dotenv.config();
 const googleConfig = {
     clientID: process.env.GOOGLE_CLIENT_ID,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    callbackURL: process.env.GOOGLE_CALLBACK_URL
+    callbackURL: process.env.GOOGLE_CALLBACK_URL,
+    // Disable session-based state verification to avoid state mismatch
+    // errors when running behind a reverse proxy (Render, etc.)
+    state: false,
+    proxy: true
 };
 
 console.log('Google OAuth Config:', {

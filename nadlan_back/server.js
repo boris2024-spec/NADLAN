@@ -21,6 +21,9 @@ const __dirname = dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+// Trust Render/Heroku/Netlify reverse proxy headers (X-Forwarded-For, X-Forwarded-Proto)
+app.set('trust proxy', 1);
+
 // Security middleware
 app.use(helmet({
     contentSecurityPolicy: {
